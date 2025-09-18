@@ -3,6 +3,7 @@ const path = require('path');
 const { createReadStream, createWriteStream } = require('fs');
 const { pipeline } = require('stream/promises');
 const zlib = require('zlib');
+const archiver = require('archiver');
 
 class ArchiveManager {
 	constructor(client) {
@@ -271,8 +272,8 @@ class ArchiveManager {
 			}
 
 			// Compresser l'archive complète
-			const compressedPath = `${archiveDir}.tar.gz`;
-			await this.createTarGz(archiveDir, compressedPath);
+			const compressedPath = `${archiveDir}.zip`;
+			await this.createZip(archiveDir, compressedPath);
 
 			// Calculer la taille du fichier compressé
 			try {
@@ -285,7 +286,7 @@ class ArchiveManager {
 			// Supprimer le dossier non compressé
 			await this.removeDirectory(archiveDir);
 
-			const archiveId = path.basename(compressedPath, '.tar.gz');
+			const archiveId = path.basename(compressedPath, '.zip');
 			console.log(`📦 Archive manuelle créée: ${path.basename(compressedPath)}`);
 			
 			return {
@@ -423,13 +424,36 @@ class ArchiveManager {
 		}
 	}
 
-	async createTarGz(sourceDir, targetPath) {
-		// Simulation de création d'archive tar.gz
-		// Dans un environnement réel, vous utiliseriez une bibliothèque comme 'tar'
-		console.log(`🗜️ Création de l'archive: ${path.basename(targetPath)}`);
+	async createZip(sourceDir, targetPath) {
+		return new Promise((resolve, reject) => {
+			console.log(`🗜️ Création de l'archive ZIP: ${path.basename(targetPath)}`);
 
-		// Pour l'instant, on crée juste un fichier vide
-		await fs.writeFile(targetPath, '');
+			// Créer un flux d'écriture vers le fichier de destination
+			const output = createWriteStream(targetPath);
+			const archive = archiver('zip', {
+				zlib: { level: 9 } // Niveau de compression maximum
+			});
+
+			// Gérer les événements
+			output.on('close', () => {
+				console.log(`✅ Archive ZIP créée: ${this.formatSize(archive.pointer())} bytes`);
+				resolve();
+			});
+
+			archive.on('error', (err) => {
+				console.error('❌ Erreur lors de la création de l\'archive ZIP:', err);
+				reject(err);
+			});
+
+			// Connecter l'archive au flux de sortie
+			archive.pipe(output);
+
+			// Ajouter le contenu du dossier à l'archive
+			archive.directory(sourceDir, false);
+
+			// Finaliser l'archive
+			archive.finalize();
+		});
 	}
 
 	async listArchives() {
@@ -438,7 +462,7 @@ class ArchiveManager {
 			const archiveFiles = await fs.readdir(this.archivePath);
 
 			for (const file of archiveFiles) {
-				if (file.endsWith('.gz') || file.endsWith('.tar.gz')) {
+				if (file.endsWith('.zip')) {
 					const filePath = path.join(this.archivePath, file);
 					const stats = await fs.stat(filePath);
 

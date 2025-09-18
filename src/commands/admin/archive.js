@@ -575,7 +575,7 @@ module.exports = {
 			const path = require('path');
 			
 			// Construire le chemin vers l'archive
-			const archivePath = path.join(process.cwd(), 'archives', `${archiveId}.tar.gz`);
+			const archivePath = path.join(process.cwd(), 'archives', `${archiveId}.zip`);
 			
 			// Vérifier si l'archive existe
 			if (!fs.existsSync(archivePath)) {
@@ -592,7 +592,7 @@ module.exports = {
 			
 			// Créer l'attachment pour le téléchargement
 			const attachment = new AttachmentBuilder(archivePath, {
-				name: `${archiveId}.tar.gz`,
+				name: `${archiveId}.zip`,
 				description: `Archive ${archiveId} (${fileSize})`
 			});
 			
