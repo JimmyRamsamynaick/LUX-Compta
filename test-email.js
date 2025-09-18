@@ -27,20 +27,56 @@ async function sendTestEmail() {
         const templatePath = path.join(__dirname, 'templates', 'email-night-theme.html');
         let htmlContent = fs.readFileSync(templatePath, 'utf8');
         
+        // Variables pour le template
+        const templateVars = {
+            title: 'Test du Système LUX-Compta',
+            subtitle: 'Vérification du système d\'envoi d\'emails',
+            messageTitle: 'Test de Notification Automatique',
+            messageContent: 'Ceci est un email de test pour vérifier le bon fonctionnement du système de notifications automatiques de LUX-Compta. Tous les composants semblent fonctionner correctement.',
+            alertType: 'Test Système',
+            additionalContent: 'Ce test inclut maintenant des sections détaillées avec informations techniques, actions recommandées et liens utiles pour une meilleure expérience utilisateur.',
+            date: new Date().toLocaleDateString('fr-FR'),
+            time: new Date().toLocaleTimeString('fr-FR'),
+            stats: [
+                { value: '✅', label: 'Système' },
+                { value: '📧', label: 'Email' },
+                { value: '🔄', label: 'Automatique' },
+                { value: '🌙', label: 'Thème Nuit' }
+            ]
+        };
+
         // Remplacement des variables dans le template
+        Object.keys(templateVars).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            if (key === 'stats' && Array.isArray(templateVars[key])) {
+                // Gestion spéciale pour les stats
+                let statsHtml = '';
+                templateVars[key].forEach(stat => {
+                    statsHtml += `
+                    <div class="stat-card">
+                        <span class="stat-number">${stat.value}</span>
+                        <div class="stat-label">${stat.label}</div>
+                    </div>`;
+                });
+                htmlContent = htmlContent.replace(/{{#if stats}}[\s\S]*?{{\/if}}/g, 
+                    `<div class="stats-grid">${statsHtml}</div>`);
+            } else {
+                htmlContent = htmlContent.replace(regex, templateVars[key]);
+            }
+        });
+
+        // Remplacement des variables supplémentaires
         const now = new Date();
         htmlContent = htmlContent
-            .replace('{{serverName}}', 'La Lanterne Nocturne')
-            .replace('{{reportType}}', 'Test Email')
-            .replace('{{date}}', now.toLocaleDateString('fr-FR'))
-            .replace('{{time}}', now.toLocaleTimeString('fr-FR'))
-            .replace('{{totalMembers}}', '42')
-            .replace('{{activeMembers}}', '28')
-            .replace('{{totalMessages}}', '1,337')
-            .replace('{{topChannel}}', '#général')
-            .replace('{{topChannelMessages}}', '456')
-            .replace('{{mostActiveUser}}', 'Jimmy')
-            .replace('{{mostActiveUserMessages}}', '89');
+            .replace(/{{serverName}}/g, 'La Lanterne Nocturne')
+            .replace(/{{reportType}}/g, 'Test Email')
+            .replace(/{{totalMembers}}/g, '42')
+            .replace(/{{activeMembers}}/g, '28')
+            .replace(/{{totalMessages}}/g, '1,337')
+            .replace(/{{topChannel}}/g, '#général')
+            .replace(/{{topChannelMessages}}/g, '456')
+            .replace(/{{mostActiveUser}}/g, 'Jimmy')
+            .replace(/{{mostActiveUserMessages}}/g, '89');
 
         // Configuration de l'email
         const mailOptions = {

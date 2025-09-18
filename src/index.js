@@ -10,10 +10,10 @@ const EmailManager = require('./managers/EmailManager');
 
 // Créer le client Discord avec les intents nécessaires
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages
-    ]
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+	],
 });
 
 // Collections pour les commandes et composants
@@ -40,65 +40,67 @@ client.customizationManager = new CustomizationManager(client);
 // Charger les commandes
 const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-    
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath);
-        
-        if ('data' in command && 'execute' in command) {
-            client.commands.set(command.data.name, command);
-            console.log(`✅ Commande chargée: ${command.data.name}`);
-        } else {
-            console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
-        }
-    }
+	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
+	for (const file of commandFiles) {
+		const filePath = path.join(commandsPath, file);
+		const command = require(filePath);
+
+		if ('data' in command && 'execute' in command) {
+			client.commands.set(command.data.name, command);
+			console.log(`✅ Commande chargée: ${command.data.name}`);
+		}
+		else {
+			console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
+		}
+	}
 }
 
 // Charger les événements
 const eventsPath = path.join(__dirname, 'events');
 if (fs.existsSync(eventsPath)) {
-    const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
-    
-    for (const file of eventFiles) {
-        const filePath = path.join(eventsPath, file);
-        const event = require(filePath);
-        
-        if (event.once) {
-            client.once(event.name, (...args) => event.execute(...args));
-        } else {
-            client.on(event.name, (...args) => event.execute(...args));
-        }
-        console.log(`✅ Événement chargé: ${event.name}`);
-    }
+	const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+	for (const file of eventFiles) {
+		const filePath = path.join(eventsPath, file);
+		const event = require(filePath);
+
+		if (event.once) {
+			client.once(event.name, (...args) => event.execute(...args));
+		}
+		else {
+			client.on(event.name, (...args) => event.execute(...args));
+		}
+		console.log(`✅ Événement chargé: ${event.name}`);
+	}
 }
 
 // Événement de connexion
 client.once(Events.ClientReady, async (readyClient) => {
-    console.log(`🤖 ${config.bot.name} est connecté en tant que ${readyClient.user.tag}!`);
-    
-    // Définir l'activité du bot
-    client.user.setActivity(config.bot.activity.name, { type: config.bot.activity.type });
-    
-    // Initialiser les managers
-    await client.statsManager.initialize();
-    await client.reportManager.initialize();
-    
-    console.log('📊 Tous les systèmes sont opérationnels!');
+	console.log(`🤖 ${config.bot.name} est connecté en tant que ${readyClient.user.tag}!`);
+
+	// Définir l'activité du bot
+	client.user.setActivity(config.bot.activity.name, { type: config.bot.activity.type });
+
+	// Initialiser les managers
+	await client.statsManager.initialize();
+	await client.reportManager.initialize();
+
+	console.log('📊 Tous les systèmes sont opérationnels!');
 });
 
 // Gestion des erreurs
 client.on('error', error => {
-    console.error('❌ Erreur Discord.js:', error);
+	console.error('❌ Erreur Discord.js:', error);
 });
 
 process.on('unhandledRejection', error => {
-    console.error('❌ Erreur non gérée:', error);
+	console.error('❌ Erreur non gérée:', error);
 });
 
 process.on('uncaughtException', error => {
-    console.error('❌ Exception non capturée:', error);
-    process.exit(1);
+	console.error('❌ Exception non capturée:', error);
+	process.exit(1);
 });
 
 // Connexion du bot

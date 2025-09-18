@@ -256,9 +256,17 @@
                 ⚠️ Ceci est un email automatique - Ne pas répondre à ce message
             </div>
             
+            <!-- Message principal -->
             <div class="message-box">
-                <h2>{{messageTitle}}</h2>
+                <h2>📋 {{messageTitle}}</h2>
                 <p>{{messageContent}}</p>
+                
+                {{#if alertType}}
+                <div style="background: rgba(255, 69, 0, 0.1); border: 1px solid #ff4500; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h3 style="color: #ff6b35; margin-bottom: 10px;">🚨 Type d'alerte: {{alertType}}</h3>
+                    <p style="color: #ffcccb;">Cette alerte nécessite votre attention immédiate.</p>
+                </div>
+                {{/if}}
                 
                 {{#if stats}}
                 <div class="stats-grid">
@@ -276,12 +284,44 @@
                 {{/if}}
             </div>
             
+            <!-- Détails techniques -->
+            <div class="message-box">
+                <h2>🔧 Détails techniques</h2>
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace;">
+                    <p><strong>📊 Système:</strong> LUX-Compta Bot v1.0.0</p>
+                    <p><strong>🕐 Timestamp:</strong> {{date}} à {{time}}</p>
+                    <p><strong>🎯 Destinataire:</strong> jimmyramsamynaick@gmail.com</p>
+                    <p><strong>🔄 Status:</strong> Notification automatique</p>
+                </div>
+            </div>
+            
+            <!-- Actions recommandées -->
+            <div class="message-box">
+                <h2>💡 Actions recommandées</h2>
+                <ul style="color: #d0d0d0; padding-left: 20px;">
+                    <li>Vérifiez le tableau de bord principal</li>
+                    <li>Consultez les logs détaillés si nécessaire</li>
+                    <li>Contactez l'administrateur en cas de problème persistant</li>
+                    <li>Archivez cette notification après traitement</li>
+                </ul>
+            </div>
+            
             {{#if additionalContent}}
             <div class="message-box">
-                <h2>Informations supplémentaires</h2>
+                <h2>📝 Informations supplémentaires</h2>
                 <p>{{additionalContent}}</p>
             </div>
             {{/if}}
+            
+            <!-- Liens utiles -->
+            <div class="message-box">
+                <h2>🔗 Liens utiles</h2>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="#" style="background: rgba(255, 215, 0, 0.2); color: #ffd700; padding: 8px 15px; border-radius: 5px; text-decoration: none; border: 1px solid #ffd700;">📊 Dashboard</a>
+                    <a href="#" style="background: rgba(0, 123, 255, 0.2); color: #007bff; padding: 8px 15px; border-radius: 5px; text-decoration: none; border: 1px solid #007bff;">📈 Rapports</a>
+                    <a href="#" style="background: rgba(40, 167, 69, 0.2); color: #28a745; padding: 8px 15px; border-radius: 5px; text-decoration: none; border: 1px solid #28a745;">⚙️ Configuration</a>
+                </div>
+            </div>
         </div>
         
         <div class="footer">

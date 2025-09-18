@@ -5,84 +5,86 @@ const moment = require('moment');
 const config = require('../../config.json');
 
 class EmailManager {
-    constructor() {
-        this.transporter = null;
-    }
+	constructor() {
+		this.transporter = null;
+	}
 
-    async initialize() {
-        try {
-            // Configurer le transporteur de mail
-            this.transporter = nodemailer.createTransporter({
-                host: process.env.EMAIL_HOST,
-                port: parseInt(process.env.EMAIL_PORT),
-                secure: false, // true pour 465, false pour les autres ports
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-            });
+	async initialize() {
+		try {
+			// Configurer le transporteur de mail
+			this.transporter = nodemailer.createTransporter({
+				host: process.env.EMAIL_HOST,
+				port: parseInt(process.env.EMAIL_PORT),
+				secure: false, // true pour 465, false pour les autres ports
+				auth: {
+					user: process.env.EMAIL_USER,
+					pass: process.env.EMAIL_PASS,
+				},
+				tls: {
+					rejectUnauthorized: false,
+				},
+			});
 
-            // Vérifier la connexion
-            await this.transporter.verify();
-            console.log('📧 EmailManager initialisé avec succès');
-            
-        } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation de l\'EmailManager:', error);
-            this.transporter = null;
-        }
-    }
+			// Vérifier la connexion
+			await this.transporter.verify();
+			console.log('📧 EmailManager initialisé avec succès');
 
-    async sendReport(to, subject, reportPath, additionalText = '') {
-        if (!this.transporter) {
-            console.error('❌ EmailManager non initialisé');
-            return false;
-        }
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de l\'initialisation de l\'EmailManager:', error);
+			this.transporter = null;
+		}
+	}
 
-        try {
-            // Vérifier que le fichier existe
-            if (!await fs.pathExists(reportPath)) {
-                console.error('❌ Fichier de rapport non trouvé:', reportPath);
-                return false;
-            }
+	async sendReport(to, subject, reportPath, additionalText = '') {
+		if (!this.transporter) {
+			console.error('❌ EmailManager non initialisé');
+			return false;
+		}
 
-            const filename = path.basename(reportPath);
-            const reportDate = moment().format('DD/MM/YYYY à HH:mm');
-            
-            // Contenu HTML de l'email
-            const htmlContent = this.generateEmailHTML(filename, reportDate, additionalText);
-            
-            // Configuration de l'email
-            const mailOptions = {
-                from: process.env.EMAIL_FROM,
-                to: to,
-                subject: subject,
-                html: htmlContent,
-                attachments: [
-                    {
-                        filename: filename,
-                        path: reportPath,
-                        contentType: 'text/csv'
-                    }
-                ]
-            };
+		try {
+			// Vérifier que le fichier existe
+			if (!await fs.pathExists(reportPath)) {
+				console.error('❌ Fichier de rapport non trouvé:', reportPath);
+				return false;
+			}
 
-            // Envoyer l'email
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log('📧 Email envoyé avec succès:', info.messageId);
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
-            return false;
-        }
-    }
+			const filename = path.basename(reportPath);
+			const reportDate = moment().format('DD/MM/YYYY à HH:mm');
 
-    generateEmailHTML(filename, reportDate, additionalText = '') {
-        return `
+			// Contenu HTML de l'email
+			const htmlContent = this.generateEmailHTML(filename, reportDate, additionalText);
+
+			// Configuration de l'email
+			const mailOptions = {
+				from: process.env.EMAIL_FROM,
+				to: to,
+				subject: subject,
+				html: htmlContent,
+				attachments: [
+					{
+						filename: filename,
+						path: reportPath,
+						contentType: 'text/csv',
+					},
+				],
+			};
+
+			// Envoyer l'email
+			const info = await this.transporter.sendMail(mailOptions);
+			console.log('📧 Email envoyé avec succès:', info.messageId);
+
+			return true;
+
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
+			return false;
+		}
+	}
+
+	generateEmailHTML(filename, reportDate, additionalText = '') {
+		return `
         <!DOCTYPE html>
         <html lang="fr">
         <head>
@@ -220,50 +222,51 @@ class EmailManager {
         </body>
         </html>
         `;
-    }
+	}
 
-    async sendAlert(to, alertType, alertData) {
-        if (!this.transporter) {
-            console.error('❌ EmailManager non initialisé');
-            return false;
-        }
+	async sendAlert(to, alertType, alertData) {
+		if (!this.transporter) {
+			console.error('❌ EmailManager non initialisé');
+			return false;
+		}
 
-        try {
-            const subject = `🚨 Alerte ${config.bot.name} - ${this.getAlertTitle(alertType)}`;
-            const htmlContent = this.generateAlertHTML(alertType, alertData);
-            
-            const mailOptions = {
-                from: process.env.EMAIL_FROM,
-                to: to,
-                subject: subject,
-                html: htmlContent
-            };
+		try {
+			const subject = `🚨 Alerte ${config.bot.name} - ${this.getAlertTitle(alertType)}`;
+			const htmlContent = this.generateAlertHTML(alertType, alertData);
 
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log('🚨 Alerte envoyée par email:', info.messageId);
-            
-            return true;
-            
-        } catch (error) {
-            console.error('❌ Erreur lors de l\'envoi de l\'alerte:', error);
-            return false;
-        }
-    }
+			const mailOptions = {
+				from: process.env.EMAIL_FROM,
+				to: to,
+				subject: subject,
+				html: htmlContent,
+			};
 
-    generateAlertHTML(alertType, alertData) {
-        const alertTitles = {
-            message_decrease: 'Baisse d\'activité des messages',
-            member_decrease: 'Baisse du nombre de membres',
-            activity_decrease: 'Baisse d\'activité générale'
-        };
+			const info = await this.transporter.sendMail(mailOptions);
+			console.log('🚨 Alerte envoyée par email:', info.messageId);
 
-        const alertIcons = {
-            message_decrease: '💬',
-            member_decrease: '👥',
-            activity_decrease: '📉'
-        };
+			return true;
 
-        return `
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de l\'envoi de l\'alerte:', error);
+			return false;
+		}
+	}
+
+	generateAlertHTML(alertType, alertData) {
+		const alertTitles = {
+			message_decrease: 'Baisse d\'activité des messages',
+			member_decrease: 'Baisse du nombre de membres',
+			activity_decrease: 'Baisse d\'activité générale',
+		};
+
+		const alertIcons = {
+			message_decrease: '💬',
+			member_decrease: '👥',
+			activity_decrease: '📉',
+		};
+
+		return `
         <!DOCTYPE html>
         <html lang="fr">
         <head>
@@ -352,30 +355,31 @@ class EmailManager {
         </body>
         </html>
         `;
-    }
+	}
 
-    getAlertTitle(alertType) {
-        const titles = {
-            message_decrease: 'Baisse d\'activité des messages',
-            member_decrease: 'Baisse du nombre de membres',
-            activity_decrease: 'Baisse d\'activité générale'
-        };
-        return titles[alertType] || 'Alerte inconnue';
-    }
+	getAlertTitle(alertType) {
+		const titles = {
+			message_decrease: 'Baisse d\'activité des messages',
+			member_decrease: 'Baisse du nombre de membres',
+			activity_decrease: 'Baisse d\'activité générale',
+		};
+		return titles[alertType] || 'Alerte inconnue';
+	}
 
-    async testConnection() {
-        if (!this.transporter) {
-            await this.initialize();
-        }
+	async testConnection() {
+		if (!this.transporter) {
+			await this.initialize();
+		}
 
-        try {
-            await this.transporter.verify();
-            return true;
-        } catch (error) {
-            console.error('❌ Test de connexion email échoué:', error);
-            return false;
-        }
-    }
+		try {
+			await this.transporter.verify();
+			return true;
+		}
+		catch (error) {
+			console.error('❌ Test de connexion email échoué:', error);
+			return false;
+		}
+	}
 }
 
 module.exports = EmailManager;
