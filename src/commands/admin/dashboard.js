@@ -462,7 +462,7 @@ module.exports = {
 			if (customId === 'dashboard_create_main') {
 				await this.handleCreate(interaction, dashboardManager);
 			}
-			else if (customId === 'dashboard_refresh_all') {
+			else if (customId === 'dashboard_refresh_all' || customId === 'dashboard_refresh') {
 				await this.refreshDashboards(interaction, dashboardManager);
 			}
 			else if (customId === 'dashboard_settings_save') {
@@ -471,12 +471,38 @@ module.exports = {
 			else if (customId === 'dashboard_settings_reset') {
 				await this.resetDashboardSettings(interaction, dashboardManager);
 			}
-			else if (customId === 'dashboard_settings_export') {
+			else if (customId === 'dashboard_settings_export' || customId === 'dashboard_export') {
 				await this.exportDashboardSettings(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_settings' || customId === 'dashboard_settings_global') {
+				await this.showDashboardSettings(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_alerts') {
+				await this.handleDashboardAlerts(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_back') {
+				await this.handleDashboardBack(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_create_new') {
+				await this.handleCreate(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_create_custom') {
+				await this.handleCreateCustom(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_help') {
+				await this.handleDashboardHelp(interaction, dashboardManager);
 			}
 			else if (customId.startsWith('dashboard_delete_')) {
 				const dashboardId = customId.replace('dashboard_delete_', '');
 				await this.deleteDashboard(interaction, dashboardManager, dashboardId);
+			}
+			else if (customId.startsWith('dashboard_') && customId.includes('_refresh')) {
+				const type = customId.replace('dashboard_', '').replace('_refresh', '');
+				await this.handleDetailedRefresh(interaction, dashboardManager, type);
+			}
+			else if (customId.startsWith('dashboard_') && customId.includes('_export')) {
+				const type = customId.replace('dashboard_', '').replace('_export', '');
+				await this.handleDetailedExport(interaction, dashboardManager, type);
 			}
 			else {
 				await interaction.reply({
@@ -510,9 +536,108 @@ module.exports = {
 
 	async exportDashboardSettings(interaction, dashboardManager) {
 		await interaction.reply({
-			content: '📤 Paramètres du dashboard exportés avec succès !',
+			content: '📊 Fonctionnalité d\'export en cours de développement.',
 			ephemeral: true,
 		});
 	},
 
+	async handleDashboardAlerts(interaction, dashboardManager) {
+		await interaction.reply({
+			content: '🚨 Gestion des alertes dashboard en cours de développement.',
+			ephemeral: true,
+		});
+	},
+
+	async handleDashboardBack(interaction, dashboardManager) {
+		try {
+			await dashboardManager.createMainDashboard(interaction);
+		} catch (error) {
+			console.error('❌ Erreur lors du retour au dashboard principal:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors du retour au dashboard principal.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async handleCreateCustom(interaction, dashboardManager) {
+		await interaction.reply({
+			content: '🎨 Création de dashboard personnalisé en cours de développement.',
+			ephemeral: true,
+		});
+	},
+
+	async handleDashboardHelp(interaction, dashboardManager) {
+		const helpEmbed = new EmbedBuilder()
+			.setTitle('📊 Aide Dashboard')
+			.setDescription('Guide d\'utilisation des dashboards')
+			.addFields([
+				{
+					name: '🔄 Actualiser',
+					value: 'Met à jour les données du dashboard',
+					inline: true,
+				},
+				{
+					name: '📊 Exporter',
+					value: 'Exporte les données (en développement)',
+					inline: true,
+				},
+				{
+					name: '⚙️ Paramètres',
+					value: 'Configure les options du dashboard',
+					inline: true,
+				},
+				{
+					name: '🚨 Alertes',
+					value: 'Gère les alertes (en développement)',
+					inline: true,
+				},
+				{
+					name: '⬅️ Retour',
+					value: 'Retourne au dashboard principal',
+					inline: true,
+				},
+			])
+			.setColor('#0099ff')
+			.setTimestamp();
+
+		await interaction.reply({
+			embeds: [helpEmbed],
+			ephemeral: true,
+		});
+	},
+
+	async handleDetailedRefresh(interaction, dashboardManager, type) {
+		try {
+			await dashboardManager.createDetailedDashboard(interaction, type);
+		} catch (error) {
+			console.error(`❌ Erreur lors de l'actualisation du dashboard ${type}:`, error);
+			await interaction.reply({
+				content: `❌ Erreur lors de l'actualisation du dashboard ${type}.`,
+				ephemeral: true,
+			});
+		}
+	},
+
+	async handleDetailedExport(interaction, dashboardManager, type) {
+		await interaction.reply({
+			content: `📊 Export du dashboard ${type} en cours de développement.`,
+			ephemeral: true,
+		});
+	},
+
+	async handleDashboardSelect(interaction) {
+		const selectedValue = interaction.values[0];
+		const dashboardManager = interaction.client.dashboardManager;
+
+		try {
+			await dashboardManager.createDetailedDashboard(interaction, selectedValue);
+		} catch (error) {
+			console.error(`❌ Erreur lors de la création du dashboard ${selectedValue}:`, error);
+			await interaction.reply({
+				content: `❌ Erreur lors de la création du dashboard ${selectedValue}.`,
+				ephemeral: true,
+			});
+		}
+	},
 };

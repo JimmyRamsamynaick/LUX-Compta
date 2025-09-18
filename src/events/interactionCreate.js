@@ -200,6 +200,33 @@ module.exports = {
 				return;
 			}
 			
+			// Menu de sélection de configuration
+			if (customId === 'alerts_config_modify') {
+				await alertsCommand.handleConfigModify(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			// Boutons de configuration avancée
+			if (customId === 'alerts_config_reset') {
+				await alertsCommand.handleConfigReset(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			if (customId === 'alerts_config_export') {
+				await alertsCommand.handleConfigExport(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			if (customId === 'alerts_reset_confirm') {
+				await alertsCommand.handleResetConfirm(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			if (customId === 'alerts_reset_cancel') {
+				await alertsCommand.handleResetCancel(interaction, interaction.client.alertManager);
+				return;
+			}
+			
 			// Boutons de seuils
 			if (customId.startsWith('alerts_threshold_')) {
 				await alertsCommand.handleThresholds(interaction, interaction.client.alertManager);
@@ -217,6 +244,13 @@ module.exports = {
 				await alertsCommand.handleStatus(interaction, interaction.client.alertManager);
 				return;
 			}
+		}
+
+		// Gestion des menus select dashboard
+		if (customId === 'dashboard_select') {
+			const dashboardCommand = require('../commands/admin/dashboard');
+			await dashboardCommand.handleDashboardSelect(interaction);
+			return;
 		}
 
 		// Gestion des boutons de dashboard

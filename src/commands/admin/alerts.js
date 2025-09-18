@@ -129,10 +129,17 @@ module.exports = {
 	},
 
 	async handleConfig(interaction, alertManager) {
-		const canal = interaction.options.getChannel('canal');
-		const activé = interaction.options.getBoolean('activé');
-
 		try {
+			// Si c'est une interaction de bouton, afficher la configuration actuelle
+			if (interaction.isButton()) {
+				await this.showCurrentConfig(interaction, alertManager);
+				return;
+			}
+
+			// Si c'est une commande slash, traiter les options
+			const canal = interaction.options?.getChannel('canal');
+			const activé = interaction.options?.getBoolean('activé');
+
 			let updated = false;
 			const changes = [];
 
@@ -607,6 +614,11 @@ module.exports = {
 
 	async showCurrentConfig(interaction, alertManager) {
 		try {
+			// Différer la réponse si ce n'est pas déjà fait
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.deferReply();
+			}
+
 			const config = await alertManager.getConfig();
 
 			let content = '⚙️ **CONFIGURATION ACTUELLE** ⚙️\n\n';
@@ -690,7 +702,9 @@ module.exports = {
 						.setEmoji('📤'),
 				);
 
-			await interaction.editReply({
+			// Utiliser editReply si déjà répondu, sinon reply
+			const replyMethod = interaction.replied || interaction.deferred ? 'editReply' : 'reply';
+			await interaction[replyMethod]({
 				content: content,
 				components: [configSelect, buttons],
 			});
@@ -703,7 +717,9 @@ module.exports = {
 			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			// Utiliser editReply si déjà répondu, sinon reply
+			const replyMethod = interaction.replied || interaction.deferred ? 'editReply' : 'reply';
+			await interaction[replyMethod]({ content: content });
 		}
 	},
 
@@ -831,4 +847,322 @@ module.exports = {
 		};
 		return labels[type] || type;
 	},
+
+	getThresholdLabel(key) {
+		const labels = {
+			'activity_drop': 'Baisse d\'activité',
+			'member_loss': 'Perte de membres',
+			'absence': 'Absence prolongée',
+			'performance': 'Performance',
+			'retard': 'Retard'
+		};
+		return labels[key] || key;
+	},
+
+	getAlertTypeEmoji(type) {
+		const emojis = {
+			'activity_drop': '📉',
+			'member_loss': '👥',
+			'absence': '⏰',
+			'performance': '⚡',
+			'retard': '🕐'
+		};
+		return emojis[type] || '🔔';
+	},
+
+	getAlertTypeLabel(type) {
+		const labels = {
+			'activity_drop': 'Baisse d\'activité',
+			'member_loss': 'Perte de membres',
+			'absence': 'Absence prolongée',
+			'performance': 'Performance',
+			'retard': 'Retard'
+		};
+		return labels[type] || type;
+	},
+
+	async handleConfigModify(interaction, alertManager) {
+		try {
+			const selectedValues = interaction.values;
+			if (!selectedValues || selectedValues.length === 0) {
+				if (!interaction.deferred && !interaction.replied) {
+					await interaction.reply({
+						content: '❌ Aucune option sélectionnée.',
+						ephemeral: true
+					});
+				} else {
+					await interaction.editReply({
+						content: '❌ Aucune option sélectionnée.',
+						ephemeral: true
+					});
+				}
+				return;
+			}
+
+			const selectedOption = selectedValues[0];
+			
+			// Rediriger vers la méthode appropriée selon l'option sélectionnée
+			switch (selectedOption) {
+				case 'thresholds':
+					// Ne pas déférer ici, laisser handleThresholds le faire
+					await this.handleThresholds(interaction, alertManager);
+					break;
+				case 'channels':
+					if (!interaction.deferred && !interaction.replied) {
+						await interaction.deferReply({ ephemeral: true });
+					}
+					await this.handleChannelConfig(interaction, alertManager);
+					break;
+				case 'types':
+					if (!interaction.deferred && !interaction.replied) {
+						await interaction.deferReply({ ephemeral: true });
+					}
+					await this.handleTypeConfig(interaction, alertManager);
+					break;
+				case 'schedule':
+					if (!interaction.deferred && !interaction.replied) {
+						await interaction.deferReply({ ephemeral: true });
+					}
+					await this.handleScheduleConfig(interaction, alertManager);
+					break;
+				default:
+					if (!interaction.deferred && !interaction.replied) {
+						await interaction.reply({
+							content: '❌ Option non reconnue.',
+							ephemeral: true
+						});
+					} else {
+						await interaction.editReply({
+							content: '❌ Option non reconnue.',
+							ephemeral: true
+						});
+					}
+			}
+		} catch (error) {
+			console.error('Erreur dans handleConfigModify:', error);
+			try {
+				if (!interaction.deferred && !interaction.replied) {
+					await interaction.reply({
+						content: '❌ Une erreur est survenue lors de la modification de la configuration.',
+						ephemeral: true
+					});
+				} else {
+					await interaction.editReply({
+						content: '❌ Une erreur est survenue lors de la modification de la configuration.',
+						ephemeral: true
+					});
+				}
+			} catch (replyError) {
+				console.error('Erreur lors de la réponse d\'erreur:', replyError);
+			}
+		}
+	},
+
+	async handleChannelConfig(interaction, alertManager) {
+		// Placeholder pour la configuration des canaux
+		const replyMethod = interaction.replied ? 'editReply' : 'reply';
+		await interaction[replyMethod]({
+			content: '🚧 Configuration des canaux en cours de développement.',
+			ephemeral: true
+		});
+	},
+
+	async handleTypeConfig(interaction, alertManager) {
+		// Placeholder pour la configuration des types
+		const replyMethod = interaction.replied ? 'editReply' : 'reply';
+		await interaction[replyMethod]({
+			content: '🚧 Configuration des types d\'alertes en cours de développement.',
+			ephemeral: true
+		});
+	},
+
+	async handleScheduleConfig(interaction, alertManager) {
+		// Placeholder pour la configuration de la planification
+		const replyMethod = interaction.replied ? 'editReply' : 'reply';
+		await interaction[replyMethod]({
+			content: '🚧 Configuration de la planification en cours de développement.',
+			ephemeral: true
+		});
+	},
+
+	async handleConfigReset(interaction, alertManager) {
+		try {
+			if (!interaction.deferred && !interaction.replied) {
+				await interaction.deferReply({ ephemeral: true });
+			}
+
+			// Créer un embed de confirmation
+			const confirmEmbed = new EmbedBuilder()
+				.setColor('#ff6b6b')
+				.setTitle('⚠️ Réinitialisation de la Configuration')
+				.setDescription('**Êtes-vous sûr de vouloir réinitialiser toute la configuration des alertes ?**\n\n' +
+					'Cette action va :\n' +
+					'• 🔄 Remettre tous les seuils aux valeurs par défaut\n' +
+					'• 📢 Réinitialiser les canaux de notification\n' +
+					'• 🎯 Désactiver tous les types d\'alertes personnalisés\n' +
+					'• ⏰ Remettre la planification par défaut\n\n' +
+					'**⚠️ Cette action est irréversible !**')
+				.setTimestamp()
+				.setFooter({ text: 'Système d\'alertes LUX Compta' });
+
+			// Boutons de confirmation
+			const confirmRow = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('alerts_reset_confirm')
+						.setLabel('✅ Confirmer la réinitialisation')
+						.setStyle(ButtonStyle.Danger),
+					new ButtonBuilder()
+						.setCustomId('alerts_reset_cancel')
+						.setLabel('❌ Annuler')
+						.setStyle(ButtonStyle.Secondary)
+				);
+
+			await interaction.editReply({
+				embeds: [confirmEmbed],
+				components: [confirmRow],
+				ephemeral: true
+			});
+
+		} catch (error) {
+			console.error('Erreur dans handleConfigReset:', error);
+			const replyMethod = interaction.replied ? 'editReply' : 'reply';
+			await interaction[replyMethod]({
+				content: '❌ Une erreur est survenue lors de la préparation de la réinitialisation.',
+				ephemeral: true
+			});
+		}
+	},
+
+	async handleConfigExport(interaction, alertManager) {
+		try {
+			// Récupérer la configuration actuelle
+			const config = await alertManager.getConfig();
+			
+			// Créer le contenu JSON formaté
+			const configJson = JSON.stringify(config, null, 2);
+			
+			// Créer un fichier temporaire
+			const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+			const filename = `alerts-config-${timestamp}.json`;
+			
+			// Créer l'attachment
+			const attachment = new AttachmentBuilder(Buffer.from(configJson, 'utf8'), {
+				name: filename
+			});
+
+			// Créer un embed informatif
+			const exportEmbed = new EmbedBuilder()
+				.setColor('#4CAF50')
+				.setTitle('📤 Export de Configuration')
+				.setDescription('**Configuration des alertes exportée avec succès !**\n\n' +
+					'📁 **Fichier :** `' + filename + '`\n' +
+					'📊 **Contenu :** Configuration complète des alertes\n' +
+					'⏰ **Exporté le :** <t:' + Math.floor(Date.now() / 1000) + ':F>\n\n' +
+					'💡 **Utilisation :** Vous pouvez utiliser ce fichier pour sauvegarder ou restaurer votre configuration.')
+				.setTimestamp()
+				.setFooter({ text: 'Système d\'alertes LUX Compta' });
+
+			if (!interaction.deferred && !interaction.replied) {
+				await interaction.reply({
+					embeds: [exportEmbed],
+					files: [attachment],
+					ephemeral: true
+				});
+			} else {
+				await interaction.editReply({
+					embeds: [exportEmbed],
+					files: [attachment],
+					ephemeral: true
+				});
+			}
+
+		} catch (error) {
+			console.error('Erreur dans handleConfigExport:', error);
+			try {
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '❌ Une erreur est survenue lors de l\'export de la configuration.',
+						ephemeral: true
+					});
+				} else {
+					await interaction.editReply({
+						content: '❌ Une erreur est survenue lors de l\'export de la configuration.',
+						ephemeral: true
+					});
+				}
+			} catch (replyError) {
+				console.error('Erreur lors de la réponse d\'erreur:', replyError);
+			}
+		}
+	},
+
+	async handleResetConfirm(interaction, alertManager) {
+		try {
+			// Réinitialiser la configuration
+			await alertManager.setAlertsEnabled(false);
+			await alertManager.setAlertChannel(null);
+			await alertManager.setThreshold('activity_drop', 50);
+			await alertManager.setThreshold('member_loss', 10);
+			await alertManager.setThreshold('absence', 24);
+
+			// Créer un embed de succès
+			const successEmbed = new EmbedBuilder()
+				.setColor('#4CAF50')
+				.setTitle('✅ Configuration Réinitialisée')
+				.setDescription('**La configuration des alertes a été réinitialisée avec succès !**\n\n' +
+					'**Valeurs par défaut restaurées :**\n' +
+					'• 📢 **Alertes :** Désactivées\n' +
+					'• 📍 **Canal :** Aucun\n' +
+					'• 📉 **Seuil d\'activité :** 50%\n' +
+					'• 👥 **Seuil de membres :** 10 membres\n' +
+					'• ⏰ **Seuil d\'absence :** 24 heures\n\n' +
+					'Vous pouvez maintenant reconfigurer les alertes selon vos besoins.')
+				.setTimestamp()
+				.setFooter({ text: 'Système d\'alertes LUX Compta' });
+
+			await interaction.update({
+				embeds: [successEmbed],
+				components: [],
+				ephemeral: true
+			});
+
+		} catch (error) {
+			console.error('Erreur dans handleResetConfirm:', error);
+			await interaction.update({
+				content: '❌ Une erreur est survenue lors de la réinitialisation de la configuration.',
+				embeds: [],
+				components: [],
+				ephemeral: true
+			});
+		}
+	},
+
+	async handleResetCancel(interaction, alertManager) {
+		try {
+			// Créer un embed d'annulation
+			const cancelEmbed = new EmbedBuilder()
+				.setColor('#6c757d')
+				.setTitle('❌ Réinitialisation Annulée')
+				.setDescription('**La réinitialisation de la configuration a été annulée.**\n\n' +
+					'Votre configuration actuelle des alertes reste inchangée.')
+				.setTimestamp()
+				.setFooter({ text: 'Système d\'alertes LUX Compta' });
+
+			await interaction.update({
+				embeds: [cancelEmbed],
+				components: [],
+				ephemeral: true
+			});
+
+		} catch (error) {
+			console.error('Erreur dans handleResetCancel:', error);
+			await interaction.update({
+				content: '❌ Une erreur est survenue lors de l\'annulation.',
+				embeds: [],
+				components: [],
+				ephemeral: true
+			});
+		}
+	}
 };
