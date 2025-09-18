@@ -307,4 +307,82 @@ module.exports = {
 
 		return `${emoji} ${sign}${percentage}%`;
 	},
+
+	async handleAlertsThresholdSelect(interaction) {
+		const selectedThreshold = interaction.values[0];
+		const alertsCommand = require('../commands/admin/alerts');
+
+		try {
+			// Créer une interaction simulée pour handleThreshold
+			const simulatedInteraction = {
+				...interaction,
+				options: {
+					getString: (name) => {
+						if (name === 'type') return selectedThreshold;
+						return null;
+					},
+				},
+			};
+
+			await alertsCommand.handleThreshold(simulatedInteraction, interaction.client.alertManager);
+		} catch (error) {
+			console.error('❌ Erreur lors de la gestion du seuil d\'alerte:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de la modification du seuil d\'alerte.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async handleAlertsHistoryFilter(interaction) {
+		const selectedFilter = interaction.values[0];
+		const alertsCommand = require('../commands/admin/alerts');
+
+		try {
+			// Créer une interaction simulée pour handleHistory
+			const simulatedInteraction = {
+				...interaction,
+				options: {
+					getString: (name) => {
+						if (name === 'filtre') return selectedFilter;
+						return null;
+					},
+				},
+			};
+
+			await alertsCommand.handleHistory(simulatedInteraction, interaction.client.alertManager);
+		} catch (error) {
+			console.error('❌ Erreur lors du filtrage de l\'historique:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors du filtrage de l\'historique des alertes.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async handleAlertsConfigModify(interaction) {
+		const selectedConfig = interaction.values[0];
+		const alertsCommand = require('../commands/admin/alerts');
+
+		try {
+			// Créer une interaction simulée pour handleConfig
+			const simulatedInteraction = {
+				...interaction,
+				options: {
+					getString: (name) => {
+						if (name === 'paramètre') return selectedConfig;
+						return null;
+					},
+				},
+			};
+
+			await alertsCommand.handleConfig(simulatedInteraction, interaction.client.alertManager);
+		} catch (error) {
+			console.error('❌ Erreur lors de la modification de la configuration:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de la modification de la configuration des alertes.',
+				ephemeral: true,
+			});
+		}
+	},
 };

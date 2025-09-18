@@ -105,6 +105,27 @@ module.exports = {
 			return;
 		}
 
+		// Gestion des sélecteurs de seuils d'alertes
+		if (customId === 'alerts_threshold_select') {
+			const selectMenus = require('../components/selectMenus');
+			await selectMenus.handleAlertsThresholdSelect(interaction);
+			return;
+		}
+
+		// Gestion des sélecteurs de filtres d'historique d'alertes
+		if (customId === 'alerts_history_filter') {
+			const selectMenus = require('../components/selectMenus');
+			await selectMenus.handleAlertsHistoryFilter(interaction);
+			return;
+		}
+
+		// Gestion des sélecteurs de configuration d'alertes
+		if (customId === 'alerts_config_modify') {
+			const selectMenus = require('../components/selectMenus');
+			await selectMenus.handleAlertsConfigModify(interaction);
+			return;
+		}
+
 		// Gestion des actions rapides des alertes
 		if (customId === 'alerts_quick_action') {
 			const selectMenus = require('../components/selectMenus');
