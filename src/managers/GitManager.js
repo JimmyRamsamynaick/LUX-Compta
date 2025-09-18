@@ -256,7 +256,7 @@ class GitManager {
     async backupToGit() {
         try {
             // Créer une branche de sauvegarde
-            const backupBranch = `backup-${moment().format('YYYY-MM-DD-HH-mm')}`;
+            const backupBranch = `backup-${moment().format('DD-MM-YYYY')}`;
             await this.createBranch(backupBranch);
             
             // Commiter tous les fichiers

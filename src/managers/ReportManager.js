@@ -25,7 +25,7 @@ class ReportManager {
 
     async generateReport(period = 'daily') {
         try {
-            const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss');
+            const timestamp = moment().format('DD-MM-YYYY');
             const filename = `rapport_${period}_${timestamp}.csv`;
             const filePath = path.join(this.reportsDir, filename);
             
@@ -225,13 +225,13 @@ class ReportManager {
             let reports = files
                 .filter(file => file.endsWith('.csv'))
                 .map(file => {
-                    const match = file.match(/rapport_(\w+)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.csv/);
+                    const match = file.match(/rapport_(\w+)_(\d{2}-\d{2}-\d{4})\.csv/);
                     if (match) {
                         return {
                             filename: file,
                             period: match[1],
                             timestamp: match[2],
-                            date: moment(match[2], 'YYYY-MM-DD_HH-mm-ss').toDate()
+                            date: moment(match[2], 'DD-MM-YYYY').toDate()
                         };
                     }
                     return null;

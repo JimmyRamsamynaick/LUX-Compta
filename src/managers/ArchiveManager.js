@@ -101,7 +101,8 @@ class ArchiveManager {
             cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
             // Créer une sauvegarde des données actuelles
-            const timestamp = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const timestamp = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
             const backupName = `data_backup_${timestamp}.json`;
             
             // Lire les données actuelles
@@ -228,7 +229,8 @@ class ArchiveManager {
 
     async createManualArchive(type = 'full') {
         try {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const now = new Date();
+            const timestamp = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
             const archiveName = `manual_archive_${type}_${timestamp}`;
             const archiveDir = path.join(this.archivePath, archiveName);
 
