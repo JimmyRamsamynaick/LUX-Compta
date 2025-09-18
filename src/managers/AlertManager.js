@@ -186,9 +186,9 @@ class AlertManager {
 
 	createAlertEmbed(alertType, data) {
 		const colors = {
-			low: 0xFFD700, // Jaune
-			medium: 0xFF8C00, // Orange
-			high: 0xFF0000, // Rouge
+			low: '#ffeb3b',
+			medium: '#ff9800',
+			high: '#f44336',
 		};
 
 		const icons = {
@@ -197,9 +197,27 @@ class AlertManager {
 			no_activity: '💤',
 		};
 
+		// Générer une description par défaut si elle n'existe pas
+		let description = data.description;
+		if (!description) {
+			switch (alertType) {
+				case 'Baisse d\'activité':
+					description = `L'activité du serveur a diminué de manière significative.`;
+					break;
+				case 'Aucune activité':
+					description = `Aucune activité détectée depuis plusieurs heures.`;
+					break;
+				case 'Perte de membres':
+					description = `Le serveur a perdu plusieurs membres récemment.`;
+					break;
+				default:
+					description = `Alerte détectée sur le serveur.`;
+			}
+		}
+
 		const embed = new EmbedBuilder()
-			.setTitle(`${icons[alertType]} ${data.type}`)
-			.setDescription(data.description)
+			.setTitle(`${icons[alertType] || '⚠️'} ${data.type || alertType}`)
+			.setDescription(description)
 			.setColor(colors[data.severity] || colors.medium)
 			.setTimestamp()
 			.setFooter({ text: 'Système d\'alertes LUX Compta' });
@@ -275,7 +293,6 @@ class AlertManager {
 			console.error('❌ Erreur lors de la gestion du bouton d\'alerte:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors du traitement de l\'alerte.',
-				ephemeral: true,
 			});
 		}
 	}
@@ -283,7 +300,6 @@ class AlertManager {
 	async acknowledgeAlert(interaction, alertType) {
 		await interaction.reply({
 			content: `✅ Alerte **${alertType}** accusée réception par ${interaction.user.tag}`,
-			ephemeral: true,
 		});
 
 		// Mettre à jour l'historique
@@ -315,7 +331,6 @@ class AlertManager {
 
 		await interaction.reply({
 			embeds: [embed],
-			ephemeral: true,
 		});
 	}
 
@@ -331,7 +346,6 @@ class AlertManager {
 
 		await interaction.reply({
 			content: `🔧 Alerte **${alertType}** marquée comme résolue par ${interaction.user.tag}`,
-			ephemeral: true,
 		});
 	}
 
@@ -447,6 +461,106 @@ class AlertManager {
 				success: false,
 				message: 'Erreur lors de l\'envoi de l\'alerte de test',
 				error: error.message
+			};
+		}
+	}
+
+	// Méthodes de configuration des alertes
+	async setAlertChannel(channelId) {
+		try {
+			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
+			
+			if (!config.alerts) {
+				config.alerts = {};
+			}
+			
+			config.alerts.channelId = channelId;
+			
+			await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
+			console.log(`✅ Canal d'alertes configuré: ${channelId}`);
+			
+			return true;
+		} catch (error) {
+			console.error('❌ Erreur lors de la configuration du canal d\'alertes:', error);
+			return false;
+		}
+	}
+
+	async setAlertsEnabled(enabled) {
+		try {
+			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
+			
+			if (!config.alerts) {
+				config.alerts = {};
+			}
+			
+			config.alerts.enabled = enabled;
+			
+			await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
+			console.log(`✅ Alertes ${enabled ? 'activées' : 'désactivées'}`);
+			
+			return true;
+		} catch (error) {
+			console.error('❌ Erreur lors de la configuration des alertes:', error);
+			return false;
+		}
+	}
+
+	async setThreshold(type, value) {
+		try {
+			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
+			
+			if (!config.alerts) {
+				config.alerts = {};
+			}
+			if (!config.alerts.thresholds) {
+				config.alerts.thresholds = {};
+			}
+			
+			const thresholdMap = {
+				'activity_drop': 'activityThreshold',
+				'member_loss': 'memberDropThreshold',
+				'absence': 'noActivityThreshold'
+			};
+			
+			const configKey = thresholdMap[type];
+			if (configKey) {
+				config.alerts.thresholds[configKey] = value;
+				await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
+				console.log(`✅ Seuil ${type} configuré: ${value}%`);
+				return true;
+			}
+			
+			return false;
+		} catch (error) {
+			console.error('❌ Erreur lors de la configuration du seuil:', error);
+			return false;
+		}
+	}
+
+	async getConfig() {
+		try {
+			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
+			
+			return {
+				enabled: config.alerts?.enabled || false,
+				channel: config.alerts?.channelId || null,
+				thresholds: {
+					activity_drop: config.alerts?.thresholds?.activityThreshold || 50,
+					member_loss: config.alerts?.thresholds?.memberDropThreshold || 10,
+					absence: config.alerts?.thresholds?.noActivityThreshold || 24
+				}
+			};
+		} catch (error) {
+			console.error('❌ Erreur lors de la lecture de la configuration:', error);
+			return {
+				enabled: false,
+				channel: null,
+				thresholds: {
+					activity_drop: 50,
+					member_loss: 10,
+					absence: 24
+				}
 			};
 		}
 	}

@@ -92,7 +92,6 @@ module.exports = {
 			if (!alertManager) {
 				return await interaction.reply({
 					content: '❌ Le gestionnaire d\'alertes n\'est pas disponible.',
-					ephemeral: true,
 				});
 			}
 
@@ -121,10 +120,10 @@ module.exports = {
 			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage, ephemeral: true });
+				await interaction.followUp({ content: errorMessage });
 			}
 			else {
-				await interaction.reply({ content: errorMessage, ephemeral: true });
+				await interaction.reply({ content: errorMessage });
 			}
 		}
 	},
@@ -167,7 +166,6 @@ module.exports = {
 
 				await interaction.reply({
 					embeds: [embed],
-					ephemeral: true,
 				});
 			}
 			else {
@@ -180,7 +178,6 @@ module.exports = {
 			console.error('❌ Erreur lors de la configuration:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la configuration des alertes.',
-				ephemeral: true,
 			});
 		}
 	},
@@ -216,13 +213,11 @@ module.exports = {
 
 				await interaction.reply({
 					embeds: [embed],
-					ephemeral: true,
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la configuration du seuil.',
-					ephemeral: true,
 				});
 			}
 
@@ -231,7 +226,6 @@ module.exports = {
 			console.error('❌ Erreur lors de la configuration du seuil:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la configuration du seuil d\'alerte.',
-				ephemeral: true,
 			});
 		}
 	},
@@ -240,7 +234,7 @@ module.exports = {
 		const type = interaction.options.getString('type');
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply();
 
 			const testResult = await alertManager.testAlert(type);
 
@@ -288,7 +282,6 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors du test de l\'alerte.',
-					ephemeral: true,
 				});
 			}
 		}
@@ -298,7 +291,7 @@ module.exports = {
 		const limite = interaction.options.getInteger('limite') || 10;
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply();
 
 			const history = await alertManager.getAlertHistory(limite);
 
@@ -353,7 +346,6 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la récupération de l\'historique des alertes.',
-					ephemeral: true,
 				});
 			}
 		}
@@ -361,7 +353,7 @@ module.exports = {
 
 	async handleStatus(interaction, alertManager) {
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply();
 
 			const status = await alertManager.getStatus();
 
@@ -423,9 +415,8 @@ module.exports = {
 				});
 			}
 			else {
-				await interaction.reply({
+				await interaction.editReply({
 					content: '❌ Erreur lors de la récupération du statut des alertes.',
-					ephemeral: true,
 				});
 			}
 		}
@@ -465,7 +456,6 @@ module.exports = {
 
 			await interaction.reply({
 				embeds: [embed],
-				ephemeral: true,
 			});
 
 		}
@@ -473,7 +463,6 @@ module.exports = {
 			console.error('❌ Erreur lors de l\'affichage de la configuration:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de l\'affichage de la configuration.',
-				ephemeral: true,
 			});
 		}
 	},

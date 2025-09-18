@@ -227,8 +227,7 @@ module.exports = {
 			// Vérifier que c'est un canal textuel
 			if (channel.type !== 0) {
 				return await interaction.reply({
-					content: '❌ Le canal sélectionné doit être un canal textuel.',
-					ephemeral: true,
+					content: '❌ Le canal sélectionné doit être un canal textuel.'
 				});
 			}
 
@@ -236,8 +235,7 @@ module.exports = {
 			const botPermissions = channel.permissionsFor(interaction.client.user);
 			if (!botPermissions.has(['SendMessages', 'ViewChannel'])) {
 				return await interaction.reply({
-					content: '❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).',
-					ephemeral: true,
+					content: '❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).'
 				});
 			}
 
@@ -294,30 +292,9 @@ module.exports = {
 			await channel.send({ embeds: [testEmbed] });
 
 			// Répondre à l'utilisateur
-			const successEmbed = new EmbedBuilder()
-				.setTitle('✅ Canal de logs configuré avec succès')
-				.setDescription(`Le canal ${channel} a été configuré pour recevoir les logs du bot.`)
-				.setColor('#00ff00')
-				.addFields([
-					{
-						name: '📝 Canal configuré',
-						value: `${channel} (${channel.id})`,
-						inline: true,
-					},
-					{
-						name: '🔧 Configuration',
-						value: 'Sauvegardée dans config.json',
-						inline: true,
-					},
-					{
-						name: '✅ Test',
-						value: 'Message de test envoyé',
-						inline: true,
-					},
-				])
-				.setTimestamp();
-
-			await interaction.reply({ embeds: [successEmbed], ephemeral: true });
+			await interaction.reply({
+				content: `✅ **Canal de logs configuré avec succès**\n\nLe canal ${channel} a été configuré pour recevoir les logs du bot.\n\n📝 **Canal configuré**\n${channel} (${channel.id})\n\n🔧 **Configuration**\nSauvegardée dans config.json\n\n✅ **Test**\nMessage de test envoyé`
+			});
 
 			// Log dans la console
 			console.log(`📝 Canal de logs configuré: ${channel.name} (${channel.id}) par ${interaction.user.tag}`);
@@ -326,20 +303,9 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur lors de la configuration du canal de logs:', error);
 
-			const errorEmbed = new EmbedBuilder()
-				.setTitle('❌ Erreur de configuration')
-				.setDescription('Impossible de configurer le canal de logs.')
-				.setColor('#ff0000')
-				.addFields([
-					{
-						name: '🚫 Erreur',
-						value: error.message || 'Erreur inconnue',
-						inline: false,
-					},
-				])
-				.setTimestamp();
-
-			await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+			await interaction.reply({
+				content: `❌ **Erreur de configuration**\n\nImpossible de configurer le canal de logs.\n\n🚫 **Erreur**\n${error.message || 'Erreur inconnue'}`
+			});
 		}
 	},
 
