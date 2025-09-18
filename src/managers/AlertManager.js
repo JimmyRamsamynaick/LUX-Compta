@@ -134,67 +134,64 @@ class AlertManager {
 	async sendAlert(alertType, data) {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			const channelId = config.alerts.channelId;
+			
+			if (!config.enabled) {
+				console.log('⚠️ Alertes désactivées');
+				return;
+			}
 
-			if (!channelId) {
+			if (!config.channel_id) {
 				console.log('⚠️ Canal d\'alerte non configuré');
 				return;
 			}
 
-			const channel = await this.client.channels.fetch(channelId);
+			const channel = this.client.channels.cache.get(config.channel_id);
 			if (!channel) {
 				console.log('⚠️ Canal d\'alerte introuvable');
 				return;
 			}
 
-			// Vérifier si cette alerte a déjà été envoyée récemment
-			const recentAlert = this.alertHistory.find(alert =>
-				alert.type === alertType &&
-                new Date() - new Date(alert.timestamp) < 3600000, // 1 heure
+			// Vérifier si une alerte similaire a été envoyée récemment
+			const recentAlert = this.alertHistory.find(alert => 
+				alert.type === alertType && 
+				Date.now() - alert.timestamp < 3600000 // 1 heure
 			);
 
 			if (recentAlert) {
-				console.log(`⏭️ Alerte ${alertType} déjà envoyée récemment`);
+				console.log(`⚠️ Alerte "${alertType}" déjà envoyée récemment`);
 				return;
 			}
 
-			// Créer l'embed d'alerte
-			const embed = this.createAlertEmbed(alertType, data);
-			const components = this.createAlertComponents(alertType, data);
-
-			await channel.send({
-				embeds: [embed],
-				components: components,
+			// Créer les components au lieu d'un embed
+			const alertComponents = this.createAlertComponents(alertType, data);
+			
+			// Envoyer l'alerte avec components
+			const message = await channel.send({
+				content: this.createAlertContent(alertType, data),
+				components: alertComponents
 			});
 
-			// Enregistrer l'alerte dans l'historique
+			// Enregistrer dans l'historique
 			this.alertHistory.push({
 				type: alertType,
 				data: data,
-				timestamp: new Date().toISOString(),
-				resolved: false,
+				timestamp: Date.now(),
+				messageId: message.id
 			});
 
 			await this.saveAlertData();
-			console.log(`🚨 Alerte ${alertType} envoyée`);
+			console.log(`✅ Alerte "${alertType}" envoyée`);
 
-		}
-		catch (error) {
+		} catch (error) {
 			console.error('❌ Erreur lors de l\'envoi d\'alerte:', error);
 		}
 	}
 
-	createAlertEmbed(alertType, data) {
-		const colors = {
-			low: '#ffeb3b',
-			medium: '#ff9800',
-			high: '#f44336',
-		};
-
+	createAlertContent(alertType, data) {
 		const icons = {
 			'Baisse d\'activité': '📉',
-			'Perte de membres importante': '👥',
-			'Aucune activité détectée': '💤',
+			'Perte de membres': '👥',
+			'Aucune activité': '💤',
 			low_activity: '📉',
 			member_drop: '👥',
 			no_activity: '💤',
@@ -218,64 +215,106 @@ class AlertManager {
 			}
 		}
 
-		const embed = new EmbedBuilder()
-			.setTitle(`${icons[alertType] || icons[data.type] || '⚠️'} ${data.type || alertType}`)
-			.setDescription(description)
-			.setColor(colors[data.severity] || colors.medium)
-			.setTimestamp()
-			.setFooter({ text: 'Système d\'alertes LUX Compta' });
+		const severityEmojis = {
+			low: '🟡',
+			medium: '🟠', 
+			high: '🔴',
+			critical: '🚨'
+		};
 
-		// Ajouter des champs spécifiques selon le type d'alerte
-		switch (alertType) {
-		case 'low_activity':
-			embed.addFields(
-				{ name: '📊 Activité actuelle', value: `${data.current} messages`, inline: true },
-				{ name: '📈 Activité précédente', value: `${data.previous} messages`, inline: true },
-				{ name: '📉 Baisse', value: `${((data.previous - data.current) / data.previous * 100).toFixed(1)}%`, inline: true },
-			);
-			break;
+		const severity = data.severity || 'medium';
+		const icon = icons[alertType] || icons[data.type] || '⚠️';
+		const severityEmoji = severityEmojis[severity] || '🟠';
 
-		case 'member_drop':
-			embed.addFields(
-				{ name: '👥 Membres actuels', value: `${data.current}`, inline: true },
-				{ name: '👥 Membres précédents', value: `${data.previous}`, inline: true },
-				{ name: '📉 Perte', value: `${data.drop} membres`, inline: true },
-			);
-			break;
+		let content = `${severityEmoji} **ALERTE ${alertType.toUpperCase()}** ${icon}\n\n`;
+		content += `📋 **Description:** ${description}\n`;
+		content += `⏰ **Détectée le:** <t:${Math.floor(Date.now() / 1000)}:F>\n`;
+		content += `🎯 **Sévérité:** ${severity.toUpperCase()}\n\n`;
 
-		case 'no_activity':
-			embed.addFields(
-				{ name: '⏰ Durée', value: `${data.hours} heures`, inline: true },
-				{ name: '📊 Messages', value: '0', inline: true },
-				{ name: '🔍 Statut', value: 'Surveillance active', inline: true },
-			);
-			break;
+		// Ajouter des détails spécifiques selon le type d'alerte
+		if (alertType === 'Baisse d\'activité' && data.decline) {
+			content += `📊 **Baisse d'activité:** ${data.decline}%\n`;
+			content += `📈 **Activité actuelle:** ${data.currentActivity}\n`;
+			content += `📉 **Activité précédente:** ${data.previousActivity}\n`;
+		} else if (alertType === 'Aucune activité' && data.hoursSinceLastActivity) {
+			content += `⏱️ **Heures sans activité:** ${data.hoursSinceLastActivity}h\n`;
+			content += `⚠️ **Seuil configuré:** ${data.threshold}h\n`;
+		} else if (alertType === 'Perte de membres' && data.loss) {
+			content += `👥 **Membres perdus:** ${data.loss}\n`;
+			content += `📊 **Membres actuels:** ${data.currentMembers}\n`;
+			content += `📈 **Membres précédents:** ${data.previousMembers}\n`;
 		}
 
-		return embed;
+		return content;
 	}
 
 	createAlertComponents(alertType, data) {
-		const actionRow = new ActionRowBuilder()
+		const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
+
+		const components = [];
+
+		// Menu de sélection pour les actions rapides (Type 17)
+		const selectMenu = new StringSelectMenuBuilder()
+			.setCustomId('alert_action_select')
+			.setPlaceholder('Choisir une action...')
+			.addOptions([
+				{
+					label: 'Marquer comme résolu',
+					description: 'Marquer cette alerte comme résolue',
+					value: 'resolve',
+					emoji: '✅'
+				},
+				{
+					label: 'Ignorer temporairement',
+					description: 'Ignorer cette alerte pendant 1 heure',
+					value: 'snooze',
+					emoji: '⏰'
+				},
+				{
+					label: 'Voir les détails',
+					description: 'Afficher plus d\'informations sur cette alerte',
+					value: 'details',
+					emoji: '📊'
+				},
+				{
+					label: 'Configurer les seuils',
+					description: 'Modifier les paramètres d\'alerte',
+					value: 'configure',
+					emoji: '⚙️'
+				}
+			]);
+
+		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+		components.push(selectRow);
+
+		// Boutons d'action rapide (Type 10)
+		const quickButtons = new ActionRowBuilder()
 			.addComponents(
 				new ButtonBuilder()
-					.setCustomId(`alert_acknowledge_${alertType}`)
-					.setLabel('Accusé de réception')
-					.setStyle(ButtonStyle.Primary)
+					.setCustomId('alert_resolve_quick')
+					.setLabel('Résoudre')
+					.setStyle(ButtonStyle.Success)
 					.setEmoji('✅'),
 				new ButtonBuilder()
-					.setCustomId(`alert_details_${alertType}`)
-					.setLabel('Détails')
+					.setCustomId('alert_snooze_quick')
+					.setLabel('Reporter')
 					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('⏰'),
+				new ButtonBuilder()
+					.setCustomId('alert_details_quick')
+					.setLabel('Détails')
+					.setStyle(ButtonStyle.Primary)
 					.setEmoji('📊'),
 				new ButtonBuilder()
-					.setCustomId(`alert_resolve_${alertType}`)
-					.setLabel('Marquer comme résolu')
-					.setStyle(ButtonStyle.Success)
-					.setEmoji('🔧'),
+					.setCustomId('alert_dismiss_quick')
+					.setLabel('Ignorer')
+					.setStyle(ButtonStyle.Danger)
+					.setEmoji('❌')
 			);
 
-		return [actionRow];
+		components.push(quickButtons);
+
+		return components;
 	}
 
 	async handleAlertButton(interaction, action, alertType) {
