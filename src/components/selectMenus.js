@@ -374,6 +374,8 @@ module.exports = {
 				replied: false,
 				deferred: false,
 				reply: async (options) => {
+					// Marquer comme répondu pour éviter les doubles réponses
+					simulatedInteraction.replied = true;
 					return await interaction.reply(options);
 				},
 				editReply: async (options) => {
@@ -383,6 +385,8 @@ module.exports = {
 					return await interaction.followUp(options);
 				},
 				deferReply: async (options) => {
+					// Marquer comme différé pour éviter les doubles réponses
+					simulatedInteraction.deferred = true;
 					return await interaction.deferReply(options);
 				},
 				options: {
@@ -398,10 +402,19 @@ module.exports = {
 			await alertsCommand.handleConfig(simulatedInteraction, interaction.client.alertManager);
 		} catch (error) {
 			console.error('❌ Erreur lors de la modification de la configuration:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la modification de la configuration des alertes.',
-				ephemeral: true,
-			});
+			// Vérifier si l'interaction n'a pas déjà été répondue
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.reply({
+					content: '❌ Erreur lors de la modification de la configuration des alertes.',
+					ephemeral: true,
+				});
+			} else {
+				// Si déjà répondue, utiliser followUp
+				await interaction.followUp({
+					content: '❌ Erreur lors de la modification de la configuration des alertes.',
+					ephemeral: true,
+				});
+			}
 		}
 	},
 };

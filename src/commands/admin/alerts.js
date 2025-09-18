@@ -185,10 +185,19 @@ module.exports = {
 							.setEmoji('⚙️'),
 					);
 
-				await interaction.reply({
-					content: content,
-					components: [buttons],
-				});
+				// Vérifier si l'interaction n'a pas déjà été répondue
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: content,
+						components: [buttons],
+					});
+				} else {
+					// Si déjà répondue, utiliser editReply
+					await interaction.editReply({
+						content: content,
+						components: [buttons],
+					});
+				}
 			}
 			else {
 				// Afficher la configuration actuelle
@@ -198,9 +207,18 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la configuration:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la configuration des alertes.',
-			});
+			// Vérifier si l'interaction n'a pas déjà été répondue
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.reply({
+					content: '❌ Erreur lors de la configuration des alertes.',
+				});
+			} else {
+				// Si déjà répondue, utiliser followUp
+				await interaction.followUp({
+					content: '❌ Erreur lors de la configuration des alertes.',
+					ephemeral: true,
+				});
+			}
 		}
 	},
 
