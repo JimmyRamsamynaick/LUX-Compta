@@ -40,7 +40,7 @@ module.exports = {
 
 		// Vérifier si l'utilisateur a les permissions admin
 		const isAdmin = interaction.member && interaction.member.roles && interaction.member.roles.cache.some(role =>
-			config.adminRoles && config.adminRoles.includes(role.name)
+			config.permissions && config.permissions.admin_roles && config.permissions.admin_roles.includes(role.name)
 		);
 
 		if (isAdmin) {

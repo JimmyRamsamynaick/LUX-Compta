@@ -33,7 +33,7 @@ module.exports = {
 
 	async execute(interaction) {
 		// Vérifier les permissions admin
-		if (!interaction.member.roles.cache.some(role => config.permissions.adminRoles.includes(role.name))) {
+		if (!interaction.member.roles.cache.some(role => config.permissions.admin_roles.includes(role.name))) {
 			return interaction.reply({
 				content: '❌ Vous n\'avez pas les permissions nécessaires pour utiliser cette commande.',
 				ephemeral: true,

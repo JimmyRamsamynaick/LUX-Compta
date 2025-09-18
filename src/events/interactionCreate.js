@@ -205,7 +205,7 @@ module.exports = {
 				config.reports.autoArchive = newValue.toLowerCase() === 'true';
 				break;
 			case 'admin_roles':
-				config.permissions.adminRoles = newValue.split(',').map(role => role.trim());
+				config.permissions.admin_roles = newValue.split(',').map(role => role.trim());
 				break;
 			}
 

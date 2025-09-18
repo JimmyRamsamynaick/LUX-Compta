@@ -54,7 +54,7 @@ module.exports = {
 
 	async execute(interaction) {
 		// Vérifier les permissions admin
-		if (!interaction.member.roles.cache.some(role => config.permissions.adminRoles.includes(role.name))) {
+		if (!interaction.member.roles.cache.some(role => config.permissions.admin_roles.includes(role.name))) {
 			return interaction.reply({
 				content: '❌ Vous n\'avez pas les permissions nécessaires pour utiliser cette commande.',
 				ephemeral: true,
@@ -110,7 +110,7 @@ module.exports = {
 		embed.addFields(
 			{ name: '🚨 Alertes', value: `**Activées:** ${config.alerts.enabled ? '✅' : '❌'}\n**Seuil:** ${config.alerts.activityThreshold}%\n**Cooldown:** ${config.alerts.cooldown}h`, inline: true },
 			{ name: '🔧 Git', value: `**Auto-commit:** ${config.git.autoCommit ? '✅' : '❌'}\n**Fréquence:** ${config.git.frequency}\n**Tags auto:** ${config.git.autoTag ? '✅' : '❌'}`, inline: true },
-			{ name: '👥 Permissions', value: `**Admins:** ${config.permissions.adminRoles.join(', ')}\n**Stats:** ${config.permissions.statsAccess.join(', ')}`, inline: true },
+			{ name: '👥 Permissions', value: `**Admins:** ${config.permissions.admin_roles.join(', ')}\n**Stats:** ${config.permissions.stats_access.join(', ')}`, inline: true },
 		);
 
 		const buttons = new ActionRowBuilder()
@@ -381,7 +381,7 @@ module.exports = {
 		case 'auto_archive':
 			return config.reports.autoArchive;
 		case 'admin_roles':
-			return config.permissions.adminRoles.join(',');
+			return config.permissions.admin_roles.join(',');
 		default:
 			return '';
 		}
