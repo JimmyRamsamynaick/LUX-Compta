@@ -181,11 +181,22 @@ module.exports = {
 		const selectedType = interaction.values[0];
 		const alertsCommand = require('../commands/admin/alerts');
 		
+		// Utiliser deferUpdate pour les select menus
 		await interaction.deferUpdate();
 		
 		try {
+			// Créer une nouvelle interaction simulée pour handleTest
+			const simulatedInteraction = {
+				...interaction,
+				deferred: true,
+				replied: false,
+				editReply: interaction.editReply.bind(interaction),
+				followUp: interaction.followUp.bind(interaction),
+				client: interaction.client
+			};
+			
 			// Appeler la fonction handleTest avec le type sélectionné
-			await alertsCommand.handleTest(interaction, interaction.client.alertManager, selectedType);
+			await alertsCommand.handleTest(simulatedInteraction, interaction.client.alertManager, selectedType);
 		} catch (error) {
 			console.error('Erreur lors du test d\'alerte:', error);
 			

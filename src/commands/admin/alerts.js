@@ -308,7 +308,10 @@ module.exports = {
 	},
 
 	async handleTest(interaction, alertManager, type = null) {
-		await interaction.deferReply();
+		// Vérifier si l'interaction a déjà été répondue
+		if (!interaction.deferred && !interaction.replied) {
+			await interaction.deferReply();
+		}
 
 		// Si type n'est pas fourni, essayer de le récupérer depuis les options (commande slash)
 		if (!type && interaction.options) {
@@ -381,10 +384,18 @@ module.exports = {
 						.setEmoji('📋'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [testSelect, buttons],
-			});
+			// Utiliser editReply ou followUp selon l'état de l'interaction
+			if (interaction.deferred) {
+				await interaction.editReply({
+					content: content,
+					components: [testSelect, buttons],
+				});
+			} else {
+				await interaction.followUp({
+					content: content,
+					components: [testSelect, buttons],
+				});
+			}
 		}
 		catch (error) {
 			console.error('❌ Erreur lors du test d\'alerte:', error);
@@ -395,7 +406,15 @@ module.exports = {
 			content += `📝 **Type demandé:** ${type || 'Non spécifié'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			// Utiliser editReply ou followUp selon l'état de l'interaction
+			if (interaction.deferred) {
+				await interaction.editReply({ content: content });
+			} else {
+				await interaction.followUp({ 
+					content: content,
+					ephemeral: true 
+				});
+			}
 		}
 	},
 
