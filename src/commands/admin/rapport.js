@@ -55,7 +55,7 @@ module.exports = {
 			console.error('Erreur dans la commande rapport:', error);
 			await interaction.reply({
 				content: '❌ Une erreur est survenue lors de l\'exécution de la commande.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -137,7 +137,7 @@ module.exports = {
 			console.error('Erreur lors de la génération du rapport:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de la génération du rapport.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -153,7 +153,7 @@ module.exports = {
 			if (reports.length === 0) {
 				return interaction.editReply({
 					content: '📋 Aucun rapport disponible.',
-					flags: 64,
+					
 				});
 			}
 
@@ -211,7 +211,7 @@ module.exports = {
 			console.error('Erreur lors de la liste des rapports:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de la récupération de la liste des rapports.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -275,7 +275,7 @@ module.exports = {
 			console.error('Erreur lors de l\'archivage:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de l\'archivage des rapports.',
-				flags: 64,
+				
 			});
 		}
 	},

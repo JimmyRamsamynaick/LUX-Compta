@@ -128,7 +128,7 @@ class DashboardManager {
 			await interaction.reply({
 				embeds: [embed],
 				components: components,
-				flags: 64,
+				
 			});
 
 		}

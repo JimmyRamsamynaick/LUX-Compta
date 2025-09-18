@@ -96,7 +96,7 @@ module.exports = {
 			if (!customizationManager) {
 				return await interaction.reply({
 					content: '❌ Le gestionnaire de personnalisation n\'est pas disponible.',
-					flags: 64,
+					
 				});
 			}
 
@@ -122,10 +122,10 @@ module.exports = {
 			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage, flags: 64 });
+				await interaction.followUp({ content: errorMessage,  });
 			}
 			else {
-				await interaction.reply({ content: errorMessage, flags: 64 });
+				await interaction.reply({ content: errorMessage,  });
 			}
 		}
 	},
@@ -138,7 +138,7 @@ module.exports = {
 			console.error('❌ Erreur lors de l\'affichage du menu:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de l\'ouverture du menu de personnalisation.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -170,7 +170,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la gestion du thème:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la gestion du thème.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -184,7 +184,7 @@ module.exports = {
 			if (!customizationManager.validateColor(valeur)) {
 				return await interaction.reply({
 					content: '❌ Format de couleur invalide. Utilisez le format hexadécimal (ex: #00ff00).',
-					flags: 64,
+					
 				});
 			}
 
@@ -220,13 +220,13 @@ module.exports = {
 				await interaction.reply({
 					content: content,
 					components: [colorButtons],
-					flags: 64,
+					
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la mise à jour de la couleur.',
-					flags: 64,
+					
 				});
 			}
 
@@ -235,7 +235,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la modification de couleur:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la modification de la couleur.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -249,7 +249,7 @@ module.exports = {
 			if (!customizationManager.validateEmoji(valeur)) {
 				return await interaction.reply({
 					content: '❌ Format d\'emoji invalide.',
-					flags: 64,
+					
 				});
 			}
 
@@ -285,13 +285,13 @@ module.exports = {
 				await interaction.reply({
 					content: content,
 					components: [emojiButtons],
-					flags: 64,
+					
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la mise à jour de l\'emoji.',
-					flags: 64,
+					
 				});
 			}
 
@@ -300,7 +300,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la modification d\'emoji:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la modification de l\'emoji.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -384,13 +384,13 @@ module.exports = {
 			await interaction.reply({
 				content: content,
 				components: [selectRow, themeButtons],
-				flags: 64,
+				
 			});
 		}
 		else {
 			await interaction.reply({
 				content: `❌ Impossible d'appliquer le thème "${nom}". Vérifiez que le thème existe.`,
-				flags: 64,
+				
 			});
 		}
 	},
@@ -399,7 +399,7 @@ module.exports = {
 		if (!nom) {
 			return await interaction.reply({
 				content: '❌ Vous devez spécifier un nom pour le nouveau thème.',
-				flags: 64,
+				
 			});
 		}
 
@@ -442,13 +442,13 @@ module.exports = {
 			await interaction.reply({
 				content: content,
 				components: [createButtons],
-				flags: 64,
+				
 			});
 		}
 		else {
 			await interaction.reply({
 				content: '❌ Erreur lors de la création du thème.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -468,13 +468,13 @@ module.exports = {
 				await interaction.reply({
 					content: `📤 Export du thème "${themeId}" terminé.`,
 					files: [attachment],
-					flags: 64,
+					
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de l\'export du thème.',
-					flags: 64,
+					
 				});
 			}
 
@@ -483,7 +483,7 @@ module.exports = {
 			console.error('❌ Erreur lors de l\'export:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de l\'export du thème.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -491,7 +491,7 @@ module.exports = {
 	async importTheme(interaction, customizationManager) {
 		await interaction.reply({
 			content: '📥 Pour importer un thème, utilisez le menu de personnalisation et sélectionnez l\'option "Importer".',
-			flags: 64,
+			
 		});
 	},
 
@@ -530,13 +530,13 @@ module.exports = {
 				await interaction.reply({
 					content: content,
 					components: [resetButtons],
-					flags: 64,
+					
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la réinitialisation.',
-					flags: 64,
+					
 				});
 			}
 
@@ -545,7 +545,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la réinitialisation:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la réinitialisation de la personnalisation.',
-				flags: 64,
+				
 			});
 		}
 	},

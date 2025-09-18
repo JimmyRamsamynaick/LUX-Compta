@@ -24,7 +24,7 @@ module.exports = {
 	async execute(interaction) {
 		// Le bot peut toujours exécuter ses propres commandes admin
 		// Pas de vérification de permissions utilisateur nécessaire
-		await interaction.deferReply({ flags: 64 });
+		await interaction.deferReply();
 
 		try {
 			const destinataire = interaction.options.getString('destinataire') || 'jimmyramsamynaick@gmail.com';
@@ -233,7 +233,7 @@ module.exports = {
 				await interaction.reply({
 					content: content,
 					components: [buttons],
-					flags: 64,
+					
 				});
 			}
 		}

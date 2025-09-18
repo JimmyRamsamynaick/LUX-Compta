@@ -19,7 +19,7 @@ module.exports = {
 				console.error('Erreur lors de l\'exécution de la commande:', error);
 				const reply = {
 					content: 'Il y a eu une erreur lors de l\'exécution de cette commande !',
-					flags: 64,
+					
 				};
 
 				if (interaction.replied || interaction.deferred) {
@@ -40,7 +40,7 @@ module.exports = {
 				console.error('Erreur lors de la gestion des composants:', error);
 				const reply = {
 					content: 'Il y a eu une erreur lors du traitement de cette interaction !',
-					flags: 64,
+					
 				};
 
 				if (interaction.replied || interaction.deferred) {
@@ -61,7 +61,7 @@ module.exports = {
 				console.error('Erreur lors de la gestion des modals:', error);
 				const reply = {
 					content: 'Il y a eu une erreur lors du traitement de ce formulaire !',
-					flags: 64,
+					
 				};
 
 				if (interaction.replied || interaction.deferred) {
@@ -103,6 +103,26 @@ module.exports = {
 			const selectMenus = require('../components/selectMenus');
 			await selectMenus.handleAlertsQuickAction(interaction);
 			return;
+		}
+
+		// Gestion des boutons de test d'alertes
+		if (customId.startsWith('alerts_test_')) {
+			const alertsCommand = require('../commands/admin/alerts');
+			
+			if (customId === 'alerts_test_all') {
+				await alertsCommand.handleTestAll(interaction);
+				return;
+			}
+			
+			if (customId === 'alerts_test_again') {
+				await alertsCommand.handleTestAgain(interaction);
+				return;
+			}
+			
+			if (customId === 'alerts_test_logs') {
+				await alertsCommand.handleTestLogs(interaction);
+				return;
+			}
 		}
 
 		// Gestion des boutons de téléchargement (Type 10)
@@ -221,7 +241,7 @@ module.exports = {
 
 			await interaction.reply({
 				content: `✅ Paramètre **${parameter}** mis à jour avec la valeur: \`${newValue}\``,
-				flags: 64,
+				
 			});
 
 		}
@@ -229,7 +249,7 @@ module.exports = {
 			console.error('Erreur lors de la mise à jour de la configuration:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la mise à jour de la configuration.',
-				flags: 64,
+				
 			});
 		}
 	},

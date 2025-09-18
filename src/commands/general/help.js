@@ -137,7 +137,7 @@ module.exports = {
 		if (!commandHelp) {
 			return interaction.reply({
 				content: `❌ Commande \`${commandName}\` non trouvée.`,
-				flags: 64,
+				
 			});
 		}
 

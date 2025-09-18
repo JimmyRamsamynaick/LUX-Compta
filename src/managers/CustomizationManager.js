@@ -155,7 +155,7 @@ class CustomizationManager {
 			await interaction.reply({
 				embeds: [embed],
 				components: components,
-				flags: 64,
+				
 			});
 
 		}

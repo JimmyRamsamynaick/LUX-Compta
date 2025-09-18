@@ -89,7 +89,7 @@ module.exports = {
 			console.error('Erreur lors de la sélection de période:', error);
 			await interaction.followUp({
 				content: '❌ Erreur lors de la récupération des données pour cette période.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -171,7 +171,7 @@ module.exports = {
 			console.error('Erreur lors de la sélection de type de rapport:', error);
 			await interaction.followUp({
 				content: '❌ Erreur lors de la récupération des rapports.',
-				flags: 64,
+				
 			});
 		}
 	},

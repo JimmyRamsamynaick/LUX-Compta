@@ -71,7 +71,7 @@ module.exports = {
 			if (!dashboardManager) {
 				return await interaction.reply({
 					content: '❌ Le gestionnaire de dashboard n\'est pas disponible.',
-					flags: 64,
+					
 				});
 			}
 
@@ -94,10 +94,10 @@ module.exports = {
 			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage, flags: 64 });
+				await interaction.followUp({ content: errorMessage,  });
 			}
 			else {
-				await interaction.reply({ content: errorMessage, flags: 64 });
+				await interaction.reply({ content: errorMessage,  });
 			}
 		}
 	},
@@ -118,7 +118,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la création du dashboard:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la création du dashboard.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -147,7 +147,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la gestion du dashboard:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la gestion du dashboard.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -166,13 +166,13 @@ module.exports = {
 
 				await interaction.reply({
 					content: `✅ Mise à jour automatique ${status}${intervalText}.`,
-					flags: 64,
+					
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Aucun dashboard trouvé dans ce canal.',
-					flags: 64,
+					
 				});
 			}
 
@@ -181,7 +181,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la configuration de l\'auto-update:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la configuration de la mise à jour automatique.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -223,7 +223,7 @@ module.exports = {
 				return await interaction.reply({
 					content: content,
 					components: [buttons],
-					flags: 64,
+					
 				});
 			}
 
@@ -298,7 +298,7 @@ module.exports = {
 			await interaction.reply({
 				content: content,
 				components: [dashboardSelect, buttons],
-				flags: 64,
+				
 			});
 
 		}
@@ -310,7 +310,7 @@ module.exports = {
 
 	async refreshDashboards(interaction, dashboardManager) {
 		try {
-			await interaction.deferReply({ flags: 64 });
+			await interaction.deferReply();
 
 			const dashboards = dashboardManager.getAllDashboards();
 			let refreshedCount = 0;
@@ -344,7 +344,7 @@ module.exports = {
 			if (!dashboard) {
 				return await interaction.reply({
 					content: '❌ Aucun dashboard trouvé dans ce canal.',
-					flags: 64,
+					
 				});
 			}
 
@@ -354,13 +354,13 @@ module.exports = {
 			if (success) {
 				await interaction.reply({
 					content: '✅ Dashboard supprimé du cache. Le message reste visible mais ne sera plus mis à jour automatiquement.',
-					flags: 64,
+					
 				});
 			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la suppression du dashboard.',
-					flags: 64,
+					
 				});
 			}
 
@@ -409,7 +409,7 @@ module.exports = {
 				return await interaction.reply({
 					content: content,
 					components: [buttons],
-					flags: 64,
+					
 				});
 			}
 
@@ -488,7 +488,7 @@ module.exports = {
 			await interaction.reply({
 				content: content,
 				components: [settingsSelect, buttons],
-				flags: 64,
+				
 			});
 
 		}

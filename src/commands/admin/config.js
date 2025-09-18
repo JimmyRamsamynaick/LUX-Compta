@@ -81,7 +81,7 @@ module.exports = {
 			console.error('Erreur dans la commande config:', error);
 			await interaction.reply({
 				content: '❌ Une erreur est survenue lors de l\'exécution de la commande.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -260,7 +260,7 @@ module.exports = {
 			console.error('Erreur lors de la réinitialisation:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de la réinitialisation de la configuration.',
-				flags: 64,
+				
 			});
 		}
 	},
@@ -304,7 +304,7 @@ module.exports = {
 			console.error('Erreur lors de la sauvegarde:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de la sauvegarde de la configuration.',
-				flags: 64,
+				
 			});
 		}
 	},

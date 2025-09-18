@@ -198,7 +198,7 @@ module.exports = {
 	},
 
 	async handleThresholds(interaction, alertManager) {
-		await interaction.deferReply({ flags: 64 });
+		await interaction.deferReply();
 
 		const threshold = interaction.options.getString('threshold');
 		const value = interaction.options.getInteger('value');
@@ -308,7 +308,7 @@ module.exports = {
 	},
 
 	async handleTest(interaction, alertManager) {
-		await interaction.deferReply({ flags: 64 });
+		await interaction.deferReply();
 
 		const type = interaction.options.getString('type');
 
@@ -392,7 +392,7 @@ module.exports = {
 	},
 
 	async handleHistory(interaction, alertManager) {
-		await interaction.deferReply({ flags: 64 });
+		await interaction.deferReply();
 
 		const limit = interaction.options.getInteger('limit') || 10;
 
@@ -678,5 +678,130 @@ module.exports = {
 
 			await interaction.editReply({ content: content });
 		}
+	},
+
+	async handleTestAll(interaction) {
+		const alertManager = interaction.client.alertManager;
+		
+		await interaction.deferReply();
+
+		try {
+			let content = '🧪 **TEST DE TOUTES LES ALERTES** 🧪\n\n';
+			content += '⏳ **Lancement des tests en cours...**\n\n';
+
+			await interaction.editReply({ content: content });
+
+			// Tester tous les types d'alertes
+			const testTypes = ['absence', 'retard', 'performance', 'activite'];
+			const results = [];
+
+			for (const type of testTypes) {
+				try {
+					const result = await alertManager.testAlert(type, interaction.guild);
+					results.push({
+						type: type,
+						success: true,
+						message: result.message || 'Test réussi'
+					});
+				} catch (error) {
+					results.push({
+						type: type,
+						success: false,
+						message: error.message || 'Erreur inconnue'
+					});
+				}
+			}
+
+			// Afficher les résultats
+			content = '🧪 **RÉSULTATS DES TESTS** 🧪\n\n';
+			
+			for (const result of results) {
+				const emoji = result.success ? '✅' : '❌';
+				const status = result.success ? 'Réussi' : 'Échec';
+				const typeLabel = this.getTypeLabel(result.type);
+				
+				content += `${emoji} **${typeLabel}:** ${status}\n`;
+				content += `   └ ${result.message}\n\n`;
+			}
+
+			const successCount = results.filter(r => r.success).length;
+			const totalCount = results.length;
+
+			content += `📊 **Résumé:** ${successCount}/${totalCount} tests réussis\n`;
+			content += `⏰ **Tests effectués:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
+
+		} catch (error) {
+			console.error('❌ Erreur lors du test de toutes les alertes:', error);
+			
+			let content = '❌ **ERREUR LORS DU TEST** ❌\n\n';
+			content += '⚠️ **Impossible de tester toutes les alertes.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
+		}
+	},
+
+	async handleTestAgain(interaction) {
+		// Relancer le dernier test effectué
+		await this.handleTest(interaction, interaction.client.alertManager);
+	},
+
+	async handleTestLogs(interaction) {
+		const alertManager = interaction.client.alertManager;
+		
+		await interaction.deferReply();
+
+		try {
+			const logs = await alertManager.getTestLogs();
+			
+			let content = '📋 **LOGS DES TESTS D\'ALERTES** 📋\n\n';
+			
+			if (!logs || logs.length === 0) {
+				content += '📝 **Aucun log de test disponible.**\n\n';
+				content += '💡 **Conseil:** Effectuez d\'abord un test pour générer des logs.';
+			} else {
+				content += `📊 **${logs.length} entrées trouvées**\n\n`;
+				
+				// Afficher les 10 derniers logs
+				const recentLogs = logs.slice(-10);
+				
+				for (const log of recentLogs) {
+					const timestamp = new Date(log.timestamp).toLocaleString('fr-FR');
+					const emoji = log.success ? '✅' : '❌';
+					
+					content += `${emoji} **${timestamp}** - ${log.type}\n`;
+					content += `   └ ${log.message}\n\n`;
+				}
+				
+				if (logs.length > 10) {
+					content += `📝 **Note:** Seuls les 10 derniers logs sont affichés (${logs.length} au total)`;
+				}
+			}
+
+			await interaction.editReply({ content: content });
+
+		} catch (error) {
+			console.error('❌ Erreur lors de la récupération des logs:', error);
+			
+			let content = '❌ **ERREUR LORS DE LA RÉCUPÉRATION** ❌\n\n';
+			content += '⚠️ **Impossible de récupérer les logs de test.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
+		}
+	},
+
+	getTypeLabel(type) {
+		const labels = {
+			'absence': 'Test d\'absence',
+			'retard': 'Test de retard',
+			'performance': 'Test de performance',
+			'activite': 'Test d\'activité'
+		};
+		return labels[type] || type;
 	},
 };
