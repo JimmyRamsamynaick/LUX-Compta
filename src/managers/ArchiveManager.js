@@ -235,7 +235,7 @@ class ArchiveManager {
 		}
 	}
 
-	async createManualArchive(type = 'full') {
+	async createManualArchive(type = 'reports', period = 'month') {
 		try {
 			const now = new Date();
 			const timestamp = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
@@ -244,18 +244,29 @@ class ArchiveManager {
 
 			await fs.mkdir(archiveDir, { recursive: true });
 
+			let fileCount = 0;
+			let totalSize = 0;
+
 			switch (type) {
-			case 'full':
+			case 'all':
 				await this.createFullArchive(archiveDir);
+				fileCount = await this.countFilesInDirectory(archiveDir);
 				break;
 			case 'reports':
 				await this.createReportsArchive(archiveDir);
+				fileCount = await this.countFilesInDirectory(archiveDir);
 				break;
-			case 'data':
+			case 'stats':
 				await this.createDataArchive(archiveDir);
+				fileCount = await this.countFilesInDirectory(archiveDir);
 				break;
-			case 'config':
+			case 'logs':
 				await this.createConfigArchive(archiveDir);
+				fileCount = await this.countFilesInDirectory(archiveDir);
+				break;
+			default:
+				await this.createReportsArchive(archiveDir);
+				fileCount = await this.countFilesInDirectory(archiveDir);
 				break;
 			}
 
@@ -263,16 +274,37 @@ class ArchiveManager {
 			const compressedPath = `${archiveDir}.tar.gz`;
 			await this.createTarGz(archiveDir, compressedPath);
 
+			// Calculer la taille du fichier compressé
+			try {
+				const stats = await fs.stat(compressedPath);
+				totalSize = stats.size;
+			} catch (error) {
+				console.warn('⚠️ Impossible de calculer la taille de l\'archive:', error.message);
+			}
+
 			// Supprimer le dossier non compressé
 			await this.removeDirectory(archiveDir);
 
+			const archiveId = path.basename(compressedPath, '.tar.gz');
 			console.log(`📦 Archive manuelle créée: ${path.basename(compressedPath)}`);
-			return compressedPath;
+			
+			return {
+				success: true,
+				archiveId: archiveId,
+				path: compressedPath,
+				size: this.formatSize(totalSize),
+				fileCount: fileCount,
+				type: type,
+				period: period
+			};
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la création de l\'archive manuelle:', error);
-			throw error;
+			return {
+				success: false,
+				error: error.message || 'Erreur inconnue lors de la création de l\'archive'
+			};
 		}
 	}
 
@@ -459,17 +491,44 @@ class ArchiveManager {
 
 	// Planifier l'archivage automatique
 	startArchiveScheduler() {
-		// Archivage automatique une fois par semaine
-		setInterval(() => {
+		// Programmer l'archivage automatique tous les jours à 2h du matin
+		const schedule = require('node-cron');
+
+		schedule.schedule('0 2 * * *', () => {
+			console.log('🕐 Démarrage de l\'archivage automatique programmé...');
 			this.autoArchive();
-		}, 7 * 24 * 60 * 60 * 1000); // 7 jours
+		});
 
-		// Nettoyage des anciennes archives une fois par mois
-		setInterval(() => {
-			this.deleteOldArchives();
-		}, 30 * 24 * 60 * 60 * 1000); // 30 jours
+		console.log('⏰ Archivage automatique programmé à 02:00');
+	}
 
-		console.log('⏰ Planificateur d\'archivage démarré');
+	async countFilesInDirectory(dirPath) {
+		try {
+			let count = 0;
+			const items = await fs.readdir(dirPath, { withFileTypes: true });
+			
+			for (const item of items) {
+				if (item.isFile()) {
+					count++;
+				} else if (item.isDirectory()) {
+					const subDirPath = path.join(dirPath, item.name);
+					count += await this.countFilesInDirectory(subDirPath);
+				}
+			}
+			
+			return count;
+		} catch (error) {
+			console.warn('⚠️ Erreur lors du comptage des fichiers:', error.message);
+			return 0;
+		}
+	}
+
+	formatSize(bytes) {
+		if (bytes === 0) return '0 B';
+		const k = 1024;
+		const sizes = ['B', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 	}
 }
 
