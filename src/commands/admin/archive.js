@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -190,7 +190,6 @@ module.exports = {
 			const result = await archiveManager.createManualArchive(type, période);
 
 			if (result.success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 				const typeNames = {
 					'reports': 'Rapports',
@@ -206,9 +205,9 @@ module.exports = {
 					'year': 'Dernière année',
 				};
 
-				let content = `📦 **ARCHIVE CRÉÉE** 📦\n\n`;
-				content += `✅ L'archive manuelle a été créée avec succès.\n\n`;
-				content += `📋 **Informations de l'archive:**\n`;
+				let content = '📦 **ARCHIVE CRÉÉE** 📦\n\n';
+				content += '✅ L\'archive manuelle a été créée avec succès.\n\n';
+				content += '📋 **Informations de l\'archive:**\n';
 				content += `📊 **Type:** ${typeNames[type]}\n`;
 				content += `📅 **Période:** ${périodeNames[période]}\n`;
 				content += `🆔 **ID:** ${result.archiveId}\n`;
@@ -233,12 +232,12 @@ module.exports = {
 							.setCustomId('create_another_archive')
 							.setLabel('Créer une autre')
 							.setStyle(ButtonStyle.Success)
-							.setEmoji('➕')
+							.setEmoji('➕'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 			else {
@@ -293,11 +292,10 @@ module.exports = {
 			}
 
 			if (updated) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `⚙️ **CONFIGURATION D'ARCHIVAGE MISE À JOUR** ⚙️\n\n`;
-				content += `✅ Les paramètres d'archivage ont été modifiés avec succès.\n\n`;
-				content += `📋 **Modifications:**\n`;
+				let content = '⚙️ **CONFIGURATION D\'ARCHIVAGE MISE À JOUR** ⚙️\n\n';
+				content += '✅ Les paramètres d\'archivage ont été modifiés avec succès.\n\n';
+				content += '📋 **Modifications:**\n';
 				content += changes.map(change => `✅ ${change}`).join('\n');
 				content += `\n\n⏰ **Mise à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -318,7 +316,7 @@ module.exports = {
 							.setCustomId('reset_archive_config')
 							.setLabel('Réinitialiser')
 							.setStyle(ButtonStyle.Danger)
-							.setEmoji('🔄')
+							.setEmoji('🔄'),
 					);
 
 				await interaction.reply({
@@ -351,9 +349,8 @@ module.exports = {
 			const archives = await archiveManager.listArchives(type);
 
 			if (archives && archives.length > 0) {
-				const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `📋 **ARCHIVES DISPONIBLES** 📋\n\n`;
+				let content = '📋 **ARCHIVES DISPONIBLES** 📋\n\n';
 				content += `📊 **${archives.length} archive(s) trouvée(s)**\n\n`;
 
 				archives.slice(0, 10).forEach((archive, index) => {
@@ -382,8 +379,8 @@ module.exports = {
 							label: archive.name || archive.id,
 							description: `${archive.type} - ${new Date(archive.created).toLocaleDateString('fr-FR')}`,
 							value: archive.id,
-							emoji: '📦'
-						}))
+							emoji: '📦',
+						})),
 					);
 
 				const selectRow = new ActionRowBuilder().addComponents(archiveSelect);
@@ -405,12 +402,12 @@ module.exports = {
 							.setCustomId('cleanup_archives')
 							.setLabel('Nettoyer')
 							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧹')
+							.setEmoji('🧹'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [selectRow, buttons]
+					components: [selectRow, buttons],
 				});
 			}
 			else {
@@ -446,11 +443,10 @@ module.exports = {
 			const result = await archiveManager.restoreArchive(archiveId);
 
 			if (result.success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `📤 **ARCHIVE RESTAURÉE** 📤\n\n`;
-				content += `✅ L'archive a été restaurée avec succès.\n\n`;
-				content += `📋 **Détails de la restauration:**\n`;
+				let content = '📤 **ARCHIVE RESTAURÉE** 📤\n\n';
+				content += '✅ L\'archive a été restaurée avec succès.\n\n';
+				content += '📋 **Détails de la restauration:**\n';
 				content += `📦 **Archive:** ${archiveId}\n`;
 				content += `📁 **Fichiers restaurés:** ${result.fileCount || 0}\n`;
 				content += `📂 **Destination:** ${result.destination || 'Dossier par défaut'}\n\n`;
@@ -473,12 +469,12 @@ module.exports = {
 							.setCustomId('restore_another_archive')
 							.setLabel('Restaurer une autre')
 							.setStyle(ButtonStyle.Success)
-							.setEmoji('📤')
+							.setEmoji('📤'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 			else {
@@ -522,11 +518,10 @@ module.exports = {
 			const result = await archiveManager.deleteArchive(archiveId);
 
 			if (result.success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `🗑️ **ARCHIVE SUPPRIMÉE** 🗑️\n\n`;
-				content += `✅ L'archive a été supprimée avec succès.\n\n`;
-				content += `📋 **Archive supprimée:**\n`;
+				let content = '🗑️ **ARCHIVE SUPPRIMÉE** 🗑️\n\n';
+				content += '✅ L\'archive a été supprimée avec succès.\n\n';
+				content += '📋 **Archive supprimée:**\n';
 				content += `🆔 **ID:** ${archiveId}\n\n`;
 				content += `⏰ **Supprimée le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -547,12 +542,12 @@ module.exports = {
 							.setCustomId('cleanup_more_archives')
 							.setLabel('Nettoyer plus')
 							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧹')
+							.setEmoji('🧹'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 			else {
@@ -588,11 +583,10 @@ module.exports = {
 			const result = await archiveManager.cleanupOldArchives(âge);
 
 			if (result.success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `🧹 **NETTOYAGE TERMINÉ** 🧹\n\n`;
-				content += `✅ Le nettoyage des anciennes archives a été effectué.\n\n`;
-				content += `📋 **Résultats du nettoyage:**\n`;
+				let content = '🧹 **NETTOYAGE TERMINÉ** 🧹\n\n';
+				content += '✅ Le nettoyage des anciennes archives a été effectué.\n\n';
+				content += '📋 **Résultats du nettoyage:**\n';
 				content += `🗑️ **Archives supprimées:** ${result.deletedCount || 0}\n`;
 				content += `💾 **Espace libéré:** ${result.freedSpace ? this.formatSize(result.freedSpace) : 'Inconnu'}\n`;
 				content += `📅 **Critère d'âge:** Plus de ${âge} jours\n\n`;
@@ -615,12 +609,12 @@ module.exports = {
 							.setCustomId('cleanup_more_archives')
 							.setLabel('Nettoyer plus')
 							.setStyle(ButtonStyle.Success)
-							.setEmoji('🧹')
+							.setEmoji('🧹'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 			else {
@@ -654,24 +648,23 @@ module.exports = {
 			const status = await archiveManager.getStatus();
 
 			if (status) {
-				const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `📊 **STATUT DE L'ARCHIVAGE** 📊\n\n`;
-				content += `📋 État actuel du système d'archivage\n\n`;
+				let content = '📊 **STATUT DE L\'ARCHIVAGE** 📊\n\n';
+				content += '📋 État actuel du système d\'archivage\n\n';
 
-				content += `⚙️ **Configuration:**\n`;
+				content += '⚙️ **Configuration:**\n';
 				content += `${status.autoEnabled ? '✅' : '❌'} **Archivage automatique:** ${status.autoEnabled ? 'Activé' : 'Désactivé'}\n`;
 				content += `⏰ **Fréquence:** ${status.frequency || 'Non définie'} jour(s)\n`;
 				content += `📅 **Rétention:** ${status.retention || 'Non définie'} jour(s)\n`;
 				content += `🕒 **Dernière archive auto:** ${status.lastAutoArchive ? new Date(status.lastAutoArchive).toLocaleString('fr-FR') : 'Jamais'}\n\n`;
 
-				content += `📊 **Statistiques:**\n`;
+				content += '📊 **Statistiques:**\n';
 				content += `📦 **Total archives:** ${status.totalArchives || 0}\n`;
 				content += `🤖 **Archives automatiques:** ${status.autoArchives || 0}\n`;
 				content += `👤 **Archives manuelles:** ${status.manualArchives || 0}\n`;
 				content += `💾 **Espace utilisé:** ${status.totalSize ? this.formatSize(status.totalSize) : 'Inconnu'}\n\n`;
 
-				content += `🔮 **Prochaines actions:**\n`;
+				content += '🔮 **Prochaines actions:**\n';
 				content += `📅 **Prochaine archive:** ${status.nextArchive ? new Date(status.nextArchive).toLocaleString('fr-FR') : 'Non planifiée'}\n`;
 				content += `🧹 **Prochaine purge:** ${status.nextCleanup ? new Date(status.nextCleanup).toLocaleString('fr-FR') : 'Non planifiée'}\n\n`;
 
@@ -686,26 +679,26 @@ module.exports = {
 							label: 'Créer archive manuelle',
 							description: 'Créer une nouvelle archive maintenant',
 							value: 'create_manual',
-							emoji: '📦'
+							emoji: '📦',
 						},
 						{
 							label: 'Configurer archivage auto',
 							description: 'Modifier les paramètres automatiques',
 							value: 'config_auto',
-							emoji: '⚙️'
+							emoji: '⚙️',
 						},
 						{
 							label: 'Nettoyer archives',
 							description: 'Supprimer les anciennes archives',
 							value: 'cleanup_old',
-							emoji: '🧹'
+							emoji: '🧹',
 						},
 						{
 							label: 'Voir toutes les archives',
 							description: 'Lister toutes les archives disponibles',
 							value: 'list_all',
-							emoji: '📋'
-						}
+							emoji: '📋',
+						},
 					]);
 
 				const selectRow = new ActionRowBuilder().addComponents(actionSelect);
@@ -727,12 +720,12 @@ module.exports = {
 							.setCustomId('archive_help')
 							.setLabel('Aide')
 							.setStyle(ButtonStyle.Success)
-							.setEmoji('❓')
+							.setEmoji('❓'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [selectRow, buttons]
+					components: [selectRow, buttons],
 				});
 			}
 			else {
@@ -762,10 +755,9 @@ module.exports = {
 	async showCurrentConfig(interaction, archiveManager) {
 		try {
 			const config = await archiveManager.getConfig();
-			const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `⚙️ **CONFIGURATION ACTUELLE DE L'ARCHIVAGE** ⚙️\n\n`;
-			content += `📋 Paramètres actuels du système d'archivage\n\n`;
+			let content = '⚙️ **CONFIGURATION ACTUELLE DE L\'ARCHIVAGE** ⚙️\n\n';
+			content += '📋 Paramètres actuels du système d\'archivage\n\n';
 			content += `${config.autoEnabled ? '✅' : '❌'} **Archivage automatique:** ${config.autoEnabled ? 'Activé' : 'Désactivé'}\n`;
 			content += `⏰ **Fréquence:** ${config.frequency || 'Non définie'} jour(s)\n`;
 			content += `📅 **Rétention:** ${config.retention || 'Non définie'} jour(s)\n\n`;
@@ -780,20 +772,20 @@ module.exports = {
 						label: 'Activer/Désactiver archivage auto',
 						description: 'Basculer l\'archivage automatique',
 						value: 'toggle_auto',
-						emoji: config.autoEnabled ? '❌' : '✅'
+						emoji: config.autoEnabled ? '❌' : '✅',
 					},
 					{
 						label: 'Modifier fréquence',
 						description: 'Changer la fréquence d\'archivage',
 						value: 'change_frequency',
-						emoji: '⏰'
+						emoji: '⏰',
 					},
 					{
 						label: 'Modifier rétention',
 						description: 'Changer la durée de rétention',
 						value: 'change_retention',
-						emoji: '📅'
-					}
+						emoji: '📅',
+					},
 				]);
 
 			const selectRow = new ActionRowBuilder().addComponents(configSelect);
@@ -815,7 +807,7 @@ module.exports = {
 						.setCustomId('export_archive_config')
 						.setLabel('Exporter config')
 						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤')
+						.setEmoji('📤'),
 				);
 
 			await interaction.reply({

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -191,14 +191,13 @@ module.exports = {
 			const dashboards = dashboardManager.getAllDashboards();
 
 			if (dashboards.length === 0) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `📊 **DASHBOARDS ACTIFS** 📊\n\n`;
-				content += `ℹ️ **Aucun dashboard actif trouvé.**\n\n`;
-				content += `💡 **Pour commencer:**\n`;
-				content += `• Utilisez \`/dashboard créer\` pour créer un nouveau dashboard\n`;
-				content += `• Choisissez le type de dashboard adapté à vos besoins\n`;
-				content += `• Configurez la mise à jour automatique si nécessaire\n\n`;
+				let content = '📊 **DASHBOARDS ACTIFS** 📊\n\n';
+				content += 'ℹ️ **Aucun dashboard actif trouvé.**\n\n';
+				content += '💡 **Pour commencer:**\n';
+				content += '• Utilisez `/dashboard créer` pour créer un nouveau dashboard\n';
+				content += '• Choisissez le type de dashboard adapté à vos besoins\n';
+				content += '• Configurez la mise à jour automatique si nécessaire\n\n';
 				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 				// Boutons d'action (Type 10)
@@ -218,19 +217,18 @@ module.exports = {
 							.setCustomId('dashboard_help')
 							.setLabel('Aide')
 							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('❓')
+							.setEmoji('❓'),
 					);
 
 				return await interaction.reply({
 					content: content,
 					components: [buttons],
-					ephemeral: true
+					ephemeral: true,
 				});
 			}
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
-			let content = `📊 **DASHBOARDS ACTIFS** 📊\n\n`;
+			let content = '📊 **DASHBOARDS ACTIFS** 📊\n\n';
 			content += `📈 **${dashboards.length} dashboard(s) trouvé(s)**\n\n`;
 
 			// Afficher les dashboards
@@ -248,9 +246,10 @@ module.exports = {
 					content += `   • **Auto-update:** ${autoUpdateStatus}\n`;
 					content += `   • **Dernière MAJ:** ${lastUpdate}\n`;
 					content += `   • **Créé par:** <@${dashboard.userId}>\n\n`;
-				} catch (error) {
+				}
+				catch (error) {
 					content += `📺 **Canal inconnu** (ID: ${dashboard.channelId})\n`;
-					content += `   • **Erreur:** Canal inaccessible\n\n`;
+					content += '   • **Erreur:** Canal inaccessible\n\n';
 				}
 			}
 
@@ -271,9 +270,9 @@ module.exports = {
 								label: `Dashboard ${dashboard.channelId}`,
 								value: dashboard.channelId,
 								description: `Auto-update: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
-								emoji: dashboard.autoUpdate ? '🟢' : '🔴'
-							}))
-						)
+								emoji: dashboard.autoUpdate ? '🟢' : '🔴',
+							})),
+						),
 				);
 
 			// Boutons d'action (Type 10)
@@ -293,13 +292,13 @@ module.exports = {
 						.setCustomId('dashboard_settings_global')
 						.setLabel('Paramètres globaux')
 						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('⚙️')
+						.setEmoji('⚙️'),
 				);
 
 			await interaction.reply({
 				content: content,
 				components: [dashboardSelect, buttons],
-				ephemeral: true
+				ephemeral: true,
 			});
 
 		}
@@ -374,18 +373,17 @@ module.exports = {
 
 	async showDashboardSettings(interaction, dashboardManager) {
 		try {
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 			const channelId = interaction.channelId;
 			const dashboard = dashboardManager.getDashboardInfo(channelId);
 
 			if (!dashboard) {
-				let content = `⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n`;
-				content += `❌ **Aucun dashboard trouvé dans ce canal.**\n\n`;
-				content += `💡 **Pour commencer:**\n`;
-				content += `• Créez d'abord un dashboard avec \`/dashboard créer\`\n`;
-				content += `• Choisissez le type de dashboard adapté\n`;
-				content += `• Revenez ensuite configurer les paramètres\n\n`;
+				let content = '⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n';
+				content += '❌ **Aucun dashboard trouvé dans ce canal.**\n\n';
+				content += '💡 **Pour commencer:**\n';
+				content += '• Créez d\'abord un dashboard avec `/dashboard créer`\n';
+				content += '• Choisissez le type de dashboard adapté\n';
+				content += '• Revenez ensuite configurer les paramètres\n\n';
 				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 				// Boutons d'action (Type 10)
@@ -405,28 +403,28 @@ module.exports = {
 							.setCustomId('dashboard_help_settings')
 							.setLabel('Aide')
 							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('❓')
+							.setEmoji('❓'),
 					);
 
 				return await interaction.reply({
 					content: content,
 					components: [buttons],
-					ephemeral: true
+					ephemeral: true,
 				});
 			}
 
-			let content = `⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n`;
-			content += `📊 **Configuration du dashboard de ce canal**\n\n`;
+			let content = '⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n';
+			content += '📊 **Configuration du dashboard de ce canal**\n\n';
 
 			// Informations générales
-			content += `📋 **Informations générales:**\n`;
+			content += '📋 **Informations générales:**\n';
 			content += `• **ID Message:** \`${dashboard.messageId}\`\n`;
 			content += `• **Canal:** <#${dashboard.channelId}>\n`;
 			content += `• **Créé par:** <@${dashboard.userId}>\n`;
 			content += `• **Créé le:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:F>\n\n`;
 
 			// Configuration
-			content += `⚙️ **Configuration actuelle:**\n`;
+			content += '⚙️ **Configuration actuelle:**\n';
 			content += `• **Auto-update:** ${dashboard.autoUpdate ? '🟢 Activé' : '🔴 Désactivé'}\n`;
 			content += `• **Dernière MAJ:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:R>\n`;
 			content += `• **Type:** ${dashboard.type || 'Principal'}\n\n`;
@@ -444,27 +442,27 @@ module.exports = {
 								label: dashboard.autoUpdate ? 'Désactiver Auto-update' : 'Activer Auto-update',
 								value: 'toggle_auto_update',
 								description: `Actuellement: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
-								emoji: dashboard.autoUpdate ? '🔴' : '🟢'
+								emoji: dashboard.autoUpdate ? '🔴' : '🟢',
 							},
 							{
 								label: 'Changer intervalle de MAJ',
 								value: 'change_interval',
 								description: 'Modifier la fréquence de mise à jour',
-								emoji: '⏱️'
+								emoji: '⏱️',
 							},
 							{
 								label: 'Modifier type de dashboard',
 								value: 'change_type',
 								description: 'Changer le type d\'affichage',
-								emoji: '🔄'
+								emoji: '🔄',
 							},
 							{
 								label: 'Réinitialiser paramètres',
 								value: 'reset_settings',
 								description: 'Remettre la configuration par défaut',
-								emoji: '🔄'
-							}
-						])
+								emoji: '🔄',
+							},
+						]),
 				);
 
 			// Boutons d'action (Type 10)
@@ -484,13 +482,13 @@ module.exports = {
 						.setCustomId('dashboard_delete_confirm')
 						.setLabel('Supprimer')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️')
+						.setEmoji('🗑️'),
 				);
 
 			await interaction.reply({
 				content: content,
 				components: [settingsSelect, buttons],
-				ephemeral: true
+				ephemeral: true,
 			});
 
 		}

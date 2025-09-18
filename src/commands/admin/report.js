@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -78,8 +78,8 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur dans la commande report:', error);
 
-			let content = `❌ **ERREUR** ❌\n\n`;
-			content += `⚠️ **Une erreur est survenue lors de l'exécution de la commande.**\n\n`;
+			let content = '❌ **ERREUR** ❌\n\n';
+			content += '⚠️ **Une erreur est survenue lors de l\'exécution de la commande.**\n\n';
 			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
 			content += `⏰ **Heure:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -97,7 +97,7 @@ module.exports = {
 
 		const period = interaction.options.getString('period');
 
-		let content = `⏳ **GÉNÉRATION DU RAPPORT** ⏳\n\n`;
+		let content = '⏳ **GÉNÉRATION DU RAPPORT** ⏳\n\n';
 		content += `📊 **Génération du rapport ${this.getPeriodLabel(period)} en cours...**\n\n`;
 		content += `⏰ **Démarré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -106,11 +106,10 @@ module.exports = {
 		try {
 			const result = await reportManager.generateReport(period);
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			content = `✅ **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n`;
+			content = '✅ **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n';
 			content += `📊 **Le rapport ${this.getPeriodLabel(period)} a été généré avec succès !**\n\n`;
-			content += `📋 **Détails du rapport:**\n`;
+			content += '📋 **Détails du rapport:**\n';
 			content += `• **📄 Fichier:** ${result.filename}\n`;
 			content += `• **📊 Entrées:** ${result.totalEntries}\n`;
 			content += `• **📅 Période:** ${this.getPeriodLabel(period)}\n\n`;
@@ -133,17 +132,17 @@ module.exports = {
 						.setCustomId('report_view')
 						.setLabel('Aperçu')
 						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('👁️')
+						.setEmoji('👁️'),
 				);
 
 			await interaction.editReply({
 				content: content,
-				components: [buttons]
+				components: [buttons],
 			});
 		}
 		catch (error) {
-			content = `❌ **ERREUR DE GÉNÉRATION** ❌\n\n`;
-			content += `⚠️ **Impossible de générer le rapport.**\n\n`;
+			content = '❌ **ERREUR DE GÉNÉRATION** ❌\n\n';
+			content += '⚠️ **Impossible de générer le rapport.**\n\n';
 			content += `🔍 **Détails:** ${error.message}\n`;
 			content += `📅 **Période demandée:** ${this.getPeriodLabel(period)}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
@@ -161,20 +160,19 @@ module.exports = {
 			const reports = await reportManager.getReportsList(period);
 
 			if (reports.length === 0) {
-				let content = `📋 **AUCUN RAPPORT TROUVÉ** 📋\n\n`;
+				let content = '📋 **AUCUN RAPPORT TROUVÉ** 📋\n\n';
 				content += period ?
 					`⚠️ **Aucun rapport ${this.getPeriodLabel(period)} trouvé.**\n\n` :
-					`⚠️ **Aucun rapport disponible.**\n\n`;
-				content += `💡 **Suggestion:** Utilisez \`/report generate\` pour créer un nouveau rapport.\n`;
+					'⚠️ **Aucun rapport disponible.**\n\n';
+				content += '💡 **Suggestion:** Utilisez `/report generate` pour créer un nouveau rapport.\n';
 				content += `⏰ **Recherche effectuée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 				await interaction.editReply({ content: content });
 				return;
 			}
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
-			let content = `📋 **LISTE DES RAPPORTS** 📋\n\n`;
+			let content = '📋 **LISTE DES RAPPORTS** 📋\n\n';
 			content += `📊 **${reports.length} rapport(s) trouvé(s)**\n\n`;
 
 			// Limiter à 10 rapports pour éviter un contenu trop long
@@ -201,24 +199,24 @@ module.exports = {
 							{
 								label: 'Tous les rapports',
 								value: 'all',
-								emoji: '📊'
+								emoji: '📊',
 							},
 							{
 								label: 'Quotidien',
 								value: 'daily',
-								emoji: '📅'
+								emoji: '📅',
 							},
 							{
 								label: 'Hebdomadaire',
 								value: 'weekly',
-								emoji: '📆'
+								emoji: '📆',
 							},
 							{
 								label: 'Mensuel',
 								value: 'monthly',
-								emoji: '🗓️'
-							}
-						])
+								emoji: '🗓️',
+							},
+						]),
 				);
 
 			// Boutons d'action (Type 10)
@@ -238,17 +236,17 @@ module.exports = {
 						.setCustomId('reports_cleanup')
 						.setLabel('Nettoyer')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️')
+						.setEmoji('🗑️'),
 				);
 
 			await interaction.editReply({
 				content: content,
-				components: [periodSelect, buttons]
+				components: [periodSelect, buttons],
 			});
 		}
 		catch (error) {
-			let content = `❌ **ERREUR** ❌\n\n`;
-			content += `⚠️ **Impossible de récupérer la liste des rapports.**\n\n`;
+			let content = '❌ **ERREUR** ❌\n\n';
+			content += '⚠️ **Impossible de récupérer la liste des rapports.**\n\n';
 			content += `🔍 **Détails:** ${error.message}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -262,7 +260,7 @@ module.exports = {
 		const filename = interaction.options.getString('filename');
 		const email = interaction.options.getString('email');
 
-		let content = `📧 **ENVOI DU RAPPORT** 📧\n\n`;
+		let content = '📧 **ENVOI DU RAPPORT** 📧\n\n';
 		content += `📤 **Envoi du rapport "${filename}" par email...**\n\n`;
 		content += `⏰ **Démarré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -271,11 +269,10 @@ module.exports = {
 		try {
 			const result = await emailManager.sendReport(filename, email);
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			content = `✅ **RAPPORT ENVOYÉ AVEC SUCCÈS** ✅\n\n`;
+			content = '✅ **RAPPORT ENVOYÉ AVEC SUCCÈS** ✅\n\n';
 			content += `📧 **Le rapport "${filename}" a été envoyé par email !**\n\n`;
-			content += `📋 **Détails de l'envoi:**\n`;
+			content += '📋 **Détails de l\'envoi:**\n';
 			content += `• **📧 Destinataire:** ${result.recipient}\n`;
 			content += `• **📄 Fichier:** ${filename}\n`;
 			content += `• **📊 Taille:** ${result.size || 'Non spécifiée'}\n\n`;
@@ -298,17 +295,17 @@ module.exports = {
 						.setCustomId('email_history')
 						.setLabel('Historique')
 						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📜')
+						.setEmoji('📜'),
 				);
 
 			await interaction.editReply({
 				content: content,
-				components: [buttons]
+				components: [buttons],
 			});
 		}
 		catch (error) {
-			content = `❌ **ERREUR D'ENVOI** ❌\n\n`;
-			content += `⚠️ **Impossible d'envoyer le rapport par email.**\n\n`;
+			content = '❌ **ERREUR D\'ENVOI** ❌\n\n';
+			content += '⚠️ **Impossible d\'envoyer le rapport par email.**\n\n';
 			content += `🔍 **Détails:** ${error.message}\n`;
 			content += `📄 **Fichier:** ${filename}\n`;
 			content += `📧 **Email:** ${email || 'Email par défaut'}\n`;

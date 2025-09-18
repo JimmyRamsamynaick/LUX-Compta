@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -191,11 +191,10 @@ module.exports = {
 			const success = await customizationManager.updateColor(type, valeur);
 
 			if (success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `🎨 **COULEUR MISE À JOUR** ✅\n\n`;
+				let content = '🎨 **COULEUR MISE À JOUR** ✅\n\n';
 				content += `📋 **La couleur ${type} a été mise à jour avec succès**\n\n`;
-				content += `🎨 **Nouvelle couleur:**\n`;
+				content += '🎨 **Nouvelle couleur:**\n';
 				content += `**${type}:** ${valeur}\n\n`;
 				content += `⏰ **Mis à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -215,7 +214,7 @@ module.exports = {
 							.setCustomId('color_apply_all')
 							.setLabel('Appliquer partout')
 							.setStyle(ButtonStyle.Success)
-							.setEmoji('✅')
+							.setEmoji('✅'),
 					);
 
 				await interaction.reply({
@@ -257,11 +256,10 @@ module.exports = {
 			const success = await customizationManager.updateEmoji(type, valeur);
 
 			if (success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `😀 **EMOJI MIS À JOUR** ✅\n\n`;
+				let content = '😀 **EMOJI MIS À JOUR** ✅\n\n';
 				content += `📋 **L'emoji ${type} a été mis à jour avec succès**\n\n`;
-				content += `😀 **Nouvel emoji:**\n`;
+				content += '😀 **Nouvel emoji:**\n';
 				content += `**${type}:** ${valeur}\n\n`;
 				content += `⏰ **Mis à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -281,7 +279,7 @@ module.exports = {
 							.setCustomId('emoji_test')
 							.setLabel('Tester')
 							.setStyle(ButtonStyle.Success)
-							.setEmoji('🧪')
+							.setEmoji('🧪'),
 					);
 
 				await interaction.reply({
@@ -318,23 +316,22 @@ module.exports = {
 
 		if (success) {
 			const theme = await customizationManager.getTheme(nom);
-			const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `🎨 **THÈME APPLIQUÉ** ✅\n\n`;
+			let content = '🎨 **THÈME APPLIQUÉ** ✅\n\n';
 			content += `📋 **Le thème "${theme.name}" a été appliqué avec succès**\n\n`;
-			
+
 			// Couleurs
-			content += `🎨 **Couleurs:**\n`;
+			content += '🎨 **Couleurs:**\n';
 			content += `🔵 **Principale:** ${theme.colors.primary}\n`;
 			content += `🟣 **Secondaire:** ${theme.colors.secondary}\n`;
 			content += `🟢 **Succès:** ${theme.colors.success}\n\n`;
-			
+
 			// Emojis
-			content += `😀 **Emojis:**\n`;
+			content += '😀 **Emojis:**\n';
 			content += `📊 **Stats:** ${theme.emojis.stats}\n`;
 			content += `👥 **Membres:** ${theme.emojis.members}\n`;
 			content += `💬 **Messages:** ${theme.emojis.messages}\n\n`;
-			
+
 			content += `⏰ **Appliqué le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection pour d'autres thèmes (Type 17)
@@ -346,20 +343,20 @@ module.exports = {
 						label: 'Thème par défaut',
 						description: 'Revenir au thème par défaut',
 						value: 'default',
-						emoji: '🔄'
+						emoji: '🔄',
 					},
 					{
 						label: 'Thème sombre',
 						description: 'Appliquer le thème sombre',
 						value: 'dark',
-						emoji: '🌙'
+						emoji: '🌙',
 					},
 					{
 						label: 'Thème coloré',
 						description: 'Appliquer le thème coloré',
 						value: 'colorful',
-						emoji: '🌈'
-					}
+						emoji: '🌈',
+					},
 				]);
 
 			const selectRow = new ActionRowBuilder().addComponents(themeSelect);
@@ -381,7 +378,7 @@ module.exports = {
 						.setCustomId('theme_duplicate')
 						.setLabel('Dupliquer')
 						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📋')
+						.setEmoji('📋'),
 				);
 
 			await interaction.reply({
@@ -416,9 +413,8 @@ module.exports = {
 		);
 
 		if (themeId) {
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `🎨 **NOUVEAU THÈME CRÉÉ** ✅\n\n`;
+			let content = '🎨 **NOUVEAU THÈME CRÉÉ** ✅\n\n';
 			content += `📋 **Le thème "${nom}" a été créé avec succès**\n\n`;
 			content += `🆔 **ID:** ${themeId}\n`;
 			content += `📋 **Basé sur:** ${currentTheme.name}\n\n`;
@@ -440,7 +436,7 @@ module.exports = {
 						.setCustomId('theme_share')
 						.setLabel('Partager')
 						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤')
+						.setEmoji('📤'),
 				);
 
 			await interaction.reply({
@@ -463,7 +459,6 @@ module.exports = {
 			const exportData = await customizationManager.exportTheme(themeId);
 
 			if (exportData) {
-				const { AttachmentBuilder } = require('discord.js');
 
 				const attachment = new AttachmentBuilder(
 					Buffer.from(exportData, 'utf8'),
@@ -505,40 +500,39 @@ module.exports = {
 			const success = await customizationManager.resetCustomization();
 
 			if (success) {
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `🔄 **THÈME RÉINITIALISÉ** ✅\n\n`;
-			content += `📋 **Le thème a été réinitialisé aux paramètres par défaut**\n\n`;
-			content += `🎨 **Couleurs par défaut restaurées**\n`;
-			content += `😀 **Emojis par défaut restaurés**\n`;
-			content += `⚙️ **Paramètres par défaut restaurés**\n\n`;
-			content += `⏰ **Réinitialisé le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+				let content = '🔄 **THÈME RÉINITIALISÉ** ✅\n\n';
+				content += '📋 **Le thème a été réinitialisé aux paramètres par défaut**\n\n';
+				content += '🎨 **Couleurs par défaut restaurées**\n';
+				content += '😀 **Emojis par défaut restaurés**\n';
+				content += '⚙️ **Paramètres par défaut restaurés**\n\n';
+				content += `⏰ **Réinitialisé le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			const resetButtons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('theme_view_default')
-						.setLabel('Voir le thème')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('👁️'),
-					new ButtonBuilder()
-						.setCustomId('theme_customize_new')
-						.setLabel('Personnaliser')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('✏️'),
-					new ButtonBuilder()
-						.setCustomId('theme_backup_restore')
-						.setLabel('Restaurer sauvegarde')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📥')
-				);
+				const resetButtons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('theme_view_default')
+							.setLabel('Voir le thème')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('👁️'),
+						new ButtonBuilder()
+							.setCustomId('theme_customize_new')
+							.setLabel('Personnaliser')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('✏️'),
+						new ButtonBuilder()
+							.setCustomId('theme_backup_restore')
+							.setLabel('Restaurer sauvegarde')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('📥'),
+					);
 
-			await interaction.reply({
-				content: content,
-				components: [resetButtons],
-				ephemeral: true,
-			});
-		}
+				await interaction.reply({
+					content: content,
+					components: [resetButtons],
+					ephemeral: true,
+				});
+			}
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la réinitialisation.',

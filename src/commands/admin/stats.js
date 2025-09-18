@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+
 const config = require('../../../config.json');
 
 module.exports = {
@@ -58,7 +59,6 @@ module.exports = {
 	},
 
 	async createStatsResponse(stats, periode, type, guild) {
-		const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
 		let content = `📊 **STATISTIQUES - ${guild.name.toUpperCase()}** 📊\n\n`;
 		content += `📅 **Période:** ${this.getPeriodLabel(periode)}\n`;
@@ -80,7 +80,7 @@ module.exports = {
 			content += `⏰ **Pic d'activité:** ${stats.peakHour || 'N/A'}\n\n`;
 
 			if (stats.topChannels && stats.topChannels.length > 0) {
-				content += `🏆 **Top Canaux:**\n`;
+				content += '🏆 **Top Canaux:**\n';
 				const topChannels = stats.topChannels
 					.slice(0, 5)
 					.map((ch, i) => `${i + 1}. <#${ch.id}> (${ch.messages} messages)`)
@@ -98,7 +98,7 @@ module.exports = {
 			content += `📈 **Croissance:** ${stats.newMembers - stats.leftMembers > 0 ? '+' : ''}${stats.newMembers - stats.leftMembers}\n\n`;
 
 			if (stats.topMembers && stats.topMembers.length > 0) {
-				content += `🏆 **Top Membres:**\n`;
+				content += '🏆 **Top Membres:**\n';
 				const topMembers = stats.topMembers
 					.slice(0, 5)
 					.map((member, i) => `${i + 1}. <@${member.id}> (${member.messages} messages)`)
@@ -113,7 +113,7 @@ module.exports = {
 			content += `💬 **Messages moyens/canal:** ${Math.round(stats.messages / stats.activeChannels || 0)}\n\n`;
 
 			if (stats.channelStats && stats.channelStats.length > 0) {
-				content += `📊 **Activité par canal:**\n`;
+				content += '📊 **Activité par canal:**\n';
 				const channelList = stats.channelStats
 					.slice(0, 10)
 					.map((ch, i) => `${i + 1}. <#${ch.id}> - ${ch.messages} messages`)
@@ -125,7 +125,7 @@ module.exports = {
 
 		// Ajouter des informations sur les alertes si nécessaire
 		if (stats.alerts && stats.alerts.length > 0) {
-			content += `🚨 **Alertes:**\n`;
+			content += '🚨 **Alertes:**\n';
 			const alertText = stats.alerts.map(alert => `⚠️ ${alert}`).join('\n');
 			content += alertText + '\n\n';
 		}
@@ -141,26 +141,26 @@ module.exports = {
 					label: 'Général',
 					description: 'Vue d\'ensemble des statistiques',
 					value: 'general',
-					emoji: '📊'
+					emoji: '📊',
 				},
 				{
 					label: 'Messages',
 					description: 'Statistiques des messages',
 					value: 'messages',
-					emoji: '💬'
+					emoji: '💬',
 				},
 				{
 					label: 'Membres',
 					description: 'Statistiques des membres',
 					value: 'members',
-					emoji: '👥'
+					emoji: '👥',
 				},
 				{
 					label: 'Canaux',
 					description: 'Statistiques des canaux',
 					value: 'channels',
-					emoji: '📊'
-				}
+					emoji: '📊',
+				},
 			]);
 
 		const selectRow = new ActionRowBuilder().addComponents(typeSelect);
@@ -182,12 +182,12 @@ module.exports = {
 					.setCustomId(`detailed_stats_${periode}`)
 					.setLabel('Détails')
 					.setStyle(ButtonStyle.Success)
-					.setEmoji('📈')
+					.setEmoji('📈'),
 			);
 
 		return {
 			content: content,
-			components: [selectRow, buttons]
+			components: [selectRow, buttons],
 		};
 	},
 

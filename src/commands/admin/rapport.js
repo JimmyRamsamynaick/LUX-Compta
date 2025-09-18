@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+
 const config = require('../../../config.json');
 
 module.exports = {
@@ -71,9 +72,8 @@ module.exports = {
 			const reportPath = await reportManager.generateReport(periode, interaction.guild);
 			const stats = await statsManager.getStats(periode);
 
-			const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `📊 **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n`;
+			let content = '📊 **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n';
 			content += `📋 **Rapport ${periode} généré pour ${interaction.guild.name}**\n\n`;
 			content += `📈 **Messages:** ${stats.messages}\n`;
 			content += `👥 **Membres actifs:** ${stats.activeMembers}\n`;
@@ -124,7 +124,7 @@ module.exports = {
 						.setCustomId(`view_report_${periode}`)
 						.setLabel('Visualiser')
 						.setStyle(ButtonStyle.Success)
-						.setEmoji('👁️')
+						.setEmoji('👁️'),
 				);
 
 			await interaction.editReply({
@@ -157,9 +157,8 @@ module.exports = {
 				});
 			}
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `📋 **RAPPORTS DISPONIBLES** 📋\n\n`;
+			let content = '📋 **RAPPORTS DISPONIBLES** 📋\n\n';
 			content += `📊 **${reports.length} rapport(s) trouvé(s)**\n\n`;
 
 			// Grouper les rapports par type
@@ -199,12 +198,12 @@ module.exports = {
 						.setCustomId('reports_cleanup')
 						.setLabel('Nettoyer')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️')
+						.setEmoji('🗑️'),
 				);
 
 			await interaction.editReply({
 				content: content,
-				components: [buttons]
+				components: [buttons],
 			});
 
 		}
@@ -225,17 +224,16 @@ module.exports = {
 		try {
 			const result = await reportManager.archiveOldReports();
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `📦 **ARCHIVAGE DES RAPPORTS** 📦\n\n`;
-			content += `✅ **Archivage terminé avec succès !**\n\n`;
-			content += `📊 **Résultats:**\n`;
+			let content = '📦 **ARCHIVAGE DES RAPPORTS** 📦\n\n';
+			content += '✅ **Archivage terminé avec succès !**\n\n';
+			content += '📊 **Résultats:**\n';
 			content += `• **${result.archived}** rapport(s) archivé(s)\n`;
 			content += `• **${result.deleted}** ancien(s) fichier(s) supprimé(s)\n`;
 			content += `• **${result.size}** d'espace libéré\n\n`;
 
 			if (result.errors && result.errors.length > 0) {
-				content += `⚠️ **Erreurs rencontrées:**\n`;
+				content += '⚠️ **Erreurs rencontrées:**\n';
 				result.errors.slice(0, 3).forEach(error => {
 					content += `• ${error}\n`;
 				});
@@ -264,12 +262,12 @@ module.exports = {
 						.setCustomId('archive_cleanup')
 						.setLabel('Nettoyer archives')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️')
+						.setEmoji('🗑️'),
 				);
 
 			await interaction.editReply({
 				content: content,
-				components: [buttons]
+				components: [buttons],
 			});
 
 		}

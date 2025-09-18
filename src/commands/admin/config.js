@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('../../../config.json');
@@ -87,41 +87,39 @@ module.exports = {
 	},
 
 	async handleShow(interaction) {
-		const { StringSelectMenuBuilder } = require('discord.js');
-
-		let content = `⚙️ **CONFIGURATION ACTUELLE** 🔧\n\n`;
-		content += `📋 **Paramètres de configuration du bot LUX Compta**\n\n`;
+		let content = '⚙️ **CONFIGURATION ACTUELLE** 🔧\n\n';
+		content += '📋 **Paramètres de configuration du bot LUX Compta**\n\n';
 
 		// Bot settings
-		content += `🤖 **Bot**\n`;
+		content += '🤖 **Bot**\n';
 		content += `📝 **Nom:** ${config.bot.name}\n`;
 		content += `🔢 **Version:** ${config.bot.version}\n`;
 		content += `⌨️ **Préfixe:** ${config.bot.prefix}\n\n`;
 
 		// Server settings
-		content += `🌍 **Serveur**\n`;
+		content += '🌍 **Serveur**\n';
 		content += `🏷️ **Nom:** ${config.server.name}\n`;
 		content += `🕐 **Fuseau:** ${config.server.timezone}\n\n`;
 
 		// Reports settings
-		content += `📊 **Rapports**\n`;
+		content += '📊 **Rapports**\n';
 		content += `📄 **Formats:** ${config.reports.formats.join(', ')}\n`;
 		content += `🗂️ **Auto-archivage:** ${config.reports.autoArchive ? '✅ Activé' : '❌ Désactivé'}\n\n`;
 
 		// Alerts settings
-		content += `🚨 **Alertes**\n`;
+		content += '🚨 **Alertes**\n';
 		content += `🔔 **Activées:** ${config.alerts.enabled ? '✅ Oui' : '❌ Non'}\n`;
 		content += `📈 **Seuil:** ${config.alerts.activityThreshold}%\n`;
 		content += `⏱️ **Cooldown:** ${config.alerts.cooldown}h\n\n`;
 
 		// Git settings
-		content += `🔧 **Git**\n`;
+		content += '🔧 **Git**\n';
 		content += `🔄 **Auto-commit:** ${config.git.autoCommit ? '✅ Activé' : '❌ Désactivé'}\n`;
 		content += `📅 **Fréquence:** ${config.git.frequency}\n`;
 		content += `🏷️ **Tags auto:** ${config.git.autoTag ? '✅ Activé' : '❌ Désactivé'}\n\n`;
 
 		// Permissions settings
-		content += `👥 **Permissions**\n`;
+		content += '👥 **Permissions**\n';
 		content += `👑 **Admins:** ${config.permissions.admin_roles.join(', ')}\n`;
 		content += `📊 **Accès stats:** ${config.permissions.stats_access.join(', ')}\n\n`;
 
@@ -136,32 +134,32 @@ module.exports = {
 					label: 'Seuil d\'alerte activité',
 					description: 'Modifier le seuil d\'alerte d\'activité',
 					value: 'alert_threshold',
-					emoji: '📈'
+					emoji: '📈',
 				},
 				{
 					label: 'Canal d\'alertes',
 					description: 'Configurer le canal d\'alertes',
 					value: 'alert_channel',
-					emoji: '📢'
+					emoji: '📢',
 				},
 				{
 					label: 'Fréquence des commits Git',
 					description: 'Modifier la fréquence des commits automatiques',
 					value: 'git_frequency',
-					emoji: '📅'
+					emoji: '📅',
 				},
 				{
 					label: 'Auto-archivage',
 					description: 'Activer/désactiver l\'auto-archivage',
 					value: 'auto_archive',
-					emoji: '🗂️'
+					emoji: '🗂️',
 				},
 				{
 					label: 'Rôles admin',
 					description: 'Gérer les rôles administrateurs',
 					value: 'admin_roles',
-					emoji: '👑'
-				}
+					emoji: '👑',
+				},
 			]);
 
 		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
@@ -188,7 +186,7 @@ module.exports = {
 					.setCustomId('config_refresh')
 					.setLabel('Actualiser')
 					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('🔄')
+					.setEmoji('🔄'),
 			);
 
 		await interaction.reply({
@@ -232,10 +230,10 @@ module.exports = {
 			const configPath = path.join(__dirname, '../../../config.json');
 			await fs.writeFile(configPath, JSON.stringify(defaultConfig, null, 2));
 
-			let content = `🔄 **CONFIGURATION RÉINITIALISÉE** ✅\n\n`;
-			content += `📋 **La configuration a été réinitialisée aux valeurs par défaut**\n\n`;
-			content += `💾 **Sauvegarde créée:** \`config_backup.json\`\n`;
-			content += `🔄 **Le bot va redémarrer dans 3 secondes pour appliquer les changements**\n\n`;
+			let content = '🔄 **CONFIGURATION RÉINITIALISÉE** ✅\n\n';
+			content += '📋 **La configuration a été réinitialisée aux valeurs par défaut**\n\n';
+			content += '💾 **Sauvegarde créée:** `config_backup.json`\n';
+			content += '🔄 **Le bot va redémarrer dans 3 secondes pour appliquer les changements**\n\n';
 			content += `⏰ **Réinitialisé le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			const restartButton = new ActionRowBuilder()
@@ -244,12 +242,12 @@ module.exports = {
 						.setCustomId('config_restart_now')
 						.setLabel('Redémarrer maintenant')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🔄')
+						.setEmoji('🔄'),
 				);
 
-			await interaction.editReply({ 
+			await interaction.editReply({
 				content: content,
-				components: [restartButton]
+				components: [restartButton],
 			});
 
 			// Redémarrer le bot pour appliquer les changements
@@ -276,8 +274,8 @@ module.exports = {
 
 			await fs.writeFile(backupPath, JSON.stringify(config, null, 2));
 
-			let content = `💾 **SAUVEGARDE CRÉÉE** ✅\n\n`;
-			content += `📁 **Configuration sauvegardée dans:**\n`;
+			let content = '💾 **SAUVEGARDE CRÉÉE** ✅\n\n';
+			content += '📁 **Configuration sauvegardée dans:**\n';
 			content += `\`config_backup_${timestamp}.json\`\n\n`;
 			content += `📊 **Taille du fichier:** ${JSON.stringify(config, null, 2).length} caractères\n`;
 			content += `⏰ **Créé le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
@@ -293,12 +291,12 @@ module.exports = {
 						.setCustomId('config_show_current')
 						.setLabel('Voir configuration')
 						.setStyle(ButtonStyle.Primary)
-						.setEmoji('👁️')
+						.setEmoji('👁️'),
 				);
 
-			await interaction.editReply({ 
+			await interaction.editReply({
 				content: content,
-				components: [actionButtons]
+				components: [actionButtons],
 			});
 
 		}
@@ -318,7 +316,7 @@ module.exports = {
 			// Vérifier que c'est un canal textuel
 			if (channel.type !== 0) {
 				return await interaction.reply({
-					content: '❌ Le canal sélectionné doit être un canal textuel.'
+					content: '❌ Le canal sélectionné doit être un canal textuel.',
 				});
 			}
 
@@ -326,7 +324,7 @@ module.exports = {
 			const botPermissions = channel.permissionsFor(interaction.client.user);
 			if (!botPermissions.has(['SendMessages', 'ViewChannel'])) {
 				return await interaction.reply({
-					content: '❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).'
+					content: '❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).',
 				});
 			}
 
@@ -353,15 +351,15 @@ module.exports = {
 			}
 
 			// Envoyer un message de test dans le canal configuré
-			let testContent = `✅ **CANAL DE LOGS CONFIGURÉ** 📝\n\n`;
-			testContent += `📋 **Ce canal a été configuré pour recevoir les logs du bot LUX-Compta**\n\n`;
+			let testContent = '✅ **CANAL DE LOGS CONFIGURÉ** 📝\n\n';
+			testContent += '📋 **Ce canal a été configuré pour recevoir les logs du bot LUX-Compta**\n\n';
 			testContent += `👤 **Configuré par:** <@${interaction.user.id}>\n`;
 			testContent += `⏰ **Date:** ${new Date().toLocaleString('fr-FR')}\n\n`;
-			testContent += `📋 **Types de logs reçus:**\n`;
-			testContent += `• 🚨 Erreurs système\n`;
-			testContent += `• ⚡ Commandes importantes\n`;
-			testContent += `• 📊 Rapports automatiques\n`;
-			testContent += `• 🔒 Alertes de sécurité\n\n`;
+			testContent += '📋 **Types de logs reçus:**\n';
+			testContent += '• 🚨 Erreurs système\n';
+			testContent += '• ⚡ Commandes importantes\n';
+			testContent += '• 📊 Rapports automatiques\n';
+			testContent += '• 🔒 Alertes de sécurité\n\n';
 			testContent += `⏰ **Configuré le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			const testButtons = new ActionRowBuilder()
@@ -375,17 +373,17 @@ module.exports = {
 						.setCustomId('logs_config_info')
 						.setLabel('Infos config')
 						.setStyle(ButtonStyle.Primary)
-						.setEmoji('ℹ️')
+						.setEmoji('ℹ️'),
 				);
 
-			await channel.send({ 
+			await channel.send({
 				content: testContent,
-				components: [testButtons]
+				components: [testButtons],
 			});
 
 			// Répondre à l'utilisateur
 			await interaction.reply({
-				content: `✅ **Canal de logs configuré avec succès**\n\nLe canal ${channel} a été configuré pour recevoir les logs du bot.\n\n📝 **Canal configuré**\n${channel} (${channel.id})\n\n🔧 **Configuration**\nSauvegardée dans config.json\n\n✅ **Test**\nMessage de test envoyé`
+				content: `✅ **Canal de logs configuré avec succès**\n\nLe canal ${channel} a été configuré pour recevoir les logs du bot.\n\n📝 **Canal configuré**\n${channel} (${channel.id})\n\n🔧 **Configuration**\nSauvegardée dans config.json\n\n✅ **Test**\nMessage de test envoyé`,
 			});
 
 			// Log dans la console
@@ -396,7 +394,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la configuration du canal de logs:', error);
 
 			await interaction.reply({
-				content: `❌ **Erreur de configuration**\n\nImpossible de configurer le canal de logs.\n\n🚫 **Erreur**\n${error.message || 'Erreur inconnue'}`
+				content: `❌ **Erreur de configuration**\n\nImpossible de configurer le canal de logs.\n\n🚫 **Erreur**\n${error.message || 'Erreur inconnue'}`,
 			});
 		}
 	},

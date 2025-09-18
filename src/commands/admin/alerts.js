@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -149,11 +149,10 @@ module.exports = {
 			}
 
 			if (updated) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `⚙️ **CONFIGURATION MISE À JOUR** ⚙️\n\n`;
-				content += `✅ **Les paramètres d'alertes ont été modifiés avec succès !**\n\n`;
-				content += `📋 **Modifications effectuées:**\n`;
+				let content = '⚙️ **CONFIGURATION MISE À JOUR** ⚙️\n\n';
+				content += '✅ **Les paramètres d\'alertes ont été modifiés avec succès !**\n\n';
+				content += '📋 **Modifications effectuées:**\n';
 				changes.forEach(change => {
 					content += `• ${change}\n`;
 				});
@@ -176,12 +175,12 @@ module.exports = {
 							.setCustomId('alerts_config_advanced')
 							.setLabel('Avancé')
 							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('⚙️')
+							.setEmoji('⚙️'),
 					);
 
 				await interaction.reply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 			else {
@@ -199,457 +198,383 @@ module.exports = {
 	},
 
 	async handleThresholds(interaction, alertManager) {
-		const type = interaction.options.getString('type');
-		const seuil = interaction.options.getInteger('seuil');
+		await interaction.deferReply({ ephemeral: true });
+
+		const threshold = interaction.options.getString('threshold');
+		const value = interaction.options.getInteger('value');
 
 		try {
-			const success = await alertManager.setThreshold(type, seuil);
+			if (threshold && value !== null) {
+				// Modifier un seuil spécifique
+				const updated = await alertManager.updateThreshold(threshold, value);
 
-			if (success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+				if (updated) {
+					let content = '⚙️ **SEUIL MIS À JOUR** ⚙️\n\n';
+					content += `✅ **Le seuil "${threshold}" a été mis à jour avec succès !**\n\n`;
+					content += `📊 **Nouvelle valeur:** ${value}\n`;
+					content += `⏰ **Mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				const typeNames = {
-					'activity_drop': 'Baisse d\'activité',
-					'member_loss': 'Perte de membres',
-					'absence': 'Absence prolongée',
-				};
+					// Menu de sélection pour autres seuils (Type 17)
+					const thresholdSelect = new ActionRowBuilder()
+						.addComponents(
+							new StringSelectMenuBuilder()
+								.setCustomId('alerts_threshold_select')
+								.setPlaceholder('🎯 Modifier un autre seuil')
+								.addOptions([
+									{
+										label: 'Membres actifs',
+										value: 'active_members',
+										emoji: '👥',
+									},
+									{
+										label: 'Messages par heure',
+										value: 'messages_per_hour',
+										emoji: '💬',
+									},
+									{
+										label: 'Nouveaux membres',
+										value: 'new_members',
+										emoji: '🆕',
+									},
+									{
+										label: 'Erreurs système',
+										value: 'system_errors',
+										emoji: '⚠️',
+									},
+								]),
+						);
 
-				let content = `🎯 **SEUIL D'ALERTE MIS À JOUR** 🎯\n\n`;
-				content += `✅ **Le seuil pour "${typeNames[type]}" a été configuré avec succès !**\n\n`;
-				content += `📋 **Configuration:**\n`;
-				content += `• **Type:** ${typeNames[type]}\n`;
-				content += `• **Nouveau seuil:** ${seuil}%\n\n`;
-				content += `⏰ **Configuré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+					// Boutons d'action (Type 10)
+					const buttons = new ActionRowBuilder()
+						.addComponents(
+							new ButtonBuilder()
+								.setCustomId('alerts_threshold_test')
+								.setLabel('Tester ce seuil')
+								.setStyle(ButtonStyle.Primary)
+								.setEmoji('🧪'),
+							new ButtonBuilder()
+								.setCustomId('alerts_threshold_view_all')
+								.setLabel('Voir tous les seuils')
+								.setStyle(ButtonStyle.Secondary)
+								.setEmoji('📊'),
+							new ButtonBuilder()
+								.setCustomId('alerts_threshold_reset')
+								.setLabel('Réinitialiser')
+								.setStyle(ButtonStyle.Danger)
+								.setEmoji('🔄'),
+						);
 
-				// Menu de sélection pour configurer d'autres seuils (Type 17)
-				const thresholdSelect = new ActionRowBuilder()
-					.addComponents(
-						new StringSelectMenuBuilder()
-							.setCustomId('alerts_threshold_config')
-							.setPlaceholder('Configurer un autre seuil...')
-							.addOptions([
-								{
-									label: 'Baisse d\'activité',
-									value: 'activity_drop',
-									emoji: '📉'
-								},
-								{
-									label: 'Perte de membres',
-									value: 'member_loss',
-									emoji: '👥'
-								},
-								{
-									label: 'Absence prolongée',
-									value: 'absence',
-									emoji: '💤'
-								}
-							])
-					);
+					await interaction.editReply({
+						content: content,
+						components: [thresholdSelect, buttons],
+					});
+				}
+				else {
+					let content = '❌ **ERREUR** ❌\n\n';
+					content += `⚠️ **Impossible de mettre à jour le seuil "${threshold}".**\n\n`;
+					content += '🔍 **Vérifiez que le nom du seuil est correct.**\n';
+					content += `⏰ **Tentative:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('alerts_threshold_test')
-							.setLabel('Tester ce seuil')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('🧪'),
-						new ButtonBuilder()
-							.setCustomId('alerts_threshold_view_all')
-							.setLabel('Voir tous les seuils')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📊'),
-						new ButtonBuilder()
-							.setCustomId('alerts_threshold_reset')
-							.setLabel('Réinitialiser')
-							.setStyle(ButtonStyle.Danger)
-							.setEmoji('🔄')
-					);
-
-				await interaction.reply({
-					content: content,
-					components: [thresholdSelect, buttons]
-				});
+					await interaction.editReply({ content: content });
+				}
 			}
 			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de la configuration du seuil.',
-				});
-			}
+				// Afficher tous les seuils actuels
+				const thresholds = await alertManager.getThresholds();
 
-		}
-		catch (error) {
-			console.error('❌ Erreur lors de la configuration du seuil:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la configuration du seuil d\'alerte.',
-			});
-		}
-	},
+				let content = '🎯 **SEUILS D\'ALERTES** 🎯\n\n';
+				content += '📊 **Configuration actuelle des seuils:**\n\n';
 
-	async handleTest(interaction, alertManager) {
-		const type = interaction.options.getString('type');
-
-		try {
-			await interaction.deferReply();
-
-			const testResult = await alertManager.testAlert(type);
-
-			if (testResult.success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
-
-				const typeNames = {
-					'activity_drop': 'Baisse d\'activité',
-					'member_loss': 'Perte de membres',
-					'absence': 'Absence prolongée',
-				};
-
-				let content = `🧪 **TEST D'ALERTE RÉUSSI** 🧪\n\n`;
-				content += `✅ **Test de l'alerte "${typeNames[type]}" effectué avec succès !**\n\n`;
-				content += `📋 **Résultat du test:**\n`;
-				content += `• **Type testé:** ${typeNames[type]}\n`;
-				content += `• **Message:** ${testResult.message || 'Alerte de test envoyée'}\n`;
-				content += `• **Statut:** Test réussi ✅\n\n`;
-				content += `⏰ **Test effectué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-				// Menu de sélection pour tester d'autres types (Type 17)
-				const testSelect = new ActionRowBuilder()
-					.addComponents(
-						new StringSelectMenuBuilder()
-							.setCustomId('alerts_test_other')
-							.setPlaceholder('Tester un autre type d\'alerte...')
-							.addOptions([
-								{
-									label: 'Baisse d\'activité',
-									value: 'activity_drop',
-									emoji: '📉'
-								},
-								{
-									label: 'Perte de membres',
-									value: 'member_loss',
-									emoji: '👥'
-								},
-								{
-									label: 'Absence prolongée',
-									value: 'absence',
-									emoji: '💤'
-								}
-							])
-					);
-
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('alerts_test_repeat')
-							.setLabel('Répéter le test')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('🔄'),
-						new ButtonBuilder()
-							.setCustomId('alerts_test_all')
-							.setLabel('Tester tout')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧪'),
-						new ButtonBuilder()
-							.setCustomId('alerts_test_config')
-							.setLabel('Configuration')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('⚙️')
-					);
-
-				await interaction.editReply({
-					content: content,
-					components: [testSelect, buttons]
-				});
-			}
-			else {
-				await interaction.editReply({
-					content: `❌ Erreur lors du test: ${testResult.error || 'Erreur inconnue'}`,
-				});
-			}
-
-		}
-		catch (error) {
-			console.error('❌ Erreur lors du test d\'alerte:', error);
-
-			if (interaction.deferred) {
-				await interaction.editReply({
-					content: '❌ Erreur lors du test de l\'alerte.',
-				});
-			}
-			else {
-				await interaction.reply({
-					content: '❌ Erreur lors du test de l\'alerte.',
-				});
-			}
-		}
-	},
-
-	async handleHistory(interaction, alertManager) {
-		const limite = interaction.options.getInteger('limite') || 10;
-
-		try {
-			await interaction.deferReply();
-
-			const history = await alertManager.getAlertHistory(limite);
-
-			if (history && history.length > 0) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
-
-				const typeNames = {
-					'activity_drop': 'Baisse d\'activité',
-					'member_loss': 'Perte de membres',
-					'absence': 'Absence prolongée',
-				};
-
-				let content = `📜 **HISTORIQUE DES ALERTES** 📜\n\n`;
-				content += `📊 **${history.length} alerte(s) dans l'historique**\n\n`;
-
-				// Afficher les 5 dernières alertes
-				const recentAlerts = history.slice(-5).reverse();
-				content += `🕒 **Alertes récentes:**\n`;
-				
-				recentAlerts.forEach((alert, index) => {
-					const date = new Date(alert.timestamp);
-					const typeEmojis = {
-						'activity_drop': '📉',
-						'member_loss': '👥',
-						'absence': '💤'
-					};
-					
-					content += `${typeEmojis[alert.type] || '⚠️'} **${typeNames[alert.type] || alert.type}** - <t:${Math.floor(date.getTime() / 1000)}:R>\n`;
-					if (alert.message) {
-						content += `   └ ${alert.message.substring(0, 80)}${alert.message.length > 80 ? '...' : ''}\n`;
-					}
+				Object.entries(thresholds).forEach(([key, thresholdValue]) => {
+					const label = this.getThresholdLabel(key);
+					content += `• **${label}:** ${thresholdValue}\n`;
 				});
 
 				content += `\n⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Menu de sélection pour filtrer par type (Type 17)
-				const filterSelect = new ActionRowBuilder()
-					.addComponents(
-						new StringSelectMenuBuilder()
-							.setCustomId('alerts_history_filter')
-							.setPlaceholder('Filtrer par type d\'alerte...')
-							.addOptions([
-								{
-									label: 'Toutes les alertes',
-									value: 'all',
-									emoji: '📜'
-								},
-								{
-									label: 'Baisse d\'activité',
-									value: 'activity_drop',
-									emoji: '📉'
-								},
-								{
-									label: 'Perte de membres',
-									value: 'member_loss',
-									emoji: '👥'
-								},
-								{
-									label: 'Absence prolongée',
-									value: 'absence',
-									emoji: '💤'
-								}
-							])
-					);
-
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('alerts_history_refresh')
-							.setLabel('Actualiser')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('🔄'),
-						new ButtonBuilder()
-							.setCustomId('alerts_history_export')
-							.setLabel('Exporter')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📤'),
-						new ButtonBuilder()
-							.setCustomId('alerts_history_clear')
-							.setLabel('Nettoyer')
-							.setStyle(ButtonStyle.Danger)
-							.setEmoji('🗑️')
-					);
-
-				await interaction.editReply({
-					content: content,
-					components: [filterSelect, buttons]
-				});
+				await interaction.editReply({ content: content });
 			}
-			else {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la gestion des seuils:', error);
 
-				let content = `📜 **HISTORIQUE DES ALERTES** 📜\n\n`;
-				content += `ℹ️ **Aucun historique d'alerte disponible.**\n\n`;
-				content += `💡 **Suggestions:**\n`;
-				content += `• Configurez des alertes pour commencer le suivi\n`;
-				content += `• Testez une alerte pour générer un premier historique\n`;
-				content += `• Vérifiez que le système d'alertes est activé\n\n`;
-				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+			let content = '❌ **ERREUR** ❌\n\n';
+			content += '⚠️ **Une erreur est survenue lors de la gestion des seuils.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('alerts_config_setup')
-							.setLabel('Configurer alertes')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('⚙️'),
-						new ButtonBuilder()
-							.setCustomId('alerts_test_sample')
-							.setLabel('Tester une alerte')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧪'),
-						new ButtonBuilder()
-							.setCustomId('alerts_status_check')
-							.setLabel('Vérifier statut')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📊')
-					);
+			await interaction.editReply({ content: content });
+		}
+	},
 
-				await interaction.editReply({
-					content: content,
-					components: [buttons]
-				});
+	async handleTest(interaction, alertManager) {
+		await interaction.deferReply({ ephemeral: true });
+
+		const type = interaction.options.getString('type');
+
+		try {
+			const testResult = await alertManager.testAlert(type);
+
+			let content = '🧪 **TEST D\'ALERTE** 🧪\n\n';
+			content += `✅ **Test de l'alerte "${type}" effectué avec succès !**\n\n`;
+			content += '📋 **Résultats du test:**\n';
+			content += `• **Type:** ${type}\n`;
+			content += `• **Statut:** ${testResult.success ? '✅ Réussi' : '❌ Échec'}\n`;
+			content += `• **Message:** ${testResult.message || 'Aucun message'}\n\n`;
+			content += `⏰ **Test effectué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour autres tests (Type 17)
+			const testSelect = new ActionRowBuilder()
+				.addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId('alerts_test_select')
+						.setPlaceholder('🧪 Tester un autre type')
+						.addOptions([
+							{
+								label: 'Alerte de membres',
+								value: 'members',
+								emoji: '👥',
+							},
+							{
+								label: 'Alerte de messages',
+								value: 'messages',
+								emoji: '💬',
+							},
+							{
+								label: 'Alerte système',
+								value: 'system',
+								emoji: '⚙️',
+							},
+							{
+								label: 'Alerte de modération',
+								value: 'moderation',
+								emoji: '🛡️',
+							},
+						]),
+				);
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('alerts_test_again')
+						.setLabel('Tester à nouveau')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('alerts_test_all')
+						.setLabel('Tester tout')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('🧪'),
+					new ButtonBuilder()
+						.setCustomId('alerts_test_logs')
+						.setLabel('Voir logs')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📋'),
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [testSelect, buttons],
+			});
+		}
+		catch (error) {
+			console.error('❌ Erreur lors du test d\'alerte:', error);
+
+			let content = '❌ **ERREUR DE TEST** ❌\n\n';
+			content += '⚠️ **Impossible d\'effectuer le test d\'alerte.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `📝 **Type demandé:** ${type || 'Non spécifié'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
+		}
+	},
+
+	async handleHistory(interaction, alertManager) {
+		await interaction.deferReply({ ephemeral: true });
+
+		const limit = interaction.options.getInteger('limit') || 10;
+
+		try {
+			const history = await alertManager.getAlertHistory(limit);
+
+			if (history.length === 0) {
+				let content = '📜 **HISTORIQUE DES ALERTES** 📜\n\n';
+				content += '⚠️ **Aucune alerte trouvée dans l\'historique.**\n\n';
+				content += '💡 **Les alertes apparaîtront ici une fois déclenchées.**\n';
+				content += `⏰ **Recherche effectuée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				await interaction.editReply({ content: content });
+				return;
 			}
 
+			let content = '📜 **HISTORIQUE DES ALERTES** 📜\n\n';
+			content += `📊 **${history.length} alerte(s) récente(s):**\n\n`;
+
+			history.forEach((alert, index) => {
+				const timestamp = Math.floor(new Date(alert.timestamp).getTime() / 1000);
+				content += `**${index + 1}.** ${alert.type} - ${alert.message}\n`;
+				content += `   ⏰ <t:${timestamp}:R>\n\n`;
+			});
+
+			content += `⏰ **Historique mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour filtrer (Type 17)
+			const filterSelect = new ActionRowBuilder()
+				.addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId('alerts_history_filter')
+						.setPlaceholder('🔍 Filtrer par type')
+						.addOptions([
+							{
+								label: 'Toutes les alertes',
+								value: 'all',
+								emoji: '📊',
+							},
+							{
+								label: 'Alertes membres',
+								value: 'members',
+								emoji: '👥',
+							},
+							{
+								label: 'Alertes messages',
+								value: 'messages',
+								emoji: '💬',
+							},
+							{
+								label: 'Alertes système',
+								value: 'system',
+								emoji: '⚙️',
+							},
+						]),
+				);
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('alerts_history_refresh')
+						.setLabel('Actualiser')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('alerts_history_export')
+						.setLabel('Exporter')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📤'),
+					new ButtonBuilder()
+						.setCustomId('alerts_history_clear')
+						.setLabel('Vider historique')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🗑️'),
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [filterSelect, buttons],
+			});
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la récupération de l\'historique:', error);
 
-			if (interaction.deferred) {
-				await interaction.editReply({
-					content: '❌ Erreur lors de la récupération de l\'historique des alertes.',
-				});
-			}
-			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de la récupération de l\'historique des alertes.',
-				});
-			}
+			let content = '❌ **ERREUR** ❌\n\n';
+			content += '⚠️ **Impossible de récupérer l\'historique des alertes.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
 		}
 	},
 
 	async handleStatus(interaction, alertManager) {
+		await interaction.deferReply({ ephemeral: true });
+
 		try {
-			await interaction.deferReply();
-
 			const status = await alertManager.getStatus();
+			const config = await alertManager.getConfig();
 
-			if (status) {
-				const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
+			let content = '📊 **STATUT DES ALERTES** 📊\n\n';
+			content += '🔧 **Configuration actuelle:**\n';
+			content += `• **Alertes activées:** ${config.enabled ? '✅ Oui' : '❌ Non'}\n`;
+			content += `• **Canal d'alertes:** ${config.channel ? `<#${config.channel}>` : '❌ Non configuré'}\n`;
+			content += `• **Intervalle de vérification:** ${config.checkInterval || 300} secondes\n\n`;
 
-				const statusEmoji = status.enabled ? '✅' : '❌';
-				const statusColor = status.enabled ? '🟢' : '🔴';
+			content += '📈 **Statistiques:**\n';
+			content += `• **Alertes envoyées aujourd'hui:** ${status.todayCount || 0}\n`;
+			content += `• **Dernière alerte:** ${status.lastAlert ? `<t:${Math.floor(new Date(status.lastAlert).getTime() / 1000)}:R>` : 'Aucune'}\n`;
+			content += `• **Système actif depuis:** <t:${Math.floor(status.uptime / 1000)}:R>\n\n`;
 
-				let content = `${statusEmoji} **STATUT DES ALERTES** 📊\n\n`;
-				content += `📋 **État actuel du système d'alertes**\n\n`;
-				
-				// Configuration générale
-				content += `⚙️ **Configuration générale**\n`;
-				content += `${statusColor} **État:** ${status.enabled ? 'Activé' : 'Désactivé'}\n`;
-				content += `📢 **Canal:** ${status.channel ? `<#${status.channel}>` : '❌ Non configuré'}\n`;
-				content += `⏰ **Dernière vérification:** ${status.lastCheck ? new Date(status.lastCheck).toLocaleString('fr-FR') : 'Jamais'}\n\n`;
-				
-				// Seuils configurés
-				content += `🎯 **Seuils configurés**\n`;
-				content += `📉 **Baisse d'activité:** ${status.thresholds?.activity_drop || 'Non défini'}%\n`;
-				content += `👥 **Perte de membres:** ${status.thresholds?.member_loss || 'Non défini'}%\n`;
-				content += `💤 **Absence prolongée:** ${status.thresholds?.absence || 'Non défini'}%\n\n`;
-				
-				// Statistiques
-				content += `📊 **Statistiques**\n`;
-				content += `🚨 **Alertes envoyées:** ${status.stats?.totalAlerts || 0}\n`;
-				content += `📅 **Alertes aujourd'hui:** ${status.stats?.todayAlerts || 0}\n`;
-				content += `⏱️ **Dernière alerte:** ${status.stats?.lastAlert ? new Date(status.stats.lastAlert).toLocaleString('fr-FR') : 'Aucune'}\n\n`;
-				content += `⏰ **Généré le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+			content += '🎯 **Prochaines actions:**\n';
+			content += `• Prochaine vérification dans ${Math.ceil((status.nextCheck - Date.now()) / 1000)} secondes\n`;
+			content += `• Maintenance programmée: <t:${Math.floor((Date.now() + 86400000) / 1000)}:F>\n\n`;
 
-				// Menu de sélection pour les actions (Type 17)
-				const selectMenu = new StringSelectMenuBuilder()
-					.setCustomId('alerts_status_action')
-					.setPlaceholder('Choisir une action...')
-					.addOptions([
-						{
-							label: 'Actualiser le statut',
-							description: 'Rafraîchir les informations de statut',
-							value: 'refresh',
-							emoji: '🔄'
-						},
-						{
-							label: 'Modifier la configuration',
-							description: 'Changer les paramètres d\'alertes',
-							value: 'config',
-							emoji: '⚙️'
-						},
-						{
-							label: 'Voir l\'historique',
-							description: 'Consulter l\'historique des alertes',
-							value: 'history',
-							emoji: '📋'
-						},
-						{
-							label: 'Tester les alertes',
-							description: 'Lancer un test du système',
-							value: 'test',
-							emoji: '🧪'
-						}
-					]);
+			content += `⏰ **Statut mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+			// Menu de sélection pour actions rapides (Type 17)
+			const quickActions = new ActionRowBuilder()
+				.addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId('alerts_quick_action')
+						.setPlaceholder('⚡ Actions rapides')
+						.addOptions([
+							{
+								label: 'Activer les alertes',
+								value: 'enable',
+								emoji: '✅',
+							},
+							{
+								label: 'Désactiver les alertes',
+								value: 'disable',
+								emoji: '❌',
+							},
+							{
+								label: 'Configurer canal',
+								value: 'set_channel',
+								emoji: '📢',
+							},
+							{
+								label: 'Réinitialiser config',
+								value: 'reset_config',
+								emoji: '🔄',
+							},
+						]),
+				);
 
-				// Boutons d'action rapide (Type 10)
-				const quickButtons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('alerts_toggle_quick')
-							.setLabel(status.enabled ? 'Désactiver' : 'Activer')
-							.setStyle(status.enabled ? ButtonStyle.Danger : ButtonStyle.Success)
-							.setEmoji(status.enabled ? '❌' : '✅'),
-						new ButtonBuilder()
-							.setCustomId('alerts_config_quick')
-							.setLabel('Configuration')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('⚙️'),
-						new ButtonBuilder()
-							.setCustomId('alerts_test_quick')
-							.setLabel('Test')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧪'),
-						new ButtonBuilder()
-							.setCustomId('alerts_history_quick')
-							.setLabel('Historique')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📋')
-					);
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('alerts_status_refresh')
+						.setLabel('Actualiser')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('alerts_status_report')
+						.setLabel('Rapport détaillé')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📊'),
+					new ButtonBuilder()
+						.setCustomId('alerts_status_help')
+						.setLabel('Aide')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('❓'),
+				);
 
-				await interaction.editReply({
-					content: content,
-					components: [selectRow, quickButtons]
-				});
-			}
-			else {
-				await interaction.editReply({
-					content: '❌ Impossible de récupérer le statut des alertes.',
-				});
-			}
-
+			await interaction.editReply({
+				content: content,
+				components: [quickActions, buttons],
+			});
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la récupération du statut:', error);
 
-			if (interaction.deferred) {
-				await interaction.editReply({
-					content: '❌ Erreur lors de la récupération du statut des alertes.',
-				});
-			}
-			else {
-				await interaction.editReply({
-					content: '❌ Erreur lors de la récupération du statut des alertes.',
-				});
-			}
+			let content = '❌ **ERREUR** ❌\n\n';
+			content += '⚠️ **Impossible de récupérer le statut des alertes.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
 		}
 	},
 
@@ -657,79 +582,65 @@ module.exports = {
 		try {
 			const config = await alertManager.getConfig();
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+			let content = '⚙️ **CONFIGURATION ACTUELLE** ⚙️\n\n';
+			content += '📋 **Paramètres des alertes:**\n\n';
 
-			let content = `⚙️ **CONFIGURATION DES ALERTES** ⚙️\n\n`;
+			// Configuration principale
+			content += '🔧 **Paramètres principaux:**\n';
+			content += `• **Statut:** ${config.enabled ? '✅ Activé' : '❌ Désactivé'}\n`;
+			content += `• **Canal:** ${config.channel ? `<#${config.channel}>` : '❌ Non configuré'}\n`;
+			content += `• **Intervalle:** ${config.checkInterval || 300} secondes\n`;
+			content += `• **Niveau de log:** ${config.logLevel || 'INFO'}\n\n`;
 
-			if (!config || Object.keys(config).length === 0) {
-				content += `❌ **Aucune configuration trouvée**\n\n`;
-				content += `💡 **Pour commencer:**\n`;
-				content += `• Utilisez \`/alerts config\` pour configurer les alertes\n`;
-				content += `• Définissez des seuils avec \`/alerts seuils\`\n`;
-				content += `• Testez avec \`/alerts test\`\n\n`;
-			} else {
-				content += `✅ **Configuration actuelle:**\n\n`;
-
-				// Statut général
-				content += `🔔 **Alertes activées:** ${config.enabled ? '✅ Oui' : '❌ Non'}\n`;
-				if (config.channel) {
-					content += `📢 **Canal d'alerte:** <#${config.channel}>\n`;
-				}
-				content += `\n`;
-
-				// Seuils configurés
-				if (config.thresholds) {
-					content += `📊 **Seuils configurés:**\n`;
-					
-					if (config.thresholds.activity_drop) {
-						content += `📉 **Baisse d'activité:** ${config.thresholds.activity_drop}% de baisse\n`;
-					}
-					if (config.thresholds.member_loss) {
-						content += `👥 **Perte de membres:** ${config.thresholds.member_loss} membres perdus\n`;
-					}
-					if (config.thresholds.absence) {
-						content += `💤 **Absence prolongée:** ${config.thresholds.absence} jours\n`;
-					}
-					content += `\n`;
-				}
-
-				// Dernière vérification
-				if (config.lastCheck) {
-					const lastCheck = new Date(config.lastCheck);
-					content += `🕒 **Dernière vérification:** <t:${Math.floor(lastCheck.getTime() / 1000)}:R>\n`;
-				}
+			// Seuils configurés
+			if (config.thresholds) {
+				content += '🎯 **Seuils configurés:**\n';
+				Object.entries(config.thresholds).forEach(([key, value]) => {
+					const label = this.getThresholdLabel(key);
+					content += `• **${label}:** ${value}\n`;
+				});
+				content += '\n';
 			}
 
-			content += `\n⏰ **Configuration consultée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+			// Types d'alertes
+			if (config.alertTypes) {
+				content += '📢 **Types d\'alertes actifs:**\n';
+				config.alertTypes.forEach(type => {
+					content += `• ${this.getAlertTypeEmoji(type)} ${this.getAlertTypeLabel(type)}\n`;
+				});
+				content += '\n';
+			}
+
+			content += `⏰ **Configuration mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection pour modifier la configuration (Type 17)
 			const configSelect = new ActionRowBuilder()
 				.addComponents(
 					new StringSelectMenuBuilder()
 						.setCustomId('alerts_config_modify')
-						.setPlaceholder('Modifier la configuration...')
+						.setPlaceholder('🔧 Modifier la configuration')
 						.addOptions([
 							{
 								label: 'Activer/Désactiver alertes',
 								value: 'toggle_enabled',
-								emoji: '🔔'
+								emoji: '🔄',
 							},
 							{
-								label: 'Changer canal d\'alerte',
+								label: 'Changer le canal',
 								value: 'change_channel',
-								emoji: '📢'
+								emoji: '📢',
 							},
 							{
-								label: 'Configurer seuils',
-								value: 'configure_thresholds',
-								emoji: '📊'
+								label: 'Modifier les seuils',
+								value: 'modify_thresholds',
+								emoji: '🎯',
 							},
 							{
-								label: 'Réinitialiser config',
-								value: 'reset_config',
-								emoji: '🔄'
-							}
-						])
+								label: 'Types d\'alertes',
+								value: 'alert_types',
+								emoji: '📋',
+							},
+						]),
 				);
 
 			// Boutons d'action (Type 10)
@@ -737,33 +648,35 @@ module.exports = {
 				.addComponents(
 					new ButtonBuilder()
 						.setCustomId('alerts_config_test')
-						.setLabel('Tester alertes')
+						.setLabel('Tester config')
 						.setStyle(ButtonStyle.Primary)
 						.setEmoji('🧪'),
+					new ButtonBuilder()
+						.setCustomId('alerts_config_reset')
+						.setLabel('Réinitialiser')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🔄'),
 					new ButtonBuilder()
 						.setCustomId('alerts_config_export')
 						.setLabel('Exporter config')
 						.setStyle(ButtonStyle.Secondary)
 						.setEmoji('📤'),
-					new ButtonBuilder()
-						.setCustomId('alerts_config_help')
-						.setLabel('Aide')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('❓')
 				);
 
 			await interaction.editReply({
 				content: content,
-				components: [configSelect, buttons]
+				components: [configSelect, buttons],
 			});
-
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de l\'affichage de la configuration:', error);
 
-			await interaction.editReply({
-				content: '❌ Erreur lors de l\'affichage de la configuration des alertes.',
-			});
+			let content = '❌ **ERREUR** ❌\n\n';
+			content += '⚠️ **Impossible d\'afficher la configuration actuelle.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.editReply({ content: content });
 		}
 	},
 };

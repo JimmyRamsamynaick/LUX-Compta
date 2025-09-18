@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -114,16 +115,15 @@ module.exports = {
 			);
 
 			if (emailResult.success) {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `✅ **EMAIL DE TEST ENVOYÉ AVEC SUCCÈS** ✅\n\n`;
-				content += `🏮 **L'email avec le thème lanterne nocturne a été envoyé !**\n\n`;
-				content += `📋 **Détails de l'envoi:**\n`;
+				let content = '✅ **EMAIL DE TEST ENVOYÉ AVEC SUCCÈS** ✅\n\n';
+				content += '🏮 **L\'email avec le thème lanterne nocturne a été envoyé !**\n\n';
+				content += '📋 **Détails de l\'envoi:**\n';
 				content += `• **📧 Destinataire:** ${destinataire}\n`;
 				content += `• **📝 Sujet:** ${sujet}\n`;
-				content += `• **🎨 Thème:** 🏮 Lanterne Nocturne\n`;
+				content += '• **🎨 Thème:** 🏮 Lanterne Nocturne\n';
 				content += `• **⏰ Envoyé à:** ${templateData.date} à ${templateData.time}\n\n`;
-				content += `📊 **Statistiques incluses:**\n`;
+				content += '📊 **Statistiques incluses:**\n';
 				content += templateData.stats.map(s => `• **${s.label}:** ${s.value}`).join('\n');
 				content += `\n\n⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -144,12 +144,12 @@ module.exports = {
 							.setCustomId('email_view_template')
 							.setLabel('Voir template')
 							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('👁️')
+							.setEmoji('👁️'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 
 				// Log dans la console
@@ -157,11 +157,10 @@ module.exports = {
 
 			}
 			else {
-				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				let content = `❌ **ERREUR LORS DE L'ENVOI** ❌\n\n`;
-				content += `⚠️ **L'email n'a pas pu être envoyé.**\n\n`;
-				content += `📋 **Détails de l'erreur:**\n`;
+				let content = '❌ **ERREUR LORS DE L\'ENVOI** ❌\n\n';
+				content += '⚠️ **L\'email n\'a pas pu être envoyé.**\n\n';
+				content += '📋 **Détails de l\'erreur:**\n';
 				content += `• **🚫 Erreur:** ${emailResult.error || 'Erreur inconnue'}\n`;
 				content += `• **📧 Destinataire visé:** ${destinataire}\n`;
 				content += `• **📝 Sujet visé:** ${sujet}\n\n`;
@@ -184,12 +183,12 @@ module.exports = {
 							.setCustomId('email_support')
 							.setLabel('Support')
 							.setStyle(ButtonStyle.Danger)
-							.setEmoji('🆘')
+							.setEmoji('🆘'),
 					);
 
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 
@@ -197,11 +196,10 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur dans la commande email-test:', error);
 
-			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			let content = `❌ **ERREUR SYSTÈME** ❌\n\n`;
-			content += `⚠️ **Une erreur inattendue s'est produite.**\n\n`;
-			content += `📋 **Détails de l'erreur:**\n`;
+			let content = '❌ **ERREUR SYSTÈME** ❌\n\n';
+			content += '⚠️ **Une erreur inattendue s\'est produite.**\n\n';
+			content += '📋 **Détails de l\'erreur:**\n';
 			content += `• **🐛 Erreur:** ${error.message || 'Erreur inconnue'}\n\n`;
 			content += `⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
@@ -222,20 +220,20 @@ module.exports = {
 						.setCustomId('system_support')
 						.setLabel('Support technique')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🆘')
+						.setEmoji('🆘'),
 				);
 
 			if (interaction.deferred) {
 				await interaction.editReply({
 					content: content,
-					components: [buttons]
+					components: [buttons],
 				});
 			}
 			else {
 				await interaction.reply({
 					content: content,
 					components: [buttons],
-					ephemeral: true
+					ephemeral: true,
 				});
 			}
 		}

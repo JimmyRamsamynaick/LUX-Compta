@@ -134,7 +134,7 @@ class AlertManager {
 	async sendAlert(alertType, data) {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			
+
 			if (!config.enabled) {
 				console.log('⚠️ Alertes désactivées');
 				return;
@@ -152,9 +152,9 @@ class AlertManager {
 			}
 
 			// Vérifier si une alerte similaire a été envoyée récemment
-			const recentAlert = this.alertHistory.find(alert => 
-				alert.type === alertType && 
-				Date.now() - alert.timestamp < 3600000 // 1 heure
+			const recentAlert = this.alertHistory.find(alert =>
+				alert.type === alertType &&
+				Date.now() - alert.timestamp < 3600000, // 1 heure
 			);
 
 			if (recentAlert) {
@@ -164,11 +164,11 @@ class AlertManager {
 
 			// Créer les components au lieu d'un embed
 			const alertComponents = this.createAlertComponents(alertType, data);
-			
+
 			// Envoyer l'alerte avec components
 			const message = await channel.send({
 				content: this.createAlertContent(alertType, data),
-				components: alertComponents
+				components: alertComponents,
 			});
 
 			// Enregistrer dans l'historique
@@ -176,13 +176,14 @@ class AlertManager {
 				type: alertType,
 				data: data,
 				timestamp: Date.now(),
-				messageId: message.id
+				messageId: message.id,
 			});
 
 			await this.saveAlertData();
 			console.log(`✅ Alerte "${alertType}" envoyée`);
 
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('❌ Erreur lors de l\'envoi d\'alerte:', error);
 		}
 	}
@@ -201,25 +202,25 @@ class AlertManager {
 		let description = data.description;
 		if (!description) {
 			switch (alertType) {
-				case 'Baisse d\'activité':
-					description = `L'activité du serveur a diminué de manière significative.`;
-					break;
-				case 'Aucune activité':
-					description = `Aucune activité détectée depuis plusieurs heures.`;
-					break;
-				case 'Perte de membres':
-					description = `Le serveur a perdu plusieurs membres récemment.`;
-					break;
-				default:
-					description = `Alerte détectée sur le serveur.`;
+			case 'Baisse d\'activité':
+				description = 'L\'activité du serveur a diminué de manière significative.';
+				break;
+			case 'Aucune activité':
+				description = 'Aucune activité détectée depuis plusieurs heures.';
+				break;
+			case 'Perte de membres':
+				description = 'Le serveur a perdu plusieurs membres récemment.';
+				break;
+			default:
+				description = 'Alerte détectée sur le serveur.';
 			}
 		}
 
 		const severityEmojis = {
 			low: '🟡',
-			medium: '🟠', 
+			medium: '🟠',
 			high: '🔴',
-			critical: '🚨'
+			critical: '🚨',
 		};
 
 		const severity = data.severity || 'medium';
@@ -236,10 +237,12 @@ class AlertManager {
 			content += `📊 **Baisse d'activité:** ${data.decline}%\n`;
 			content += `📈 **Activité actuelle:** ${data.currentActivity}\n`;
 			content += `📉 **Activité précédente:** ${data.previousActivity}\n`;
-		} else if (alertType === 'Aucune activité' && data.hoursSinceLastActivity) {
+		}
+		else if (alertType === 'Aucune activité' && data.hoursSinceLastActivity) {
 			content += `⏱️ **Heures sans activité:** ${data.hoursSinceLastActivity}h\n`;
 			content += `⚠️ **Seuil configuré:** ${data.threshold}h\n`;
-		} else if (alertType === 'Perte de membres' && data.loss) {
+		}
+		else if (alertType === 'Perte de membres' && data.loss) {
 			content += `👥 **Membres perdus:** ${data.loss}\n`;
 			content += `📊 **Membres actuels:** ${data.currentMembers}\n`;
 			content += `📈 **Membres précédents:** ${data.previousMembers}\n`;
@@ -262,26 +265,26 @@ class AlertManager {
 					label: 'Marquer comme résolu',
 					description: 'Marquer cette alerte comme résolue',
 					value: 'resolve',
-					emoji: '✅'
+					emoji: '✅',
 				},
 				{
 					label: 'Ignorer temporairement',
 					description: 'Ignorer cette alerte pendant 1 heure',
 					value: 'snooze',
-					emoji: '⏰'
+					emoji: '⏰',
 				},
 				{
 					label: 'Voir les détails',
 					description: 'Afficher plus d\'informations sur cette alerte',
 					value: 'details',
-					emoji: '📊'
+					emoji: '📊',
 				},
 				{
 					label: 'Configurer les seuils',
 					description: 'Modifier les paramètres d\'alerte',
 					value: 'configure',
-					emoji: '⚙️'
-				}
+					emoji: '⚙️',
+				},
 			]);
 
 		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
@@ -309,7 +312,7 @@ class AlertManager {
 					.setCustomId('alert_dismiss_quick')
 					.setLabel('Ignorer')
 					.setStyle(ButtonStyle.Danger)
-					.setEmoji('❌')
+					.setEmoji('❌'),
 			);
 
 		components.push(quickButtons);
@@ -452,53 +455,53 @@ class AlertManager {
 	async testAlert(type) {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			
+
 			// Simuler des données de test selon le type d'alerte
 			let testData = {};
-			
+
 			switch (type) {
-				case 'Baisse d\'activité':
-					testData = {
-						type: 'Baisse d\'activité',
-						description: 'L\'activité du serveur a diminué de 67% par rapport à la période précédente.',
-						currentActivity: 5,
-						previousActivity: 15,
-						threshold: 10,
-						decline: 67,
-						severity: 'high'
-					};
-					break;
-				case 'Aucune activité':
-					testData = {
-						type: 'Aucune activité',
-						description: 'Aucune activité détectée depuis 25 heures.',
-						hoursSinceLastActivity: 25,
-						threshold: 24,
-						severity: 'critical'
-					};
-					break;
-				case 'Perte de membres':
-					testData = {
-						type: 'Perte de membres',
-						description: 'Le serveur a perdu 5 membres récemment.',
-						currentMembers: 95,
-						previousMembers: 100,
-						threshold: 5,
-						loss: 5,
-						severity: 'medium'
-					};
-					break;
-				default:
-					testData = {
-						type: 'Baisse d\'activité',
-						description: 'L\'activité du serveur a diminué de 67% par rapport à la période précédente.',
-						currentActivity: 5,
-						previousActivity: 15,
-						threshold: 10,
-						decline: 67,
-						severity: 'high'
-					};
-					type = 'Baisse d\'activité';
+			case 'Baisse d\'activité':
+				testData = {
+					type: 'Baisse d\'activité',
+					description: 'L\'activité du serveur a diminué de 67% par rapport à la période précédente.',
+					currentActivity: 5,
+					previousActivity: 15,
+					threshold: 10,
+					decline: 67,
+					severity: 'high',
+				};
+				break;
+			case 'Aucune activité':
+				testData = {
+					type: 'Aucune activité',
+					description: 'Aucune activité détectée depuis 25 heures.',
+					hoursSinceLastActivity: 25,
+					threshold: 24,
+					severity: 'critical',
+				};
+				break;
+			case 'Perte de membres':
+				testData = {
+					type: 'Perte de membres',
+					description: 'Le serveur a perdu 5 membres récemment.',
+					currentMembers: 95,
+					previousMembers: 100,
+					threshold: 5,
+					loss: 5,
+					severity: 'medium',
+				};
+				break;
+			default:
+				testData = {
+					type: 'Baisse d\'activité',
+					description: 'L\'activité du serveur a diminué de 67% par rapport à la période précédente.',
+					currentActivity: 5,
+					previousActivity: 15,
+					threshold: 10,
+					decline: 67,
+					severity: 'high',
+				};
+				type = 'Baisse d\'activité';
 			}
 
 			// Envoyer l'alerte de test
@@ -507,14 +510,15 @@ class AlertManager {
 			return {
 				success: true,
 				message: `Alerte de test "${type}" envoyée avec succès`,
-				data: testData
+				data: testData,
 			};
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('Erreur lors du test d\'alerte:', error);
 			return {
 				success: false,
 				message: 'Erreur lors de l\'envoi de l\'alerte de test',
-				error: error.message
+				error: error.message,
 			};
 		}
 	}
@@ -523,18 +527,19 @@ class AlertManager {
 	async setAlertChannel(channelId) {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			
+
 			if (!config.alerts) {
 				config.alerts = {};
 			}
-			
+
 			config.alerts.channelId = channelId;
-			
+
 			await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
 			console.log(`✅ Canal d'alertes configuré: ${channelId}`);
-			
+
 			return true;
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('❌ Erreur lors de la configuration du canal d\'alertes:', error);
 			return false;
 		}
@@ -543,18 +548,19 @@ class AlertManager {
 	async setAlertsEnabled(enabled) {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			
+
 			if (!config.alerts) {
 				config.alerts = {};
 			}
-			
+
 			config.alerts.enabled = enabled;
-			
+
 			await fs.writeFile(this.configPath, JSON.stringify(config, null, 2));
 			console.log(`✅ Alertes ${enabled ? 'activées' : 'désactivées'}`);
-			
+
 			return true;
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('❌ Erreur lors de la configuration des alertes:', error);
 			return false;
 		}
@@ -563,20 +569,20 @@ class AlertManager {
 	async setThreshold(type, value) {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			
+
 			if (!config.alerts) {
 				config.alerts = {};
 			}
 			if (!config.alerts.thresholds) {
 				config.alerts.thresholds = {};
 			}
-			
+
 			const thresholdMap = {
 				'activity_drop': 'activityThreshold',
 				'member_loss': 'memberDropThreshold',
-				'absence': 'noActivityThreshold'
+				'absence': 'noActivityThreshold',
 			};
-			
+
 			const configKey = thresholdMap[type];
 			if (configKey) {
 				config.alerts.thresholds[configKey] = value;
@@ -584,9 +590,10 @@ class AlertManager {
 				console.log(`✅ Seuil ${type} configuré: ${value}%`);
 				return true;
 			}
-			
+
 			return false;
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('❌ Erreur lors de la configuration du seuil:', error);
 			return false;
 		}
@@ -595,17 +602,18 @@ class AlertManager {
 	async getConfig() {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
-			
+
 			return {
 				enabled: config.alerts?.enabled || false,
 				channel: config.alerts?.channelId || null,
 				thresholds: {
 					activity_drop: config.alerts?.thresholds?.activityThreshold || 50,
 					member_loss: config.alerts?.thresholds?.memberDropThreshold || 10,
-					absence: config.alerts?.thresholds?.noActivityThreshold || 24
-				}
+					absence: config.alerts?.thresholds?.noActivityThreshold || 24,
+				},
 			};
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('❌ Erreur lors de la lecture de la configuration:', error);
 			return {
 				enabled: false,
@@ -613,8 +621,8 @@ class AlertManager {
 				thresholds: {
 					activity_drop: 50,
 					member_loss: 10,
-					absence: 24
-				}
+					absence: 24,
+				},
 			};
 		}
 	}

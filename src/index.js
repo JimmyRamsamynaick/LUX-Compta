@@ -42,14 +42,14 @@ const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
 	// Charger les commandes des sous-dossiers
 	const commandFolders = fs.readdirSync(commandsPath);
-	
+
 	for (const folder of commandFolders) {
 		const folderPath = path.join(commandsPath, folder);
-		
+
 		// Vérifier si c'est un dossier
 		if (fs.statSync(folderPath).isDirectory()) {
 			const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
-			
+
 			for (const file of commandFiles) {
 				const filePath = path.join(folderPath, file);
 				const command = require(filePath);

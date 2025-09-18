@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+
 const config = require('../../../config.json');
 
 module.exports = {
@@ -23,42 +24,41 @@ module.exports = {
 	},
 
 	async showGeneralHelp(interaction, isUpdate = false) {
-		const { ButtonBuilder, ButtonStyle } = require('discord.js');
 
-		let content = `🤖 **LUX COMPTA - GUIDE D'UTILISATION** 🤖\n\n`;
+		let content = '🤖 **LUX COMPTA - GUIDE D\'UTILISATION** 🤖\n\n';
 		content += `📊 **Bot de comptabilité et statistiques pour ${config.server.name}**\n\n`;
 
 		// Commandes générales
-		content += `📊 **Commandes générales:**\n`;
-		content += `• \`/help\` - Afficher cette aide\n`;
-		content += `• \`/stats\` - Voir les statistiques du serveur\n`;
-		content += `• \`/info\` - Informations sur le bot\n\n`;
+		content += '📊 **Commandes générales:**\n';
+		content += '• `/help` - Afficher cette aide\n';
+		content += '• `/stats` - Voir les statistiques du serveur\n';
+		content += '• `/info` - Informations sur le bot\n\n';
 
 		// Vérifier si l'utilisateur a les permissions admin
 		const isAdmin = interaction.member && interaction.member.roles && interaction.member.roles.cache.some(role =>
-			config.permissions && config.permissions.admin_roles && config.permissions.admin_roles.includes(role.name)
+			config.permissions && config.permissions.admin_roles && config.permissions.admin_roles.includes(role.name),
 		);
 
 		if (isAdmin) {
-			content += `⚙️ **Commandes administrateur:**\n`;
-			content += `• \`/rapport\` - Gérer les rapports\n`;
-			content += `• \`/config\` - Configuration du bot\n`;
-			content += `• \`/maintenance\` - Outils de maintenance\n\n`;
+			content += '⚙️ **Commandes administrateur:**\n';
+			content += '• `/rapport` - Gérer les rapports\n';
+			content += '• `/config` - Configuration du bot\n';
+			content += '• `/maintenance` - Outils de maintenance\n\n';
 		}
 
 		// Fonctionnalités principales
-		content += `📈 **Fonctionnalités principales:**\n`;
-		content += `• Suivi des statistiques en temps réel\n`;
-		content += `• Génération de rapports CSV\n`;
-		content += `• Alertes d'activité\n`;
-		content += `• Archivage automatique\n`;
-		content += `• Intégration Git\n\n`;
+		content += '📈 **Fonctionnalités principales:**\n';
+		content += '• Suivi des statistiques en temps réel\n';
+		content += '• Génération de rapports CSV\n';
+		content += '• Alertes d\'activité\n';
+		content += '• Archivage automatique\n';
+		content += '• Intégration Git\n\n';
 
-		content += `🔧 **Composants interactifs:**\n`;
-		content += `• Sélecteur de période\n`;
-		content += `• Boutons d'action\n`;
-		content += `• Téléchargement de rapports\n`;
-		content += `• Envoi par email\n\n`;
+		content += '🔧 **Composants interactifs:**\n';
+		content += '• Sélecteur de période\n';
+		content += '• Boutons d\'action\n';
+		content += '• Téléchargement de rapports\n';
+		content += '• Envoi par email\n\n';
 
 		content += `⏰ **Guide consulté:** <t:${Math.floor(Date.now() / 1000)}:F>\n`;
 		content += `📋 **Version:** ${config.bot.version}`;
@@ -111,18 +111,19 @@ module.exports = {
 					.setCustomId('help_support')
 					.setLabel('Support')
 					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('❓')
+					.setEmoji('❓'),
 			);
 
 		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
 		if (isUpdate) {
-			await interaction.update({ 
-				content: content, 
+			await interaction.update({
+				content: content,
 				components: [selectRow, buttons],
-				embeds: []
+				embeds: [],
 			});
-		} else {
+		}
+		else {
 			await interaction.reply({
 				content: content,
 				components: [selectRow, buttons],
@@ -131,7 +132,6 @@ module.exports = {
 	},
 
 	async showCommandHelp(interaction, commandName) {
-		const { ButtonBuilder, ButtonStyle } = require('discord.js');
 		const commandHelp = this.getCommandHelp(commandName);
 
 		if (!commandHelp) {
@@ -169,27 +169,27 @@ module.exports = {
 							label: 'stats',
 							description: 'Statistiques du serveur',
 							value: 'stats',
-							emoji: '📊'
+							emoji: '📊',
 						},
 						{
 							label: 'rapport',
 							description: 'Gestion des rapports',
 							value: 'rapport',
-							emoji: '📋'
+							emoji: '📋',
 						},
 						{
 							label: 'config',
 							description: 'Configuration du bot',
 							value: 'config',
-							emoji: '⚙️'
+							emoji: '⚙️',
 						},
 						{
 							label: 'help',
 							description: 'Système d\'aide',
 							value: 'help',
-							emoji: '❓'
-						}
-					])
+							emoji: '❓',
+						},
+					]),
 			);
 
 		// Boutons d'action (Type 10)
@@ -209,12 +209,12 @@ module.exports = {
 					.setCustomId('help_more_info')
 					.setLabel('Plus d\'infos')
 					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('ℹ️')
+					.setEmoji('ℹ️'),
 			);
 
-		await interaction.reply({ 
+		await interaction.reply({
 			content: content,
-			components: [commandSelect, buttons]
+			components: [commandSelect, buttons],
 		});
 	},
 
@@ -250,7 +250,6 @@ module.exports = {
 	},
 
 	async handleCategorySelect(interaction, category) {
-		const { ButtonBuilder, ButtonStyle } = require('discord.js');
 
 		// Si l'utilisateur sélectionne le menu principal, afficher l'aide générale
 		if (category === 'main_menu') {
@@ -264,11 +263,11 @@ module.exports = {
 		content += `📝 **Description:**\n${categoryHelp.description}\n\n`;
 
 		if (categoryHelp.commands) {
-			content += `🔧 **Commandes disponibles:**\n`;
+			content += '🔧 **Commandes disponibles:**\n';
 			categoryHelp.commands.forEach(cmd => {
 				content += `• **/${cmd.name}** - ${cmd.description}\n`;
 			});
-			content += `\n`;
+			content += '\n';
 		}
 
 		if (categoryHelp.tips) {
@@ -331,15 +330,15 @@ module.exports = {
 					.setCustomId('help_category_faq')
 					.setLabel('FAQ')
 					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('❓')
+					.setEmoji('❓'),
 			);
 
 		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
-		await interaction.update({ 
-			content: content, 
+		await interaction.update({
+			content: content,
 			components: [selectRow, buttons],
-			embeds: []
+			embeds: [],
 		});
 	},
 
