@@ -176,6 +176,26 @@ module.exports = {
 		}
 	},
 
+	// Gestionnaire pour le sélecteur de test d'alertes
+	async handleAlertsTestSelect(interaction) {
+		const selectedType = interaction.values[0];
+		const alertsCommand = require('../commands/admin/alerts');
+		
+		await interaction.deferUpdate();
+		
+		try {
+			// Appeler la fonction handleTest avec le type sélectionné
+			await alertsCommand.handleTest(interaction, interaction.client.alertManager, selectedType);
+		} catch (error) {
+			console.error('Erreur lors du test d\'alerte:', error);
+			
+			await interaction.followUp({
+				content: '❌ Erreur lors du test d\'alerte.',
+				ephemeral: true
+			});
+		}
+	},
+
 	// Gestionnaire pour les actions rapides des alertes (Type 17)
 	async handleAlertsQuickAction(interaction) {
 		const selectedAction = interaction.values[0];

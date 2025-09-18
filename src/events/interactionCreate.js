@@ -98,6 +98,13 @@ module.exports = {
 			return;
 		}
 
+		// Gestion des sélecteurs de test d'alertes
+		if (customId === 'alerts_test_select') {
+			const selectMenus = require('../components/selectMenus');
+			await selectMenus.handleAlertsTestSelect(interaction);
+			return;
+		}
+
 		// Gestion des actions rapides des alertes
 		if (customId === 'alerts_quick_action') {
 			const selectMenus = require('../components/selectMenus');
