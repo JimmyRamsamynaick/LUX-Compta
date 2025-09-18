@@ -383,14 +383,72 @@ class AlertManager {
 		// Vérifier les alertes toutes les heures
 		setInterval(() => {
 			this.checkActivityAlerts();
-		}, 3600000); // 1 heure
+		}, 60 * 60 * 1000); // 1 heure
 
-		// Nettoyer les anciennes alertes une fois par jour
+		// Nettoyer les anciennes alertes tous les jours
 		setInterval(() => {
 			this.clearOldAlerts();
-		}, 86400000); // 24 heures
+		}, 24 * 60 * 60 * 1000); // 24 heures
 
-		console.log('⏰ Planificateur d\'alertes démarré');
+		console.log('📅 Planificateur d\'alertes démarré');
+	}
+
+	async testAlert(type) {
+		try {
+			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
+			
+			// Simuler des données de test selon le type d'alerte
+			let testData = {};
+			
+			switch (type) {
+				case 'Baisse d\'activité':
+					testData = {
+						currentActivity: 5,
+						previousActivity: 15,
+						threshold: 10,
+						decline: 67
+					};
+					break;
+				case 'Aucune activité':
+					testData = {
+						hoursSinceLastActivity: 25,
+						threshold: 24
+					};
+					break;
+				case 'Perte de membres':
+					testData = {
+						currentMembers: 95,
+						previousMembers: 100,
+						threshold: 5,
+						loss: 5
+					};
+					break;
+				default:
+					testData = {
+						currentActivity: 5,
+						previousActivity: 15,
+						threshold: 10,
+						decline: 67
+					};
+					type = 'Baisse d\'activité';
+			}
+
+			// Envoyer l'alerte de test
+			await this.sendAlert(type, testData);
+
+			return {
+				success: true,
+				message: `Alerte de test "${type}" envoyée avec succès`,
+				data: testData
+			};
+		} catch (error) {
+			console.error('Erreur lors du test d\'alerte:', error);
+			return {
+				success: false,
+				message: 'Erreur lors de l\'envoi de l\'alerte de test',
+				error: error.message
+			};
+		}
 	}
 }
 

@@ -22,7 +22,7 @@ module.exports = {
 		}
 	},
 
-	async showGeneralHelp(interaction) {
+	async showGeneralHelp(interaction, isUpdate = false) {
 		const embed = new EmbedBuilder()
 			.setTitle('🤖 LUX Compta - Guide d\'utilisation')
 			.setDescription(`Bot de comptabilité et statistiques pour **${config.server.name}**`)
@@ -39,8 +39,8 @@ module.exports = {
 		});
 
 		// Vérifier si l'utilisateur a les permissions admin
-		const isAdmin = interaction.member.roles.cache.some(role =>
-			config.permissions.adminRoles.includes(role.name),
+		const isAdmin = interaction.member && interaction.member.roles && interaction.member.roles.cache.some(role =>
+			config.adminRoles && config.adminRoles.includes(role.name)
 		);
 
 		if (isAdmin) {
@@ -98,10 +98,14 @@ module.exports = {
 
 		const row = new ActionRowBuilder().addComponents(selectMenu);
 
-		await interaction.reply({
-			embeds: [embed],
-			components: [row],
-		});
+		if (isUpdate) {
+			await interaction.update({ embeds: [embed], components: [row] });
+		} else {
+			await interaction.reply({
+				embeds: [embed],
+				components: [row],
+			});
+		}
 	},
 
 	async showCommandHelp(interaction, commandName) {
@@ -168,6 +172,12 @@ module.exports = {
 	},
 
 	async handleCategorySelect(interaction, category) {
+		// Si l'utilisateur sélectionne le menu principal, afficher l'aide générale
+		if (category === 'main_menu') {
+			await this.showGeneralHelp(interaction, true); // true pour indiquer que c'est une mise à jour
+			return;
+		}
+
 		const categoryHelp = this.getCategoryHelp(category);
 
 		const embed = new EmbedBuilder()
@@ -195,11 +205,55 @@ module.exports = {
 			});
 		}
 
-		await interaction.update({ embeds: [embed], components: [] });
+		// Créer le menu de sélection pour permettre de choisir une autre catégorie
+		const selectMenu = new StringSelectMenuBuilder()
+			.setCustomId('help_category_select')
+			.setPlaceholder('Choisir une autre catégorie ou revenir au menu principal')
+			.addOptions([
+				{
+					label: 'Menu principal',
+					description: 'Revenir au menu d\'aide principal',
+					value: 'main_menu',
+					emoji: '🏠',
+				},
+				{
+					label: 'Statistiques',
+					description: 'Commandes liées aux statistiques',
+					value: 'stats',
+					emoji: '📊',
+				},
+				{
+					label: 'Rapports',
+					description: 'Génération et gestion des rapports',
+					value: 'reports',
+					emoji: '📋',
+				},
+				{
+					label: 'Configuration',
+					description: 'Paramètres et configuration',
+					value: 'config',
+					emoji: '⚙️',
+				},
+				{
+					label: 'Composants',
+					description: 'Utilisation des composants interactifs',
+					value: 'components',
+					emoji: '🔧',
+				},
+			]);
+
+		const row = new ActionRowBuilder().addComponents(selectMenu);
+
+		await interaction.update({ embeds: [embed], components: [row] });
 	},
 
 	getCategoryHelp(category) {
 		const categories = {
+			'main_menu': {
+				title: 'Menu principal',
+				description: 'Retour au menu d\'aide principal',
+				isMainMenu: true,
+			},
 			'stats': {
 				title: 'Statistiques',
 				description: 'Le système de statistiques suit l\'activité du serveur en temps réel.',

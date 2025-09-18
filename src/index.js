@@ -40,18 +40,41 @@ client.customizationManager = new CustomizationManager(client);
 // Charger les commandes
 const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
-	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+	// Charger les commandes des sous-dossiers
+	const commandFolders = fs.readdirSync(commandsPath);
+	
+	for (const folder of commandFolders) {
+		const folderPath = path.join(commandsPath, folder);
+		
+		// Vérifier si c'est un dossier
+		if (fs.statSync(folderPath).isDirectory()) {
+			const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
+			
+			for (const file of commandFiles) {
+				const filePath = path.join(folderPath, file);
+				const command = require(filePath);
 
-	for (const file of commandFiles) {
-		const filePath = path.join(commandsPath, file);
-		const command = require(filePath);
-
-		if ('data' in command && 'execute' in command) {
-			client.commands.set(command.data.name, command);
-			console.log(`✅ Commande chargée: ${command.data.name}`);
+				if ('data' in command && 'execute' in command) {
+					client.commands.set(command.data.name, command);
+					console.log(`✅ Commande chargée: ${command.data.name}`);
+				}
+				else {
+					console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
+				}
+			}
 		}
-		else {
-			console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
+		// Charger aussi les fichiers .js directement dans le dossier commands (si il y en a)
+		else if (folder.endsWith('.js')) {
+			const filePath = path.join(commandsPath, folder);
+			const command = require(filePath);
+
+			if ('data' in command && 'execute' in command) {
+				client.commands.set(command.data.name, command);
+				console.log(`✅ Commande chargée: ${command.data.name}`);
+			}
+			else {
+				console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
+			}
 		}
 	}
 }
