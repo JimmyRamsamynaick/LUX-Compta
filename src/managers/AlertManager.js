@@ -599,6 +599,54 @@ class AlertManager {
 		}
 	}
 
+	async getStatus() {
+		try {
+			const alertData = JSON.parse(await fs.readFile(this.alertsPath, 'utf8'));
+			const config = await this.getConfig();
+			
+			// Calculer les statistiques
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			
+			const todayAlerts = alertData.history?.filter(alert => 
+				new Date(alert.timestamp) >= today
+			) || [];
+			
+			const lastAlert = alertData.history?.length > 0 
+				? alertData.history[alertData.history.length - 1].timestamp 
+				: null;
+			
+			// Calculer le temps de fonctionnement (uptime)
+			const uptime = Date.now() - new Date(alertData.lastActivityCheck || new Date()).getTime();
+			
+			// Calculer la prochaine vérification (basé sur l'intervalle de configuration)
+			const checkInterval = config.checkInterval || 300000; // 5 minutes par défaut
+			const nextCheck = Date.now() + checkInterval;
+			
+			return {
+				todayCount: todayAlerts.length,
+				lastAlert: lastAlert,
+				uptime: uptime,
+				nextCheck: nextCheck,
+				totalAlerts: alertData.history?.length || 0,
+				enabled: config.enabled,
+				channel: config.channel
+			};
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la récupération du statut:', error);
+			return {
+				todayCount: 0,
+				lastAlert: null,
+				uptime: 0,
+				nextCheck: Date.now() + 300000,
+				totalAlerts: 0,
+				enabled: false,
+				channel: null
+			};
+		}
+	}
+
 	async getConfig() {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));

@@ -198,7 +198,7 @@ module.exports = {
 	},
 
 	async handleThresholds(interaction, alertManager) {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		const threshold = interaction.options.getString('threshold');
 		const value = interaction.options.getInteger('value');
@@ -308,7 +308,7 @@ module.exports = {
 	},
 
 	async handleTest(interaction, alertManager) {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		const type = interaction.options.getString('type');
 
@@ -392,7 +392,7 @@ module.exports = {
 	},
 
 	async handleHistory(interaction, alertManager) {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		const limit = interaction.options.getInteger('limit') || 10;
 
@@ -488,7 +488,7 @@ module.exports = {
 	},
 
 	async handleStatus(interaction, alertManager) {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply();
 
 		try {
 			const status = await alertManager.getStatus();

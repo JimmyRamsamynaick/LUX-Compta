@@ -7,7 +7,7 @@ module.exports = {
 	async handleDownloadReport(interaction, period) {
 		const reportManager = interaction.client.reportManager;
 
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		try {
 			// Générer le rapport s'il n'existe pas déjà
@@ -19,7 +19,7 @@ module.exports = {
 			if (!fileExists) {
 				return interaction.editReply({
 					content: '❌ Erreur lors de la génération du rapport.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 
@@ -45,7 +45,7 @@ module.exports = {
 			console.error('Erreur lors du téléchargement du rapport:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors du téléchargement du rapport.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},
@@ -92,7 +92,7 @@ module.exports = {
 		const statsManager = interaction.client.statsManager;
 		const reportManager = interaction.client.reportManager;
 
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		try {
 			const stats = await statsManager.getStats(period);
@@ -152,7 +152,7 @@ module.exports = {
 			console.error('Erreur lors de la visualisation du rapport:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de la visualisation du rapport.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},
@@ -193,7 +193,7 @@ module.exports = {
 			console.error('Erreur lors de l\'actualisation:', error);
 			await interaction.followUp({
 				content: '❌ Erreur lors de l\'actualisation des statistiques.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},
@@ -218,7 +218,7 @@ module.exports = {
 		const emailManager = interaction.client.emailManager;
 		const reportManager = interaction.client.reportManager;
 
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 64 });
 
 		try {
 			const emailAddress = interaction.fields.getTextInputValue('email_address');
@@ -255,7 +255,7 @@ module.exports = {
 			console.error('Erreur lors de l\'envoi de l\'email:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de l\'envoi de l\'email. Vérifiez la configuration email.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},

@@ -87,7 +87,7 @@ module.exports = {
 				await interaction.editReply({ content: content });
 			}
 			else {
-				await interaction.reply({ content: content, ephemeral: true });
+				await interaction.reply({ content: content, flags: 64 });
 			}
 		}
 	},

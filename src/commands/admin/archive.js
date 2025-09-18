@@ -137,7 +137,7 @@ module.exports = {
 			if (!archiveManager) {
 				return await interaction.reply({
 					content: '❌ Le gestionnaire d\'archives n\'est pas disponible.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 
@@ -172,10 +172,10 @@ module.exports = {
 			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage, ephemeral: true });
+				await interaction.followUp({ content: errorMessage, flags: 64 });
 			}
 			else {
-				await interaction.reply({ content: errorMessage, ephemeral: true });
+				await interaction.reply({ content: errorMessage, flags: 64 });
 			}
 		}
 	},
@@ -185,7 +185,7 @@ module.exports = {
 		const période = interaction.options.getString('période') || 'month';
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const result = await archiveManager.createManualArchive(type, période);
 
@@ -258,7 +258,7 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la création de l\'archive.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 		}
@@ -322,7 +322,7 @@ module.exports = {
 				await interaction.reply({
 					content: content,
 					components: [buttons],
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 			else {
@@ -335,7 +335,7 @@ module.exports = {
 			console.error('❌ Erreur lors de la configuration:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la configuration de l\'archivage.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},
@@ -344,7 +344,7 @@ module.exports = {
 		const type = interaction.options.getString('type');
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const archives = await archiveManager.listArchives(type);
 
@@ -428,7 +428,7 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la récupération de la liste des archives.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 		}
@@ -438,7 +438,7 @@ module.exports = {
 		const archiveId = interaction.options.getString('archive');
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const result = await archiveManager.restoreArchive(archiveId);
 
@@ -495,7 +495,7 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la restauration de l\'archive.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 		}
@@ -508,12 +508,12 @@ module.exports = {
 		if (!confirmer) {
 			return await interaction.reply({
 				content: '❌ Vous devez confirmer la suppression en définissant le paramètre "confirmer" sur true.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const result = await archiveManager.deleteArchive(archiveId);
 
@@ -568,7 +568,7 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la suppression de l\'archive.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 		}
@@ -578,7 +578,7 @@ module.exports = {
 		const âge = interaction.options.getInteger('âge') || 90;
 
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const result = await archiveManager.cleanupOldArchives(âge);
 
@@ -635,7 +635,7 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors du nettoyage des archives.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 		}
@@ -643,7 +643,7 @@ module.exports = {
 
 	async handleStatus(interaction, archiveManager) {
 		try {
-			await interaction.deferReply({ ephemeral: true });
+			await interaction.deferReply({ flags: 64 });
 
 			const status = await archiveManager.getStatus();
 
@@ -746,7 +746,7 @@ module.exports = {
 			else {
 				await interaction.reply({
 					content: '❌ Erreur lors de la récupération du statut de l\'archivage.',
-					ephemeral: true,
+					flags: 64,
 				});
 			}
 		}
@@ -813,7 +813,7 @@ module.exports = {
 			await interaction.reply({
 				content: content,
 				components: [selectRow, buttons],
-				ephemeral: true,
+				flags: 64,
 			});
 
 		}
@@ -821,7 +821,7 @@ module.exports = {
 			console.error('❌ Erreur lors de l\'affichage de la configuration:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de l\'affichage de la configuration.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},

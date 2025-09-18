@@ -19,7 +19,7 @@ module.exports = {
 				console.error('Erreur lors de l\'exécution de la commande:', error);
 				const reply = {
 					content: 'Il y a eu une erreur lors de l\'exécution de cette commande !',
-					ephemeral: true,
+					flags: 64,
 				};
 
 				if (interaction.replied || interaction.deferred) {
@@ -40,7 +40,7 @@ module.exports = {
 				console.error('Erreur lors de la gestion des composants:', error);
 				const reply = {
 					content: 'Il y a eu une erreur lors du traitement de cette interaction !',
-					ephemeral: true,
+					flags: 64,
 				};
 
 				if (interaction.replied || interaction.deferred) {
@@ -61,7 +61,7 @@ module.exports = {
 				console.error('Erreur lors de la gestion des modals:', error);
 				const reply = {
 					content: 'Il y a eu une erreur lors du traitement de ce formulaire !',
-					ephemeral: true,
+					flags: 64,
 				};
 
 				if (interaction.replied || interaction.deferred) {
@@ -95,6 +95,13 @@ module.exports = {
 		if (customId === 'report_type_select') {
 			const selectMenus = require('../components/selectMenus');
 			await selectMenus.handleReportTypeSelect(interaction);
+			return;
+		}
+
+		// Gestion des actions rapides des alertes
+		if (customId === 'alerts_quick_action') {
+			const selectMenus = require('../components/selectMenus');
+			await selectMenus.handleAlertsQuickAction(interaction);
 			return;
 		}
 
@@ -214,7 +221,7 @@ module.exports = {
 
 			await interaction.reply({
 				content: `✅ Paramètre **${parameter}** mis à jour avec la valeur: \`${newValue}\``,
-				ephemeral: true,
+				flags: 64,
 			});
 
 		}
@@ -222,7 +229,7 @@ module.exports = {
 			console.error('Erreur lors de la mise à jour de la configuration:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la mise à jour de la configuration.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},

@@ -89,7 +89,7 @@ module.exports = {
 			console.error('Erreur lors de la sélection de période:', error);
 			await interaction.followUp({
 				content: '❌ Erreur lors de la récupération des données pour cette période.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},
@@ -171,7 +171,74 @@ module.exports = {
 			console.error('Erreur lors de la sélection de type de rapport:', error);
 			await interaction.followUp({
 				content: '❌ Erreur lors de la récupération des rapports.',
-				ephemeral: true,
+				flags: 64,
+			});
+		}
+	},
+
+	// Gestionnaire pour les actions rapides des alertes (Type 17)
+	async handleAlertsQuickAction(interaction) {
+		const selectedAction = interaction.values[0];
+		const alertManager = interaction.client.alertManager;
+
+		await interaction.deferUpdate();
+
+		try {
+			let content = '';
+			let success = false;
+
+			switch (selectedAction) {
+				case 'enable':
+					await alertManager.setAlertsEnabled(true);
+					content = '✅ **Alertes activées avec succès !**\n\n';
+					content += '🔔 Les alertes automatiques sont maintenant actives.\n';
+					content += '📊 Le système surveillera l\'activité du serveur.';
+					success = true;
+					break;
+
+				case 'disable':
+					await alertManager.setAlertsEnabled(false);
+					content = '❌ **Alertes désactivées avec succès !**\n\n';
+					content += '🔕 Les alertes automatiques sont maintenant inactives.\n';
+					content += '⚠️ Le système ne surveillera plus l\'activité du serveur.';
+					success = true;
+					break;
+
+				case 'test_low_activity':
+					const testResult = await alertManager.testAlert('low_activity');
+					content = '🧪 **Test d\'alerte - Faible activité**\n\n';
+					content += '✅ Test effectué avec succès !\n';
+					content += `📊 Résultat: ${testResult.success ? 'Alerte envoyée' : 'Erreur lors du test'}`;
+					success = testResult.success;
+					break;
+
+				case 'clear_history':
+					await alertManager.clearOldAlerts(0); // Supprimer toutes les alertes
+					content = '🗑️ **Historique des alertes effacé**\n\n';
+					content += '✅ Toutes les alertes ont été supprimées de l\'historique.\n';
+					content += '📊 L\'historique est maintenant vide.';
+					success = true;
+					break;
+
+				default:
+					content = '❌ **Action non reconnue**\n\n';
+					content += `⚠️ L'action "${selectedAction}" n'est pas supportée.`;
+					success = false;
+			}
+
+			// Mettre à jour le message avec le résultat
+			await interaction.editReply({
+				content: content,
+				components: [] // Supprimer les composants après action
+			});
+
+		}
+		catch (error) {
+			console.error('Erreur lors de l\'action rapide des alertes:', error);
+			await interaction.editReply({
+				content: '❌ **Erreur lors de l\'exécution de l\'action**\n\n' +
+					'Une erreur est survenue lors de l\'exécution de l\'action sélectionnée.',
+				components: []
 			});
 		}
 	},

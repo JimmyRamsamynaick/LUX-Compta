@@ -53,7 +53,7 @@ module.exports = {
 			console.error('Erreur lors de la récupération des statistiques:', error);
 			await interaction.editReply({
 				content: '❌ Erreur lors de la récupération des statistiques.',
-				ephemeral: true,
+				flags: 64,
 			});
 		}
 	},
