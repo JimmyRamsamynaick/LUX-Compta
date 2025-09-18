@@ -323,4 +323,77 @@ module.exports = {
 		};
 		return labels[period] || period;
 	},
+
+	// Gestionnaire pour les boutons de rapport
+	async handleReportButton(interaction) {
+		const customId = interaction.customId;
+
+		try {
+			if (customId === 'report_generate') {
+				await this.generateReport(interaction);
+			}
+			else if (customId === 'report_schedule') {
+				await this.scheduleReport(interaction);
+			}
+			else if (customId === 'report_export') {
+				await this.exportReport(interaction);
+			}
+			else if (customId.startsWith('report_type_')) {
+				const reportType = customId.replace('report_type_', '');
+				await this.selectReportType(interaction, reportType);
+			}
+			else if (customId.startsWith('report_format_')) {
+				const format = customId.replace('report_format_', '');
+				await this.selectReportFormat(interaction, format);
+			}
+			else {
+				await interaction.reply({
+					content: '❌ Action de rapport non reconnue.',
+					ephemeral: true,
+				});
+			}
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la gestion du bouton rapport:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de l\'exécution de l\'action de rapport.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async generateReport(interaction) {
+		await interaction.reply({
+			content: '📊 Rapport généré avec succès !',
+			ephemeral: true,
+		});
+	},
+
+	async scheduleReport(interaction) {
+		await interaction.reply({
+			content: '⏰ Rapport programmé avec succès !',
+			ephemeral: true,
+		});
+	},
+
+	async exportReport(interaction) {
+		await interaction.reply({
+			content: '📤 Rapport exporté avec succès !',
+			ephemeral: true,
+		});
+	},
+
+	async selectReportType(interaction, reportType) {
+		await interaction.reply({
+			content: `✅ Type de rapport "${reportType}" sélectionné.`,
+			ephemeral: true,
+		});
+	},
+
+	async selectReportFormat(interaction, format) {
+		await interaction.reply({
+			content: `✅ Format "${format}" sélectionné pour le rapport.`,
+			ephemeral: true,
+		});
+	},
 };

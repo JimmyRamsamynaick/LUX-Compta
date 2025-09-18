@@ -183,6 +183,84 @@ module.exports = {
 			return;
 		}
 
+		// Gestion des boutons d'alertes (configuration, seuils, historique, statut)
+		if (customId.startsWith('alerts_')) {
+			const alertsCommand = require('../commands/admin/alerts');
+			
+			// Boutons de configuration
+			if (customId === 'alerts_config_view' || customId === 'alerts_config_test' || customId === 'alerts_config_advanced') {
+				await alertsCommand.handleConfig(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			// Boutons de seuils
+			if (customId.startsWith('alerts_threshold_')) {
+				await alertsCommand.handleThresholds(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			// Boutons d'historique
+			if (customId.startsWith('alerts_history_')) {
+				await alertsCommand.handleHistory(interaction, interaction.client.alertManager);
+				return;
+			}
+			
+			// Boutons de statut
+			if (customId.startsWith('alerts_status_')) {
+				await alertsCommand.handleStatus(interaction, interaction.client.alertManager);
+				return;
+			}
+		}
+
+		// Gestion des boutons de dashboard
+		if (customId.startsWith('dashboard_')) {
+			const dashboardCommand = require('../commands/admin/dashboard');
+			await dashboardCommand.handleDashboardButton(interaction);
+			return;
+		}
+
+		// Gestion des boutons d'archive
+		if (customId.startsWith('archive_') || customId.includes('archive')) {
+			const archiveCommand = require('../commands/admin/archive');
+			await archiveCommand.handleArchiveButton(interaction);
+			return;
+		}
+
+		// Gestion des boutons de customisation
+		if (customId.startsWith('customization_') || customId.startsWith('theme_') || customId.startsWith('color_') || customId.startsWith('emoji_')) {
+			const customizeCommand = require('../commands/admin/customize');
+			await customizeCommand.handleCustomizeButton(interaction);
+			return;
+		}
+
+		// Gestion des boutons d'email de test
+		if (customId.startsWith('email_')) {
+			const emailTestCommand = require('../commands/admin/email-test');
+			await emailTestCommand.handleEmailButton(interaction);
+			return;
+		}
+
+		// Gestion des boutons de rapport
+		if (customId.startsWith('report_')) {
+			const reportCommand = require('../commands/admin/report');
+			await reportCommand.handleReportButton(interaction);
+			return;
+		}
+
+		// Gestion des boutons d'aide
+		if (customId.startsWith('help_')) {
+			const helpCommand = require('../commands/general/help');
+			await helpCommand.handleHelpButton(interaction);
+			return;
+		}
+
+		// Gestion des boutons de stats
+		if (customId.startsWith('stats_')) {
+			const statsCommand = require('../commands/admin/stats');
+			await statsCommand.handleStatsButton(interaction);
+			return;
+		}
+
 		console.log(`Composant non géré: ${customId}`);
 	},
 

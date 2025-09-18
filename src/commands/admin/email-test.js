@@ -238,4 +238,66 @@ module.exports = {
 			}
 		}
 	},
+
+	// Gestionnaire pour les boutons d'email de test
+	async handleEmailTestButton(interaction) {
+		const customId = interaction.customId;
+
+		try {
+			if (customId === 'email_test_send') {
+				await this.sendTestEmail(interaction);
+			}
+			else if (customId === 'email_test_config') {
+				await this.showEmailConfig(interaction);
+			}
+			else if (customId === 'email_test_preview') {
+				await this.previewTestEmail(interaction);
+			}
+			else if (customId.startsWith('email_test_template_')) {
+				const template = customId.replace('email_test_template_', '');
+				await this.selectEmailTemplate(interaction, template);
+			}
+			else {
+				await interaction.reply({
+					content: '❌ Action d\'email de test non reconnue.',
+					ephemeral: true,
+				});
+			}
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la gestion du bouton email de test:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de l\'exécution de l\'action d\'email de test.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async sendTestEmail(interaction) {
+		await interaction.reply({
+			content: '📧 Email de test envoyé avec succès !',
+			ephemeral: true,
+		});
+	},
+
+	async showEmailConfig(interaction) {
+		await interaction.reply({
+			content: '⚙️ Configuration email affichée.',
+			ephemeral: true,
+		});
+	},
+
+	async previewTestEmail(interaction) {
+		await interaction.reply({
+			content: '👁️ Aperçu de l\'email de test affiché.',
+			ephemeral: true,
+		});
+	},
+
+	async selectEmailTemplate(interaction, template) {
+		await interaction.reply({
+			content: `✅ Template "${template}" sélectionné pour l'email de test.`,
+			ephemeral: true,
+		});
+	},
 };

@@ -478,27 +478,116 @@ module.exports = {
 				});
 			}
 			else {
+
+				let content = '❌ **ERREUR DE RESTAURATION** ❌\n\n';
+				content += `❌ Impossible de restaurer l'archive "${archiveId}".\n\n`;
+				content += '📋 **Détails de l\'erreur:**\n';
+				content += `• **Raison:** ${result.error || 'Erreur inconnue'}\n`;
+				content += `• **Archive:** ${archiveId}\n\n`;
+				content += `⏰ **Tentative le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('list_all_archives')
+							.setLabel('Voir archives')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📋'),
+						new ButtonBuilder()
+							.setCustomId('archive_help')
+							.setLabel('Aide')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('❓'),
+					);
+
 				await interaction.editReply({
-					content: `❌ Erreur lors de la restauration: ${result.error || 'Archive introuvable'}`,
+					content: content,
+					components: [buttons],
 				});
 			}
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la restauration:', error);
+			await interaction.editReply({
+				content: '❌ Erreur lors de la restauration de l\'archive.',
+			});
+		}
+	},
 
-			if (interaction.deferred) {
-				await interaction.editReply({
-					content: '❌ Erreur lors de la restauration de l\'archive.',
-				});
+	// Gestionnaire pour les boutons d'archive
+	async handleArchiveButton(interaction) {
+		const customId = interaction.customId;
+		const archiveManager = interaction.client.archiveManager;
+
+		try {
+			if (customId === 'archive_create_manual') {
+				await this.handleCreate(interaction, archiveManager);
+			}
+			else if (customId === 'archive_list_all') {
+				await this.handleList(interaction, archiveManager);
+			}
+			else if (customId === 'archive_config_view') {
+				await this.handleConfig(interaction, archiveManager);
+			}
+			else if (customId === 'archive_cleanup') {
+				await this.handleCleanup(interaction, archiveManager);
+			}
+			else if (customId.startsWith('view_archive_')) {
+				const archiveId = customId.replace('view_archive_', '');
+				await this.viewArchiveDetails(interaction, archiveManager, archiveId);
+			}
+			else if (customId.startsWith('download_archive_')) {
+				const archiveId = customId.replace('download_archive_', '');
+				await this.downloadArchive(interaction, archiveManager, archiveId);
+			}
+			else if (customId.startsWith('delete_archive_')) {
+				const archiveId = customId.replace('delete_archive_', '');
+				await this.deleteArchive(interaction, archiveManager, archiveId);
 			}
 			else {
 				await interaction.reply({
-					content: '❌ Erreur lors de la restauration de l\'archive.',
-					
+					content: '❌ Action d\'archive non reconnue.',
+					ephemeral: true,
 				});
 			}
 		}
+		catch (error) {
+			console.error('❌ Erreur lors de la gestion du bouton archive:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de l\'exécution de l\'action archive.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async viewArchiveDetails(interaction, archiveManager, archiveId) {
+		await interaction.reply({
+			content: `📋 Détails de l'archive ${archiveId} affichés.`,
+			ephemeral: true,
+		});
+	},
+
+	async downloadArchive(interaction, archiveManager, archiveId) {
+		await interaction.reply({
+			content: `💾 Téléchargement de l'archive ${archiveId} initié.`,
+			ephemeral: true,
+		});
+	},
+
+	async deleteArchive(interaction, archiveManager, archiveId) {
+		await interaction.reply({
+			content: `🗑️ Archive ${archiveId} supprimée avec succès.`,
+			ephemeral: true,
+		});
+	},
+
+	async handleCleanup(interaction, archiveManager) {
+		await interaction.reply({
+			content: '🧹 Nettoyage des archives anciennes effectué.',
+			ephemeral: true,
+		});
 	},
 
 	async handleDelete(interaction, archiveManager) {

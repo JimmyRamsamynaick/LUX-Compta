@@ -407,4 +407,160 @@ module.exports = {
 
 		return categories[category] || { title: 'Catégorie inconnue', description: 'Cette catégorie n\'existe pas.' };
 	},
+
+	async handleHelpButton(interaction) {
+		const customId = interaction.customId;
+
+		try {
+			if (customId === 'help_quick_start') {
+				await this.showQuickStart(interaction);
+			} else if (customId === 'help_examples') {
+				await this.showExamples(interaction);
+			} else if (customId === 'help_support') {
+				await this.showSupport(interaction);
+			} else if (customId === 'help_back_main') {
+				await this.showGeneralHelp(interaction, true);
+			} else if (customId === 'help_try_command') {
+				await this.showTryCommand(interaction);
+			} else if (customId === 'help_more_info') {
+				await this.showMoreInfo(interaction);
+			} else if (customId === 'help_category_demo') {
+				await this.showCategoryDemo(interaction);
+			} else if (customId === 'help_category_examples') {
+				await this.showCategoryExamples(interaction);
+			} else if (customId === 'help_category_faq') {
+				await this.showCategoryFAQ(interaction);
+			}
+		} catch (error) {
+			console.error('Erreur dans handleHelpButton:', error);
+			await interaction.reply({
+				content: '❌ Une erreur est survenue lors du traitement de votre demande.',
+				ephemeral: true
+			});
+		}
+	},
+
+	async showQuickStart(interaction) {
+		let content = '🚀 **GUIDE DE DÉMARRAGE RAPIDE** 🚀\n\n';
+		content += '**Étape 1:** Utilisez `/help` pour voir toutes les commandes\n';
+		content += '**Étape 2:** Essayez `/stats` pour voir les statistiques\n';
+		content += '**Étape 3:** Explorez les boutons et menus interactifs\n\n';
+		content += '💡 **Conseil:** Commencez par les commandes de base avant d\'explorer les fonctionnalités avancées.';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showExamples(interaction) {
+		let content = '📝 **EXEMPLES D\'UTILISATION** 📝\n\n';
+		content += '**Statistiques:**\n';
+		content += '• `/stats` - Statistiques générales\n';
+		content += '• Cliquez sur "Actualiser" pour mettre à jour\n\n';
+		content += '**Rapports:**\n';
+		content += '• `/rapport generer` - Créer un rapport\n';
+		content += '• Utilisez les boutons pour télécharger\n\n';
+		content += '**Navigation:**\n';
+		content += '• Utilisez les menus déroulants pour changer de catégorie\n';
+		content += '• Les boutons permettent des actions rapides';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showSupport(interaction) {
+		let content = '❓ **SUPPORT ET AIDE** ❓\n\n';
+		content += '**Problèmes courants:**\n';
+		content += '• Commande non reconnue → Vérifiez l\'orthographe\n';
+		content += '• Pas de permissions → Contactez un administrateur\n';
+		content += '• Bot ne répond pas → Vérifiez qu\'il est en ligne\n\n';
+		content += '**Contact:**\n';
+		content += '• Mentionnez un administrateur\n';
+		content += '• Utilisez le canal de support\n';
+		content += '• Consultez la documentation complète';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showTryCommand(interaction) {
+		let content = '🚀 **ESSAYER LA COMMANDE** 🚀\n\n';
+		content += 'Vous pouvez maintenant essayer cette commande !\n\n';
+		content += '💡 **Conseils:**\n';
+		content += '• Tapez `/` pour voir toutes les commandes\n';
+		content += '• Utilisez la saisie automatique\n';
+		content += '• Lisez les descriptions des options';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showMoreInfo(interaction) {
+		let content = 'ℹ️ **INFORMATIONS DÉTAILLÉES** ℹ️\n\n';
+		content += 'Pour plus d\'informations détaillées:\n\n';
+		content += '• Consultez la documentation complète\n';
+		content += '• Explorez les différentes catégories d\'aide\n';
+		content += '• Testez les fonctionnalités interactives\n';
+		content += '• Demandez de l\'aide aux administrateurs';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showCategoryDemo(interaction) {
+		let content = '🎬 **DÉMONSTRATION** 🎬\n\n';
+		content += 'Voici une démonstration des fonctionnalités:\n\n';
+		content += '1. Utilisez les commandes slash\n';
+		content += '2. Interagissez avec les boutons\n';
+		content += '3. Explorez les menus déroulants\n';
+		content += '4. Téléchargez les rapports\n\n';
+		content += '💡 Chaque interaction vous donnera des options supplémentaires !';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showCategoryExamples(interaction) {
+		let content = '📋 **EXEMPLES PRATIQUES** 📋\n\n';
+		content += 'Voici des exemples concrets d\'utilisation:\n\n';
+		content += '**Scénario 1:** Consulter les stats du jour\n';
+		content += '→ `/stats` puis sélectionner "Aujourd\'hui"\n\n';
+		content += '**Scénario 2:** Générer un rapport mensuel\n';
+		content += '→ `/rapport generer` puis choisir "Mensuel"\n\n';
+		content += '**Scénario 3:** Configurer les alertes\n';
+		content += '→ `/config` puis "Alertes"';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
+
+	async showCategoryFAQ(interaction) {
+		let content = '❓ **QUESTIONS FRÉQUENTES** ❓\n\n';
+		content += '**Q: Comment voir les statistiques ?**\n';
+		content += 'R: Utilisez `/stats` et sélectionnez la période\n\n';
+		content += '**Q: Comment télécharger un rapport ?**\n';
+		content += 'R: Générez le rapport puis cliquez sur "Télécharger"\n\n';
+		content += '**Q: Qui peut utiliser les commandes admin ?**\n';
+		content += 'R: Seuls les utilisateurs avec les rôles appropriés\n\n';
+		content += '**Q: Le bot ne répond pas ?**\n';
+		content += 'R: Vérifiez qu\'il est en ligne et que vous avez les permissions';
+
+		await interaction.update({
+			content: content,
+			components: []
+		});
+	},
 };

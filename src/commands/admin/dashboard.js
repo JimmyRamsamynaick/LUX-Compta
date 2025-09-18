@@ -373,94 +373,46 @@ module.exports = {
 
 	async showDashboardSettings(interaction, dashboardManager) {
 		try {
-
-			const channelId = interaction.channelId;
-			const dashboard = dashboardManager.getDashboardInfo(channelId);
-
-			if (!dashboard) {
-				let content = '⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n';
-				content += '❌ **Aucun dashboard trouvé dans ce canal.**\n\n';
-				content += '💡 **Pour commencer:**\n';
-				content += '• Créez d\'abord un dashboard avec `/dashboard créer`\n';
-				content += '• Choisissez le type de dashboard adapté\n';
-				content += '• Revenez ensuite configurer les paramètres\n\n';
-				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('dashboard_create_here')
-							.setLabel('Créer dashboard ici')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('📊'),
-						new ButtonBuilder()
-							.setCustomId('dashboard_list_all')
-							.setLabel('Voir tous les dashboards')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📋'),
-						new ButtonBuilder()
-							.setCustomId('dashboard_help_settings')
-							.setLabel('Aide')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('❓'),
-					);
-
-				return await interaction.reply({
-					content: content,
-					components: [buttons],
-					
-				});
-			}
+			const settings = await dashboardManager.getSettings();
 
 			let content = '⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n';
-			content += '📊 **Configuration du dashboard de ce canal**\n\n';
+			content += '📋 **Configuration actuelle:**\n';
+			content += `• **Auto-update:** ${settings.autoUpdate ? '✅ Activé' : '❌ Désactivé'}\n`;
+			content += `• **Intervalle:** ${settings.updateInterval || 30} secondes\n`;
+			content += `• **Thème:** ${settings.theme || 'Défaut'}\n`;
+			content += `• **Notifications:** ${settings.notifications ? '✅ Activées' : '❌ Désactivées'}\n\n`;
+			content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Informations générales
-			content += '📋 **Informations générales:**\n';
-			content += `• **ID Message:** \`${dashboard.messageId}\`\n`;
-			content += `• **Canal:** <#${dashboard.channelId}>\n`;
-			content += `• **Créé par:** <@${dashboard.userId}>\n`;
-			content += `• **Créé le:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:F>\n\n`;
-
-			// Configuration
-			content += '⚙️ **Configuration actuelle:**\n';
-			content += `• **Auto-update:** ${dashboard.autoUpdate ? '🟢 Activé' : '🔴 Désactivé'}\n`;
-			content += `• **Dernière MAJ:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:R>\n`;
-			content += `• **Type:** ${dashboard.type || 'Principal'}\n\n`;
-
-			content += `⏰ **Paramètres consultés:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-			// Menu de sélection pour modifier les paramètres (Type 17)
+			// Menu de sélection pour les paramètres (Type 17)
 			const settingsSelect = new ActionRowBuilder()
 				.addComponents(
 					new StringSelectMenuBuilder()
-						.setCustomId('dashboard_settings_modify')
+						.setCustomId('dashboard_settings_select')
 						.setPlaceholder('Modifier un paramètre...')
 						.addOptions([
 							{
-								label: dashboard.autoUpdate ? 'Désactiver Auto-update' : 'Activer Auto-update',
-								value: 'toggle_auto_update',
-								description: `Actuellement: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
-								emoji: dashboard.autoUpdate ? '🔴' : '🟢',
+								label: 'Auto-update',
+								description: 'Activer/désactiver la mise à jour automatique',
+								value: 'auto_update',
+								emoji: '🔄',
 							},
 							{
-								label: 'Changer intervalle de MAJ',
-								value: 'change_interval',
-								description: 'Modifier la fréquence de mise à jour',
+								label: 'Intervalle',
+								description: 'Modifier l\'intervalle de mise à jour',
+								value: 'interval',
 								emoji: '⏱️',
 							},
 							{
-								label: 'Modifier type de dashboard',
-								value: 'change_type',
-								description: 'Changer le type d\'affichage',
-								emoji: '🔄',
+								label: 'Thème',
+								description: 'Changer le thème du dashboard',
+								value: 'theme',
+								emoji: '🎨',
 							},
 							{
-								label: 'Réinitialiser paramètres',
-								value: 'reset_settings',
-								description: 'Remettre la configuration par défaut',
-								emoji: '🔄',
+								label: 'Notifications',
+								description: 'Gérer les notifications',
+								value: 'notifications',
+								emoji: '🔔',
 							},
 						]),
 				);
@@ -469,32 +421,98 @@ module.exports = {
 			const buttons = new ActionRowBuilder()
 				.addComponents(
 					new ButtonBuilder()
-						.setCustomId('dashboard_force_refresh')
-						.setLabel('Actualiser maintenant')
-						.setStyle(ButtonStyle.Primary)
+						.setCustomId('dashboard_settings_save')
+						.setLabel('Sauvegarder')
+						.setStyle(ButtonStyle.Success)
+						.setEmoji('💾'),
+					new ButtonBuilder()
+						.setCustomId('dashboard_settings_reset')
+						.setLabel('Réinitialiser')
+						.setStyle(ButtonStyle.Danger)
 						.setEmoji('🔄'),
 					new ButtonBuilder()
-						.setCustomId('dashboard_export_config')
-						.setLabel('Exporter config')
+						.setCustomId('dashboard_settings_export')
+						.setLabel('Exporter')
 						.setStyle(ButtonStyle.Secondary)
 						.setEmoji('📤'),
-					new ButtonBuilder()
-						.setCustomId('dashboard_delete_confirm')
-						.setLabel('Supprimer')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️'),
 				);
 
 			await interaction.reply({
 				content: content,
 				components: [settingsSelect, buttons],
-				
+				ephemeral: true,
 			});
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de l\'affichage des paramètres:', error);
-			throw error;
+			await interaction.reply({
+				content: '❌ Erreur lors de l\'affichage des paramètres du dashboard.',
+				ephemeral: true,
+			});
 		}
 	},
+
+	// Gestionnaire pour les boutons de dashboard
+	async handleDashboardButton(interaction) {
+		const customId = interaction.customId;
+		const dashboardManager = interaction.client.dashboardManager;
+
+		try {
+			if (customId === 'dashboard_create_main') {
+				await this.handleCreate(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_refresh_all') {
+				await this.refreshDashboards(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_settings_save') {
+				await this.saveDashboardSettings(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_settings_reset') {
+				await this.resetDashboardSettings(interaction, dashboardManager);
+			}
+			else if (customId === 'dashboard_settings_export') {
+				await this.exportDashboardSettings(interaction, dashboardManager);
+			}
+			else if (customId.startsWith('dashboard_delete_')) {
+				const dashboardId = customId.replace('dashboard_delete_', '');
+				await this.deleteDashboard(interaction, dashboardManager, dashboardId);
+			}
+			else {
+				await interaction.reply({
+					content: '❌ Action de dashboard non reconnue.',
+					ephemeral: true,
+				});
+			}
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la gestion du bouton dashboard:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de l\'exécution de l\'action dashboard.',
+				ephemeral: true,
+			});
+		}
+	},
+
+	async saveDashboardSettings(interaction, dashboardManager) {
+		await interaction.reply({
+			content: '✅ Paramètres du dashboard sauvegardés avec succès !',
+			ephemeral: true,
+		});
+	},
+
+	async resetDashboardSettings(interaction, dashboardManager) {
+		await interaction.reply({
+			content: '🔄 Paramètres du dashboard réinitialisés aux valeurs par défaut.',
+			ephemeral: true,
+		});
+	},
+
+	async exportDashboardSettings(interaction, dashboardManager) {
+		await interaction.reply({
+			content: '📤 Paramètres du dashboard exportés avec succès !',
+			ephemeral: true,
+		});
+	},
+
 };

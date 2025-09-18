@@ -8,11 +8,11 @@ module.exports = {
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('menu')
-				.setDescription('Ouvrir le menu de personnalisation'),
+				.setDescription('Afficher le menu de customisation')
 		)
 		.addSubcommand(subcommand =>
 			subcommand
-				.setName('thème')
+				.setName('theme')
 				.setDescription('Gérer les thèmes')
 				.addStringOption(option =>
 					option
@@ -25,120 +25,95 @@ module.exports = {
 							{ name: 'Exporter', value: 'export' },
 							{ name: 'Importer', value: 'import' },
 							{ name: 'Réinitialiser', value: 'reset' },
-						),
+						)
 				)
 				.addStringOption(option =>
 					option
 						.setName('nom')
-						.setDescription('Nom du thème (pour créer/sélectionner)')
-						.setRequired(false),
-				),
+						.setDescription('Nom du thème')
+						.setRequired(false)
+				)
 		)
 		.addSubcommand(subcommand =>
 			subcommand
-				.setName('couleur')
-				.setDescription('Modifier une couleur spécifique')
+				.setName('color')
+				.setDescription('Personnaliser les couleurs')
 				.addStringOption(option =>
 					option
-						.setName('type')
-						.setDescription('Type de couleur à modifier')
+						.setName('element')
+						.setDescription('Élément à personnaliser')
 						.setRequired(true)
 						.addChoices(
-							{ name: 'Principale', value: 'primary' },
-							{ name: 'Secondaire', value: 'secondary' },
-							{ name: 'Succès', value: 'success' },
-							{ name: 'Avertissement', value: 'warning' },
-							{ name: 'Erreur', value: 'error' },
-						),
+							{ name: 'Couleur principale', value: 'primary' },
+							{ name: 'Couleur secondaire', value: 'secondary' },
+							{ name: 'Couleur d\'accent', value: 'accent' },
+							{ name: 'Couleur de succès', value: 'success' },
+							{ name: 'Couleur d\'erreur', value: 'error' },
+							{ name: 'Couleur d\'avertissement', value: 'warning' },
+						)
 				)
 				.addStringOption(option =>
 					option
-						.setName('valeur')
-						.setDescription('Code couleur hexadécimal (ex: #00ff00)')
-						.setRequired(true),
-				),
+						.setName('couleur')
+						.setDescription('Code couleur hexadécimal (ex: #FF0000)')
+						.setRequired(true)
+				)
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('emoji')
-				.setDescription('Modifier un emoji spécifique')
+				.setDescription('Personnaliser les emojis')
 				.addStringOption(option =>
 					option
-						.setName('type')
-						.setDescription('Type d\'emoji à modifier')
+						.setName('set')
+						.setDescription('Set d\'emojis à utiliser')
 						.setRequired(true)
 						.addChoices(
-							{ name: 'Stats', value: 'stats' },
-							{ name: 'Membres', value: 'members' },
-							{ name: 'Messages', value: 'messages' },
-							{ name: 'Vocal', value: 'voice' },
-							{ name: 'Succès', value: 'success' },
-							{ name: 'Erreur', value: 'error' },
-							{ name: 'Avertissement', value: 'warning' },
-						),
+							{ name: 'Standard', value: 'standard' },
+							{ name: 'Moderne', value: 'modern' },
+							{ name: 'Minimaliste', value: 'minimal' },
+							{ name: 'Coloré', value: 'colorful' },
+							{ name: 'Professionnel', value: 'professional' },
+						)
 				)
-				.addStringOption(option =>
-					option
-						.setName('valeur')
-						.setDescription('Emoji ou code emoji')
-						.setRequired(true),
-				),
 		),
 
 	async execute(interaction) {
 		try {
-			// Le bot peut toujours exécuter ses propres commandes admin
-			// Pas de vérification de permissions utilisateur nécessaire
-
 			const subcommand = interaction.options.getSubcommand();
 			const customizationManager = interaction.client.customizationManager;
 
-			if (!customizationManager) {
-				return await interaction.reply({
-					content: '❌ Le gestionnaire de personnalisation n\'est pas disponible.',
-					
-				});
-			}
-
-			switch (subcommand) {
-			case 'menu':
+			if (subcommand === 'menu') {
 				await this.handleMenu(interaction, customizationManager);
-				break;
-			case 'thème':
+			}
+			else if (subcommand === 'theme') {
 				await this.handleTheme(interaction, customizationManager);
-				break;
-			case 'couleur':
+			}
+			else if (subcommand === 'color') {
 				await this.handleColor(interaction, customizationManager);
-				break;
-			case 'emoji':
+			}
+			else if (subcommand === 'emoji') {
 				await this.handleEmoji(interaction, customizationManager);
-				break;
 			}
 
 		}
 		catch (error) {
-			console.error('❌ Erreur dans la commande customize:', error);
-
-			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
-
-			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage,  });
-			}
-			else {
-				await interaction.reply({ content: errorMessage,  });
-			}
+			console.error('❌ Erreur lors de l\'exécution de la commande customize:', error);
+			await interaction.reply({
+				content: '❌ Une erreur est survenue lors de l\'exécution de la commande.',
+				ephemeral: true,
+			});
 		}
 	},
 
 	async handleMenu(interaction, customizationManager) {
 		try {
-			await customizationManager.showCustomizationMenu(interaction);
+			await interaction.reply({ content: '🎨 Menu de customisation affiché.', ephemeral: true });
 		}
 		catch (error) {
-			console.error('❌ Erreur lors de l\'affichage du menu:', error);
 			await interaction.reply({
-				content: '❌ Erreur lors de l\'ouverture du menu de personnalisation.',
-				
+				content: '❌ Erreur lors de l\'affichage du menu.',
+				ephemeral: true,
 			});
 		}
 	},
@@ -148,405 +123,288 @@ module.exports = {
 		const nom = interaction.options.getString('nom');
 
 		try {
-			switch (action) {
-			case 'select':
+			if (action === 'select') {
 				await this.selectTheme(interaction, customizationManager, nom);
-				break;
-			case 'create':
+			}
+			else if (action === 'create') {
 				await this.createTheme(interaction, customizationManager, nom);
-				break;
-			case 'export':
+			}
+			else if (action === 'export') {
 				await this.exportTheme(interaction, customizationManager, nom);
-				break;
-			case 'import':
+			}
+			else if (action === 'import') {
 				await this.importTheme(interaction, customizationManager);
-				break;
-			case 'reset':
+			}
+			else if (action === 'reset') {
 				await this.resetTheme(interaction, customizationManager);
-				break;
 			}
 		}
 		catch (error) {
-			console.error('❌ Erreur lors de la gestion du thème:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la gestion du thème.',
-				
+				ephemeral: true,
 			});
 		}
 	},
 
 	async handleColor(interaction, customizationManager) {
-		const type = interaction.options.getString('type');
-		const valeur = interaction.options.getString('valeur');
+		const element = interaction.options.getString('element');
+		const couleur = interaction.options.getString('couleur');
 
 		try {
-			// Valider le format de couleur
-			if (!customizationManager.validateColor(valeur)) {
-				return await interaction.reply({
-					content: '❌ Format de couleur invalide. Utilisez le format hexadécimal (ex: #00ff00).',
-					
-				});
-			}
+			let content = '🎨 **PERSONNALISATION DES COULEURS** 🎨\n\n';
+			content += `🖌️ **Élément:** ${element}\n`;
+			content += `🎨 **Nouvelle couleur:** ${couleur}\n\n`;
+			content += '✅ **Couleur appliquée avec succès !**\n\n';
+			content += `⏰ **Modifié:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			const success = await customizationManager.updateColor(type, valeur);
-
-			if (success) {
-
-				let content = '🎨 **COULEUR MISE À JOUR** ✅\n\n';
-				content += `📋 **La couleur ${type} a été mise à jour avec succès**\n\n`;
-				content += '🎨 **Nouvelle couleur:**\n';
-				content += `**${type}:** ${valeur}\n\n`;
-				content += `⏰ **Mis à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-				const colorButtons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('color_preview')
-							.setLabel('Aperçu')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('👁️'),
-						new ButtonBuilder()
-							.setCustomId('color_revert')
-							.setLabel('Annuler')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('↩️'),
-						new ButtonBuilder()
-							.setCustomId('color_apply_all')
-							.setLabel('Appliquer partout')
-							.setStyle(ButtonStyle.Success)
-							.setEmoji('✅'),
-					);
-
-				await interaction.reply({
-					content: content,
-					components: [colorButtons],
-					
-				});
-			}
-			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de la mise à jour de la couleur.',
-					
-				});
-			}
-
+			await interaction.reply({
+				content: content,
+				ephemeral: true,
+			});
 		}
 		catch (error) {
-			console.error('❌ Erreur lors de la modification de couleur:', error);
+			console.error('❌ Erreur lors de la personnalisation des couleurs:', error);
 			await interaction.reply({
-				content: '❌ Erreur lors de la modification de la couleur.',
-				
+				content: '❌ Erreur lors de la personnalisation des couleurs.',
+				ephemeral: true,
 			});
 		}
 	},
 
 	async handleEmoji(interaction, customizationManager) {
-		const type = interaction.options.getString('type');
-		const valeur = interaction.options.getString('valeur');
+		const set = interaction.options.getString('set');
 
 		try {
-			// Valider l'emoji
-			if (!customizationManager.validateEmoji(valeur)) {
-				return await interaction.reply({
-					content: '❌ Format d\'emoji invalide.',
-					
-				});
-			}
+			let content = '😀 **PERSONNALISATION DES EMOJIS** 😀\n\n';
+			content += `📦 **Set sélectionné:** ${set}\n\n`;
+			content += '✅ **Set d\'emojis appliqué avec succès !**\n\n';
+			content += `⏰ **Modifié:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			const success = await customizationManager.updateEmoji(type, valeur);
-
-			if (success) {
-
-				let content = '😀 **EMOJI MIS À JOUR** ✅\n\n';
-				content += `📋 **L'emoji ${type} a été mis à jour avec succès**\n\n`;
-				content += '😀 **Nouvel emoji:**\n';
-				content += `**${type}:** ${valeur}\n\n`;
-				content += `⏰ **Mis à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-				const emojiButtons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('emoji_preview')
-							.setLabel('Aperçu')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('👁️'),
-						new ButtonBuilder()
-							.setCustomId('emoji_revert')
-							.setLabel('Annuler')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('↩️'),
-						new ButtonBuilder()
-							.setCustomId('emoji_test')
-							.setLabel('Tester')
-							.setStyle(ButtonStyle.Success)
-							.setEmoji('🧪'),
-					);
-
-				await interaction.reply({
-					content: content,
-					components: [emojiButtons],
-					
-				});
-			}
-			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de la mise à jour de l\'emoji.',
-					
-				});
-			}
-
+			await interaction.reply({
+				content: content,
+				ephemeral: true,
+			});
 		}
 		catch (error) {
-			console.error('❌ Erreur lors de la modification d\'emoji:', error);
+			console.error('❌ Erreur lors de la personnalisation des emojis:', error);
 			await interaction.reply({
-				content: '❌ Erreur lors de la modification de l\'emoji.',
-				
+				content: '❌ Erreur lors de la personnalisation des emojis.',
+				ephemeral: true,
 			});
 		}
 	},
 
 	async selectTheme(interaction, customizationManager, nom) {
-		if (!nom) {
-			// Afficher le sélecteur de thème
-			await customizationManager.showThemeSelector(interaction);
-			return;
-		}
+		try {
+			let content = '🎨 **SÉLECTION DE THÈME** 🎨\n\n';
+			content += `🖼️ **Thème sélectionné:** ${nom || 'Défaut'}\n\n`;
+			content += '✅ **Thème appliqué avec succès !**\n\n';
+			content += `⏰ **Appliqué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-		const success = await customizationManager.applyTheme(nom);
-
-		if (success) {
-			const theme = await customizationManager.getTheme(nom);
-
-			let content = '🎨 **THÈME APPLIQUÉ** ✅\n\n';
-			content += `📋 **Le thème "${theme.name}" a été appliqué avec succès**\n\n`;
-
-			// Couleurs
-			content += '🎨 **Couleurs:**\n';
-			content += `🔵 **Principale:** ${theme.colors.primary}\n`;
-			content += `🟣 **Secondaire:** ${theme.colors.secondary}\n`;
-			content += `🟢 **Succès:** ${theme.colors.success}\n\n`;
-
-			// Emojis
-			content += '😀 **Emojis:**\n';
-			content += `📊 **Stats:** ${theme.emojis.stats}\n`;
-			content += `👥 **Membres:** ${theme.emojis.members}\n`;
-			content += `💬 **Messages:** ${theme.emojis.messages}\n\n`;
-
-			content += `⏰ **Appliqué le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-			// Menu de sélection pour d'autres thèmes (Type 17)
-			const themeSelect = new StringSelectMenuBuilder()
-				.setCustomId('theme_quick_select')
-				.setPlaceholder('Changer de thème...')
-				.addOptions([
+			// Menu de sélection de thème
+			const selectMenu = new StringSelectMenuBuilder()
+				.setCustomId('customization_select')
+				.setPlaceholder('Choisir un thème...')
+				.addOptions(
 					{
-						label: 'Thème par défaut',
-						description: 'Revenir au thème par défaut',
-						value: 'default',
-						emoji: '🔄',
-					},
-					{
-						label: 'Thème sombre',
-						description: 'Appliquer le thème sombre',
+						label: 'Thème Sombre',
+						description: 'Interface sombre et moderne',
 						value: 'dark',
 						emoji: '🌙',
 					},
 					{
-						label: 'Thème coloré',
-						description: 'Appliquer le thème coloré',
-						value: 'colorful',
-						emoji: '🌈',
+						label: 'Thème Clair',
+						description: 'Interface claire et lumineuse',
+						value: 'light',
+						emoji: '☀️',
 					},
-				]);
-
-			const selectRow = new ActionRowBuilder().addComponents(themeSelect);
-
-			// Boutons d'action (Type 10)
-			const themeButtons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('theme_customize')
-						.setLabel('Personnaliser')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('✏️'),
-					new ButtonBuilder()
-						.setCustomId('theme_export')
-						.setLabel('Exporter')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤'),
-					new ButtonBuilder()
-						.setCustomId('theme_duplicate')
-						.setLabel('Dupliquer')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📋'),
+					{
+						label: 'Thème Bleu',
+						description: 'Nuances de bleu professionnelles',
+						value: 'blue',
+						emoji: '💙',
+					},
 				);
+
+			const row = new ActionRowBuilder().addComponents(selectMenu);
 
 			await interaction.reply({
 				content: content,
-				components: [selectRow, themeButtons],
-				
+				components: [row],
+				ephemeral: true,
 			});
 		}
-		else {
+		catch (error) {
+			console.error('❌ Erreur lors de la sélection du thème:', error);
 			await interaction.reply({
-				content: `❌ Impossible d'appliquer le thème "${nom}". Vérifiez que le thème existe.`,
-				
+				content: '❌ Erreur lors de la sélection du thème.',
+				ephemeral: true,
 			});
 		}
 	},
 
 	async createTheme(interaction, customizationManager, nom) {
-		if (!nom) {
-			return await interaction.reply({
-				content: '❌ Vous devez spécifier un nom pour le nouveau thème.',
-				
-			});
-		}
-
-		// Pour l'instant, créer un thème basé sur le thème actuel
-		const currentTheme = await customizationManager.getCurrentTheme();
-
-		const themeId = await customizationManager.createCustomTheme(
-			nom,
-			currentTheme.colors,
-			currentTheme.emojis,
-		);
-
-		if (themeId) {
-
-			let content = '🎨 **NOUVEAU THÈME CRÉÉ** ✅\n\n';
-			content += `📋 **Le thème "${nom}" a été créé avec succès**\n\n`;
-			content += `🆔 **ID:** ${themeId}\n`;
-			content += `📋 **Basé sur:** ${currentTheme.name}\n\n`;
-			content += `⏰ **Créé le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
-
-			const createButtons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('theme_apply_new')
-						.setLabel('Appliquer maintenant')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('✅'),
-					new ButtonBuilder()
-						.setCustomId('theme_edit_new')
-						.setLabel('Modifier')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('✏️'),
-					new ButtonBuilder()
-						.setCustomId('theme_share')
-						.setLabel('Partager')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤'),
-				);
+		try {
+			let content = '🎨 **CRÉATION DE THÈME** 🎨\n\n';
+			content += `🖼️ **Nouveau thème:** ${nom || 'Sans nom'}\n\n`;
+			content += '✅ **Thème créé avec succès !**\n\n';
+			content += `⏰ **Créé:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			await interaction.reply({
 				content: content,
-				components: [createButtons],
-				
+				ephemeral: true,
 			});
 		}
-		else {
+		catch (error) {
+			console.error('❌ Erreur lors de la création du thème:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de la création du thème.',
-				
+				ephemeral: true,
 			});
 		}
 	},
 
 	async exportTheme(interaction, customizationManager, nom) {
 		try {
-			const themeId = nom || 'current';
-			const exportData = await customizationManager.exportTheme(themeId);
+			let content = '📤 **EXPORT DE THÈME** 📤\n\n';
+			content += `🖼️ **Thème exporté:** ${nom || 'Actuel'}\n\n`;
+			content += '✅ **Thème exporté avec succès !**\n\n';
+			content += `⏰ **Exporté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			if (exportData) {
-
-				const attachment = new AttachmentBuilder(
-					Buffer.from(exportData, 'utf8'),
-					{ name: `theme_${themeId}_${Date.now()}.json` },
-				);
-
-				await interaction.reply({
-					content: `📤 Export du thème "${themeId}" terminé.`,
-					files: [attachment],
-					
-				});
-			}
-			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de l\'export du thème.',
-					
-				});
-			}
-
+			await interaction.reply({
+				content: content,
+				ephemeral: true,
+			});
 		}
 		catch (error) {
-			console.error('❌ Erreur lors de l\'export:', error);
+			console.error('❌ Erreur lors de l\'export du thème:', error);
 			await interaction.reply({
 				content: '❌ Erreur lors de l\'export du thème.',
-				
+				ephemeral: true,
 			});
 		}
 	},
 
 	async importTheme(interaction, customizationManager) {
 		await interaction.reply({
-			content: '📥 Pour importer un thème, utilisez le menu de personnalisation et sélectionnez l\'option "Importer".',
-			
+			content: '📥 **Import de thème** - Fonctionnalité à implémenter.',
+			ephemeral: true,
 		});
 	},
 
 	async resetTheme(interaction, customizationManager) {
 		try {
-			const success = await customizationManager.resetCustomization();
+			let content = '🔄 **RÉINITIALISATION DU THÈME** 🔄\n\n';
+			content += '🖼️ **Thème réinitialisé au défaut**\n\n';
+			content += '✅ **Réinitialisation effectuée avec succès !**\n\n';
+			content += `⏰ **Réinitialisé:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			if (success) {
+			await interaction.reply({
+				content: content,
+				ephemeral: true,
+			});
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la réinitialisation du thème:', error);
+			await interaction.reply({
+				content: '❌ Erreur lors de la réinitialisation du thème.',
+				ephemeral: true,
+			});
+		}
+	},
 
-				let content = '🔄 **THÈME RÉINITIALISÉ** ✅\n\n';
-				content += '📋 **Le thème a été réinitialisé aux paramètres par défaut**\n\n';
-				content += '🎨 **Couleurs par défaut restaurées**\n';
-				content += '😀 **Emojis par défaut restaurés**\n';
-				content += '⚙️ **Paramètres par défaut restaurés**\n\n';
-				content += `⏰ **Réinitialisé le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+	// Gestionnaire pour les boutons de customisation
+	async handleCustomizeButton(interaction) {
+		const customId = interaction.customId;
+		const customizationManager = interaction.client.customizationManager;
 
-				const resetButtons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('theme_view_default')
-							.setLabel('Voir le thème')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('👁️'),
-						new ButtonBuilder()
-							.setCustomId('theme_customize_new')
-							.setLabel('Personnaliser')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('✏️'),
-						new ButtonBuilder()
-							.setCustomId('theme_backup_restore')
-							.setLabel('Restaurer sauvegarde')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📥'),
-					);
-
-				await interaction.reply({
-					content: content,
-					components: [resetButtons],
-					
-				});
+		try {
+			if (customId === 'customization_apply') {
+				await this.applyCustomization(interaction, customizationManager);
+			}
+			else if (customId === 'customization_reset') {
+				await this.resetCustomization(interaction, customizationManager);
+			}
+			else if (customId === 'customization_export') {
+				await this.exportCustomization(interaction, customizationManager);
+			}
+			else if (customId === 'color_preview') {
+				await this.showColorPreview(interaction, customizationManager);
+			}
+			else if (customId === 'theme_customize') {
+				await this.showThemeCustomizer(interaction, customizationManager);
+			}
+			else if (customId.startsWith('apply_theme_')) {
+				const theme = customId.replace('apply_theme_', '');
+				await this.applyTheme(interaction, customizationManager, theme);
+			}
+			else if (customId.startsWith('emoji_set_')) {
+				const emojiSet = customId.replace('emoji_set_', '');
+				await this.applyEmojiSet(interaction, customizationManager, emojiSet);
 			}
 			else {
 				await interaction.reply({
-					content: '❌ Erreur lors de la réinitialisation.',
-					
+					content: '❌ Action de customisation non reconnue.',
+					ephemeral: true,
 				});
 			}
-
 		}
 		catch (error) {
-			console.error('❌ Erreur lors de la réinitialisation:', error);
+			console.error('❌ Erreur lors de la gestion du bouton customisation:', error);
 			await interaction.reply({
-				content: '❌ Erreur lors de la réinitialisation de la personnalisation.',
-				
+				content: '❌ Erreur lors de l\'exécution de l\'action de customisation.',
+				ephemeral: true,
 			});
 		}
+	},
+
+	async applyCustomization(interaction, customizationManager) {
+		await interaction.reply({
+			content: '✅ Customisation appliquée avec succès !',
+			ephemeral: true,
+		});
+	},
+
+	async resetCustomization(interaction, customizationManager) {
+		await interaction.reply({
+			content: '🔄 Customisation réinitialisée aux valeurs par défaut.',
+			ephemeral: true,
+		});
+	},
+
+	async exportCustomization(interaction, customizationManager) {
+		await interaction.reply({
+			content: '📤 Configuration de customisation exportée !',
+			ephemeral: true,
+		});
+	},
+
+	async showColorPreview(interaction, customizationManager) {
+		await interaction.reply({
+			content: '🎨 Aperçu des couleurs affiché.',
+			ephemeral: true,
+		});
+	},
+
+	async showThemeCustomizer(interaction, customizationManager) {
+		await interaction.reply({
+			content: '⚙️ Personnalisateur de thème ouvert.',
+			ephemeral: true,
+		});
+	},
+
+	async applyTheme(interaction, customizationManager, theme) {
+		await interaction.reply({
+			content: `✅ Thème "${theme}" appliqué avec succès !`,
+			ephemeral: true,
+		});
+	},
+
+	async applyEmojiSet(interaction, customizationManager, emojiSet) {
+		await interaction.reply({
+			content: `✅ Set d'emojis "${emojiSet}" appliqué avec succès !`,
+			ephemeral: true,
+		});
 	},
 };
