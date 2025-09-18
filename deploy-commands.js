@@ -58,6 +58,7 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
         // Option 1: Déploiement global (toutes les guildes)
         // Les commandes globales peuvent prendre jusqu'à 1 heure pour apparaître
+        console.log('🌍 Déploiement global des commandes...');
         const globalData = await rest.put(
             Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands },
@@ -67,11 +68,19 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
         // Option 2: Déploiement pour une guilde spécifique (instantané)
         // Utile pour les tests et le développement
         if (process.env.GUILD_ID) {
-            const guildData = await rest.put(
-                Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-                { body: commands },
-            );
-            console.log(`✅ ${guildData.length} commandes slash déployées pour la guilde ${process.env.GUILD_ID}.`);
+            console.log(`🏠 Déploiement pour la guilde ${process.env.GUILD_ID}...`);
+            try {
+                const guildData = await rest.put(
+                    Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+                    { body: commands },
+                );
+                console.log(`✅ ${guildData.length} commandes slash déployées pour la guilde ${process.env.GUILD_ID}.`);
+            } catch (guildError) {
+                console.warn(`⚠️ Impossible de déployer sur la guilde ${process.env.GUILD_ID}:`, guildError.message);
+                console.warn('💡 Le bot n\'est peut-être pas encore invité sur ce serveur ou n\'a pas les bonnes permissions.');
+                console.warn('🔗 Utilisez ce lien pour inviter le bot avec les bonnes permissions:');
+                console.warn(`https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=2147483648&scope=bot%20applications.commands`);
+            }
         }
 
         console.log('🎉 Déploiement terminé avec succès !');
