@@ -57,17 +57,40 @@ async function scheduleAutomaticTasks(client) {
     // Rapport mensuel
     if (config.reports.periods.monthly.enabled) {
         const monthlyTime = config.reports.periods.monthly.time.split(':');
-        const monthDay = config.reports.periods.monthly.day === 'last' ? 'L' : config.reports.periods.monthly.day;
-        cron.schedule(`${monthlyTime[1]} ${monthlyTime[0]} ${monthDay} * *`, async () => {
-            console.log('📊 Génération du rapport mensuel...');
-            await client.reportManager.generateMonthlyReport();
-            
-            if (config.git.auto_commit) {
-                await client.gitManager.autoCommit('Rapport mensuel généré');
-            }
-        }, {
-            timezone: config.server.timezone
-        });
+        const monthDay = config.reports.periods.monthly.day === 'last' ? '28-31' : config.reports.periods.monthly.day;
+        
+        // Pour le dernier jour du mois, on utilise une approche différente
+        if (config.reports.periods.monthly.day === 'last') {
+            // Vérifier tous les jours à 23:59 si c'est le dernier jour du mois
+            cron.schedule(`${monthlyTime[1]} ${monthlyTime[0]} 28-31 * *`, async () => {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+                
+                // Si demain est le 1er du mois, alors aujourd'hui est le dernier jour
+                if (tomorrow.getDate() === 1) {
+                    console.log('📊 Génération du rapport mensuel...');
+                    await client.reportManager.generateMonthlyReport();
+                    
+                    if (config.git.auto_commit) {
+                        await client.gitManager.autoCommit('Rapport mensuel généré');
+                    }
+                }
+            }, {
+                timezone: config.server.timezone
+            });
+        } else {
+            cron.schedule(`${monthlyTime[1]} ${monthlyTime[0]} ${monthDay} * *`, async () => {
+                console.log('📊 Génération du rapport mensuel...');
+                await client.reportManager.generateMonthlyReport();
+                
+                if (config.git.auto_commit) {
+                    await client.gitManager.autoCommit('Rapport mensuel généré');
+                }
+            }, {
+                timezone: config.server.timezone
+            });
+        }
         console.log(`⏰ Rapport mensuel programmé le ${config.reports.periods.monthly.day} à ${config.reports.periods.monthly.time}`);
     }
     
