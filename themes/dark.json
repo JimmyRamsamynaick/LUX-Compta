@@ -1,0 +1,19 @@
+{
+  "name": "Sombre",
+  "colors": {
+    "primary": "#2f3136",
+    "secondary": "#36393f",
+    "success": "#43b581",
+    "warning": "#faa61a",
+    "error": "#f04747"
+  },
+  "emojis": {
+    "stats": "📈",
+    "members": "👤",
+    "messages": "💭",
+    "voice": "🎤",
+    "success": "🟢",
+    "error": "🔴",
+    "warning": "🟡"
+  }
+}

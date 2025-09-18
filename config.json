@@ -1,0 +1,96 @@
+{
+  "prefix": "!",
+  "adminRoles": ["Admin", "Modérateur", "Gestionnaire"],
+  "reportChannel": "reports",
+  "statsChannel": "statistiques",
+  "bot": {
+    "name": "LUX Compta",
+    "description": "Bot de statistiques pour La Lanterne Nocturne",
+    "version": "1.0.0",
+    "status": "online",
+    "activity": {
+      "type": "WATCHING",
+      "name": "les statistiques du serveur"
+    }
+  },
+  "server": {
+    "name": "La Lanterne Nocturne",
+    "timezone": "Europe/Luxembourg"
+  },
+  "reports": {
+    "formats": ["csv", "json"],
+    "periods": {
+      "daily": {
+        "enabled": true,
+        "time": "23:59"
+      },
+      "weekly": {
+        "enabled": true,
+        "day": "sunday",
+        "time": "23:59"
+      },
+      "monthly": {
+        "enabled": true,
+        "day": "last",
+        "time": "23:59"
+      }
+    },
+    "auto_archive": {
+      "enabled": true,
+      "after_days": 30
+    }
+  },
+  "statistics": {
+    "track": {
+      "members": true,
+      "messages": true,
+      "voice_activity": true,
+      "reactions": true,
+      "channels": true
+    },
+    "top_lists": {
+      "members": 10,
+      "messages": 10,
+      "channels": 5
+    }
+  },
+  "alerts": {
+    "enabled": true,
+    "thresholds": {
+      "member_decrease": 5,
+      "message_decrease": 50,
+      "activity_decrease": 30
+    },
+    "cooldown_hours": 24
+  },
+  "git": {
+    "auto_commit": true,
+    "commit_frequency": "daily",
+    "commit_message_template": "📊 Mise à jour automatique des statistiques - {date}",
+    "create_tags": true,
+    "tag_pattern": "v{version}"
+  },
+  "permissions": {
+    "admin_roles": ["Admin", "Modérateur"],
+    "report_access": ["Admin", "Modérateur", "Staff"],
+    "stats_access": ["@everyone"]
+  },
+  "components": {
+    "period_selector": {
+      "type": 17,
+      "options": [
+        {"label": "Aujourd'hui", "value": "daily", "emoji": "📅"},
+        {"label": "Cette semaine", "value": "weekly", "emoji": "📊"},
+        {"label": "Ce mois", "value": "monthly", "emoji": "📈"}
+      ]
+    },
+    "action_buttons": {
+      "type": 10,
+      "buttons": [
+        {"label": "Télécharger", "style": "PRIMARY", "emoji": "⬇️"},
+        {"label": "Envoyer par mail", "style": "SECONDARY", "emoji": "📧"},
+        {"label": "Visualiser", "style": "SUCCESS", "emoji": "👁️"}
+      ]
+    }
+  }
+}
