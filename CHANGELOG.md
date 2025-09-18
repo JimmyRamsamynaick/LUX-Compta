@@ -7,20 +7,38 @@ et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.
 
 ## [Non publié]
 
+### En cours de développement
+- Nouvelles fonctionnalités à venir
+- Améliorations de performance
+- Corrections de bugs mineurs
+
+## [v2025.1.0] - 2025-01-25
+
 ### Ajouté
-- Nouvelle fonctionnalité de rapport automatique
-- Système de sauvegarde automatique
-- Interface de configuration avancée
+- Mise à jour complète vers l'année 2025
+- Documentation README.md complètement réécrite et améliorée
+- Badges de statut et table des matières dans le README
+- Sections détaillées sur l'architecture et les fonctionnalités
+- Guide de contribution et support utilisateur
+- Documentation des fonctionnalités avancées
 
 ### Modifié
-- Amélioration des performances du système de statistiques
-- Mise à jour de l'interface utilisateur
-- Optimisation de la gestion mémoire
+- Toutes les références de dates de 2024 vers 2025
+- Template de rapport avec nouvelles dates 2025
+- Licence mise à jour pour 2025
+- Amélioration du système de génération de rapports
+- Simplification des intents Discord pour éviter les erreurs
+- Optimisation de la configuration du bot
 
 ### Corrigé
-- Correction du bug de synchronisation des données
-- Résolution des problèmes de connexion intermittente
-- Correction des erreurs de formatage des rapports
+- Erreur "Used disallowed intents" dans Discord.js
+- Suppression des événements guildMemberAdd et guildMemberRemove
+- Problèmes de démarrage du bot Discord
+- Correction des patterns de dates dans node-cron
+
+### Supprimé
+- Événements Discord nécessitant des intents non autorisés
+- Dépendances obsolètes dans le système de membres
 
 ## [1.0.2] - 2025-01-01
 
