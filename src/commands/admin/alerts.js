@@ -307,10 +307,18 @@ module.exports = {
 		}
 	},
 
-	async handleTest(interaction, alertManager) {
+	async handleTest(interaction, alertManager, type = null) {
 		await interaction.deferReply();
 
-		const type = interaction.options.getString('type');
+		// Si type n'est pas fourni, essayer de le récupérer depuis les options (commande slash)
+		if (!type && interaction.options) {
+			type = interaction.options.getString('type');
+		}
+		
+		// Si toujours pas de type, utiliser un type par défaut
+		if (!type) {
+			type = 'absence'; // Type par défaut pour les tests
+		}
 
 		try {
 			const testResult = await alertManager.testAlert(type);
@@ -745,8 +753,8 @@ module.exports = {
 	},
 
 	async handleTestAgain(interaction) {
-		// Relancer le dernier test effectué
-		await this.handleTest(interaction, interaction.client.alertManager);
+		// Relancer le dernier test effectué avec un type par défaut
+		await this.handleTest(interaction, interaction.client.alertManager, 'absence');
 	},
 
 	async handleTestLogs(interaction) {
