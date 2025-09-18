@@ -192,6 +192,9 @@ class AlertManager {
 		};
 
 		const icons = {
+			'Baisse d\'activité': '📉',
+			'Perte de membres importante': '👥',
+			'Aucune activité détectée': '💤',
 			low_activity: '📉',
 			member_drop: '👥',
 			no_activity: '💤',
@@ -216,7 +219,7 @@ class AlertManager {
 		}
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${icons[alertType] || '⚠️'} ${data.type || alertType}`)
+			.setTitle(`${icons[alertType] || icons[data.type] || '⚠️'} ${data.type || alertType}`)
 			.setDescription(description)
 			.setColor(colors[data.severity] || colors.medium)
 			.setTimestamp()
@@ -417,32 +420,44 @@ class AlertManager {
 			switch (type) {
 				case 'Baisse d\'activité':
 					testData = {
+						type: 'Baisse d\'activité',
+						description: 'L\'activité du serveur a diminué de 67% par rapport à la période précédente.',
 						currentActivity: 5,
 						previousActivity: 15,
 						threshold: 10,
-						decline: 67
+						decline: 67,
+						severity: 'high'
 					};
 					break;
 				case 'Aucune activité':
 					testData = {
+						type: 'Aucune activité',
+						description: 'Aucune activité détectée depuis 25 heures.',
 						hoursSinceLastActivity: 25,
-						threshold: 24
+						threshold: 24,
+						severity: 'critical'
 					};
 					break;
 				case 'Perte de membres':
 					testData = {
+						type: 'Perte de membres',
+						description: 'Le serveur a perdu 5 membres récemment.',
 						currentMembers: 95,
 						previousMembers: 100,
 						threshold: 5,
-						loss: 5
+						loss: 5,
+						severity: 'medium'
 					};
 					break;
 				default:
 					testData = {
+						type: 'Baisse d\'activité',
+						description: 'L\'activité du serveur a diminué de 67% par rapport à la période précédente.',
 						currentActivity: 5,
 						previousActivity: 15,
 						threshold: 10,
-						decline: 67
+						decline: 67,
+						severity: 'high'
 					};
 					type = 'Baisse d\'activité';
 			}
