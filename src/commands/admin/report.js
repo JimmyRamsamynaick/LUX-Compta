@@ -78,17 +78,16 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur dans la commande report:', error);
 
-			const errorEmbed = new EmbedBuilder()
-				.setColor('#ff0000')
-				.setTitle('❌ Erreur')
-				.setDescription('Une erreur est survenue lors de l\'exécution de la commande.')
-				.setTimestamp();
+			let content = `❌ **ERREUR** ❌\n\n`;
+			content += `⚠️ **Une erreur est survenue lors de l'exécution de la commande.**\n\n`;
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `⏰ **Heure:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.editReply({ embeds: [errorEmbed] });
+				await interaction.editReply({ content: content });
 			}
 			else {
-				await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+				await interaction.reply({ content: content, ephemeral: true });
 			}
 		}
 	},
@@ -98,41 +97,58 @@ module.exports = {
 
 		const period = interaction.options.getString('period');
 
-		const embed = new EmbedBuilder()
-			.setColor('#ffa500')
-			.setTitle('⏳ Génération du rapport en cours...')
-			.setDescription(`Génération du rapport ${this.getPeriodLabel(period)} en cours...`)
-			.setTimestamp();
+		let content = `⏳ **GÉNÉRATION DU RAPPORT** ⏳\n\n`;
+		content += `📊 **Génération du rapport ${this.getPeriodLabel(period)} en cours...**\n\n`;
+		content += `⏰ **Démarré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-		await interaction.editReply({ embeds: [embed] });
+		await interaction.editReply({ content: content });
 
 		try {
 			const result = await reportManager.generateReport(period);
 
-			const successEmbed = new EmbedBuilder()
-				.setColor('#00ff00')
-				.setTitle('✅ Rapport généré avec succès')
-				.setDescription(`Le rapport ${this.getPeriodLabel(period)} a été généré avec succès.`)
-				.addFields(
-					{ name: '📄 Fichier', value: result.filename, inline: true },
-					{ name: '📊 Entrées', value: result.totalEntries.toString(), inline: true },
-					{ name: '📅 Période', value: this.getPeriodLabel(period), inline: true },
-				)
-				.setTimestamp();
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			await interaction.editReply({ embeds: [successEmbed] });
+			content = `✅ **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n`;
+			content += `📊 **Le rapport ${this.getPeriodLabel(period)} a été généré avec succès !**\n\n`;
+			content += `📋 **Détails du rapport:**\n`;
+			content += `• **📄 Fichier:** ${result.filename}\n`;
+			content += `• **📊 Entrées:** ${result.totalEntries}\n`;
+			content += `• **📅 Période:** ${this.getPeriodLabel(period)}\n\n`;
+			content += `⏰ **Généré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('report_download')
+						.setLabel('Télécharger')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('💾'),
+					new ButtonBuilder()
+						.setCustomId('report_send_email')
+						.setLabel('Envoyer par mail')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📧'),
+					new ButtonBuilder()
+						.setCustomId('report_view')
+						.setLabel('Aperçu')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('👁️')
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [buttons]
+			});
 		}
 		catch (error) {
-			const errorEmbed = new EmbedBuilder()
-				.setColor('#ff0000')
-				.setTitle('❌ Erreur de génération')
-				.setDescription('Impossible de générer le rapport.')
-				.addFields(
-					{ name: '🔍 Détails', value: error.message },
-				)
-				.setTimestamp();
+			content = `❌ **ERREUR DE GÉNÉRATION** ❌\n\n`;
+			content += `⚠️ **Impossible de générer le rapport.**\n\n`;
+			content += `🔍 **Détails:** ${error.message}\n`;
+			content += `📅 **Période demandée:** ${this.getPeriodLabel(period)}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ embeds: [errorEmbed] });
+			await interaction.editReply({ content: content });
 		}
 	},
 
@@ -145,53 +161,98 @@ module.exports = {
 			const reports = await reportManager.getReportsList(period);
 
 			if (reports.length === 0) {
-				const noReportsEmbed = new EmbedBuilder()
-					.setColor('#ffa500')
-					.setTitle('📋 Aucun rapport trouvé')
-					.setDescription(period ?
-						`Aucun rapport ${this.getPeriodLabel(period)} trouvé.` :
-						'Aucun rapport disponible.',
-					)
-					.setTimestamp();
+				let content = `📋 **AUCUN RAPPORT TROUVÉ** 📋\n\n`;
+				content += period ?
+					`⚠️ **Aucun rapport ${this.getPeriodLabel(period)} trouvé.**\n\n` :
+					`⚠️ **Aucun rapport disponible.**\n\n`;
+				content += `💡 **Suggestion:** Utilisez \`/report generate\` pour créer un nouveau rapport.\n`;
+				content += `⏰ **Recherche effectuée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				await interaction.editReply({ embeds: [noReportsEmbed] });
+				await interaction.editReply({ content: content });
 				return;
 			}
 
-			const embed = new EmbedBuilder()
-				.setColor('#0099ff')
-				.setTitle('📋 Liste des rapports')
-				.setDescription(`${reports.length} rapport(s) trouvé(s)`)
-				.setTimestamp();
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
-			// Limiter à 10 rapports pour éviter de dépasser la limite des fields
+			let content = `📋 **LISTE DES RAPPORTS** 📋\n\n`;
+			content += `📊 **${reports.length} rapport(s) trouvé(s)**\n\n`;
+
+			// Limiter à 10 rapports pour éviter un contenu trop long
 			const displayReports = reports.slice(0, 10);
 
 			displayReports.forEach((report, index) => {
-				embed.addFields({
-					name: `${index + 1}. ${report.filename}`,
-					value: `📅 ${this.getPeriodLabel(report.period)} - ${report.date.toLocaleDateString('fr-FR')}`,
-					inline: false,
-				});
+				content += `**${index + 1}.** ${report.filename}\n`;
+				content += `   📅 ${this.getPeriodLabel(report.period)} - ${report.date.toLocaleDateString('fr-FR')}\n\n`;
 			});
 
 			if (reports.length > 10) {
-				embed.setFooter({ text: `... et ${reports.length - 10} autre(s) rapport(s)` });
+				content += `... et **${reports.length - 10}** autre(s) rapport(s)\n\n`;
 			}
 
-			await interaction.editReply({ embeds: [embed] });
+			content += `⏰ **Liste mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour filtrer par période (Type 17)
+			const periodSelect = new ActionRowBuilder()
+				.addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId('report_filter_period')
+						.setPlaceholder('🔍 Filtrer par période')
+						.addOptions([
+							{
+								label: 'Tous les rapports',
+								value: 'all',
+								emoji: '📊'
+							},
+							{
+								label: 'Quotidien',
+								value: 'daily',
+								emoji: '📅'
+							},
+							{
+								label: 'Hebdomadaire',
+								value: 'weekly',
+								emoji: '📆'
+							},
+							{
+								label: 'Mensuel',
+								value: 'monthly',
+								emoji: '🗓️'
+							}
+						])
+				);
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('reports_refresh')
+						.setLabel('Actualiser')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('reports_export')
+						.setLabel('Exporter liste')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📤'),
+					new ButtonBuilder()
+						.setCustomId('reports_cleanup')
+						.setLabel('Nettoyer')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🗑️')
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [periodSelect, buttons]
+			});
 		}
 		catch (error) {
-			const errorEmbed = new EmbedBuilder()
-				.setColor('#ff0000')
-				.setTitle('❌ Erreur')
-				.setDescription('Impossible de récupérer la liste des rapports.')
-				.addFields(
-					{ name: '🔍 Détails', value: error.message },
-				)
-				.setTimestamp();
+			let content = `❌ **ERREUR** ❌\n\n`;
+			content += `⚠️ **Impossible de récupérer la liste des rapports.**\n\n`;
+			content += `🔍 **Détails:** ${error.message}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ embeds: [errorEmbed] });
+			await interaction.editReply({ content: content });
 		}
 	},
 
@@ -201,40 +262,59 @@ module.exports = {
 		const filename = interaction.options.getString('filename');
 		const email = interaction.options.getString('email');
 
-		const embed = new EmbedBuilder()
-			.setColor('#ffa500')
-			.setTitle('📧 Envoi du rapport en cours...')
-			.setDescription(`Envoi du rapport "${filename}" par email...`)
-			.setTimestamp();
+		let content = `📧 **ENVOI DU RAPPORT** 📧\n\n`;
+		content += `📤 **Envoi du rapport "${filename}" par email...**\n\n`;
+		content += `⏰ **Démarré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-		await interaction.editReply({ embeds: [embed] });
+		await interaction.editReply({ content: content });
 
 		try {
 			const result = await emailManager.sendReport(filename, email);
 
-			const successEmbed = new EmbedBuilder()
-				.setColor('#00ff00')
-				.setTitle('✅ Rapport envoyé avec succès')
-				.setDescription(`Le rapport "${filename}" a été envoyé par email.`)
-				.addFields(
-					{ name: '📧 Destinataire', value: result.recipient, inline: true },
-					{ name: '📄 Fichier', value: filename, inline: true },
-				)
-				.setTimestamp();
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			await interaction.editReply({ embeds: [successEmbed] });
+			content = `✅ **RAPPORT ENVOYÉ AVEC SUCCÈS** ✅\n\n`;
+			content += `📧 **Le rapport "${filename}" a été envoyé par email !**\n\n`;
+			content += `📋 **Détails de l'envoi:**\n`;
+			content += `• **📧 Destinataire:** ${result.recipient}\n`;
+			content += `• **📄 Fichier:** ${filename}\n`;
+			content += `• **📊 Taille:** ${result.size || 'Non spécifiée'}\n\n`;
+			content += `⏰ **Envoyé:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('email_resend')
+						.setLabel('Renvoyer')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('email_send_other')
+						.setLabel('Envoyer à autre')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📧'),
+					new ButtonBuilder()
+						.setCustomId('email_history')
+						.setLabel('Historique')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📜')
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [buttons]
+			});
 		}
 		catch (error) {
-			const errorEmbed = new EmbedBuilder()
-				.setColor('#ff0000')
-				.setTitle('❌ Erreur d\'envoi')
-				.setDescription('Impossible d\'envoyer le rapport par email.')
-				.addFields(
-					{ name: '🔍 Détails', value: error.message },
-				)
-				.setTimestamp();
+			content = `❌ **ERREUR D'ENVOI** ❌\n\n`;
+			content += `⚠️ **Impossible d'envoyer le rapport par email.**\n\n`;
+			content += `🔍 **Détails:** ${error.message}\n`;
+			content += `📄 **Fichier:** ${filename}\n`;
+			content += `📧 **Email:** ${email || 'Email par défaut'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ embeds: [errorEmbed] });
+			await interaction.editReply({ content: content });
 		}
 	},
 

@@ -190,7 +190,7 @@ module.exports = {
 			const result = await archiveManager.createManualArchive(type, période);
 
 			if (result.success) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 				const typeNames = {
 					'reports': 'Rapports',
@@ -206,27 +206,39 @@ module.exports = {
 					'year': 'Dernière année',
 				};
 
-				const embed = new EmbedBuilder()
-					.setTitle('📦 Archive créée')
-					.setDescription('L\'archive manuelle a été créée avec succès.')
-					.setColor('#00ff00')
-					.addFields([
-						{
-							name: 'Informations de l\'archive',
-							value: [
-								`**Type:** ${typeNames[type]}`,
-								`**Période:** ${périodeNames[période]}`,
-								`**ID:** ${result.archiveId}`,
-								`**Taille:** ${result.size || 'Inconnue'}`,
-								`**Fichiers:** ${result.fileCount || 0}`,
-							].join('\n'),
-							inline: false,
-						},
-					])
-					.setTimestamp();
+				let content = `📦 **ARCHIVE CRÉÉE** 📦\n\n`;
+				content += `✅ L'archive manuelle a été créée avec succès.\n\n`;
+				content += `📋 **Informations de l'archive:**\n`;
+				content += `📊 **Type:** ${typeNames[type]}\n`;
+				content += `📅 **Période:** ${périodeNames[période]}\n`;
+				content += `🆔 **ID:** ${result.archiveId}\n`;
+				content += `📏 **Taille:** ${result.size || 'Inconnue'}\n`;
+				content += `📁 **Fichiers:** ${result.fileCount || 0}\n\n`;
+				content += `⏰ **Créée le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId(`view_archive_${result.archiveId}`)
+							.setLabel('Voir détails')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('👁️'),
+						new ButtonBuilder()
+							.setCustomId(`download_archive_${result.archiveId}`)
+							.setLabel('Télécharger')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('⬇️'),
+						new ButtonBuilder()
+							.setCustomId('create_another_archive')
+							.setLabel('Créer une autre')
+							.setStyle(ButtonStyle.Success)
+							.setEmoji('➕')
+					);
 
 				await interaction.editReply({
-					embeds: [embed],
+					content: content,
+					components: [buttons]
 				});
 			}
 			else {
@@ -281,23 +293,37 @@ module.exports = {
 			}
 
 			if (updated) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				const embed = new EmbedBuilder()
-					.setTitle('⚙️ Configuration d\'archivage mise à jour')
-					.setDescription('Les paramètres d\'archivage ont été modifiés avec succès.')
-					.setColor('#00ff00')
-					.addFields([
-						{
-							name: 'Modifications',
-							value: changes.join('\n'),
-							inline: false,
-						},
-					])
-					.setTimestamp();
+				let content = `⚙️ **CONFIGURATION D'ARCHIVAGE MISE À JOUR** ⚙️\n\n`;
+				content += `✅ Les paramètres d'archivage ont été modifiés avec succès.\n\n`;
+				content += `📋 **Modifications:**\n`;
+				content += changes.map(change => `✅ ${change}`).join('\n');
+				content += `\n\n⏰ **Mise à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('view_archive_config')
+							.setLabel('Voir config complète')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('⚙️'),
+						new ButtonBuilder()
+							.setCustomId('test_archive_config')
+							.setLabel('Tester config')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('🧪'),
+						new ButtonBuilder()
+							.setCustomId('reset_archive_config')
+							.setLabel('Réinitialiser')
+							.setStyle(ButtonStyle.Danger)
+							.setEmoji('🔄')
+					);
 
 				await interaction.reply({
-					embeds: [embed],
+					content: content,
+					components: [buttons],
 					ephemeral: true,
 				});
 			}
@@ -325,39 +351,66 @@ module.exports = {
 			const archives = await archiveManager.listArchives(type);
 
 			if (archives && archives.length > 0) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-				const embed = new EmbedBuilder()
-					.setTitle('📋 Archives disponibles')
-					.setDescription(`${archives.length} archive(s) trouvée(s)`)
-					.setColor('#3498db');
+				let content = `📋 **ARCHIVES DISPONIBLES** 📋\n\n`;
+				content += `📊 **${archives.length} archive(s) trouvée(s)**\n\n`;
 
 				archives.slice(0, 10).forEach((archive, index) => {
 					const date = new Date(archive.created).toLocaleString('fr-FR');
 					const size = archive.size ? this.formatSize(archive.size) : 'Inconnue';
 
-					embed.addFields([
-						{
-							name: `${index + 1}. ${archive.name || archive.id}`,
-							value: [
-								`**Type:** ${archive.type}`,
-								`**Date:** ${date}`,
-								`**Taille:** ${size}`,
-								`**ID:** ${archive.id}`,
-							].join('\n'),
-							inline: true,
-						},
-					]);
+					content += `**${index + 1}. ${archive.name || archive.id}**\n`;
+					content += `📊 **Type:** ${archive.type}\n`;
+					content += `📅 **Date:** ${date}\n`;
+					content += `📏 **Taille:** ${size}\n`;
+					content += `🆔 **ID:** ${archive.id}\n\n`;
 				});
 
 				if (archives.length > 10) {
-					embed.setFooter({ text: `... et ${archives.length - 10} autres archives` });
+					content += `... et ${archives.length - 10} autres archives\n\n`;
 				}
 
-				embed.setTimestamp();
+				content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Menu de sélection pour gérer les archives
+				const archiveSelect = new StringSelectMenuBuilder()
+					.setCustomId('manage_archive_select')
+					.setPlaceholder('Sélectionner une archive à gérer...')
+					.addOptions(
+						archives.slice(0, 25).map(archive => ({
+							label: archive.name || archive.id,
+							description: `${archive.type} - ${new Date(archive.created).toLocaleDateString('fr-FR')}`,
+							value: archive.id,
+							emoji: '📦'
+						}))
+					);
+
+				const selectRow = new ActionRowBuilder().addComponents(archiveSelect);
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('refresh_archives')
+							.setLabel('Actualiser')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('🔄'),
+						new ButtonBuilder()
+							.setCustomId('create_new_archive')
+							.setLabel('Nouvelle archive')
+							.setStyle(ButtonStyle.Success)
+							.setEmoji('➕'),
+						new ButtonBuilder()
+							.setCustomId('cleanup_archives')
+							.setLabel('Nettoyer')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('🧹')
+					);
 
 				await interaction.editReply({
-					embeds: [embed],
+					content: content,
+					components: [selectRow, buttons]
 				});
 			}
 			else {
@@ -393,27 +446,39 @@ module.exports = {
 			const result = await archiveManager.restoreArchive(archiveId);
 
 			if (result.success) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				const embed = new EmbedBuilder()
-					.setTitle('📤 Archive restaurée')
-					.setDescription('L\'archive a été restaurée avec succès.')
-					.setColor('#00ff00')
-					.addFields([
-						{
-							name: 'Détails de la restauration',
-							value: [
-								`**Archive:** ${archiveId}`,
-								`**Fichiers restaurés:** ${result.fileCount || 0}`,
-								`**Destination:** ${result.destination || 'Dossier par défaut'}`,
-							].join('\n'),
-							inline: false,
-						},
-					])
-					.setTimestamp();
+				let content = `📤 **ARCHIVE RESTAURÉE** 📤\n\n`;
+				content += `✅ L'archive a été restaurée avec succès.\n\n`;
+				content += `📋 **Détails de la restauration:**\n`;
+				content += `📦 **Archive:** ${archiveId}\n`;
+				content += `📁 **Fichiers restaurés:** ${result.fileCount || 0}\n`;
+				content += `📂 **Destination:** ${result.destination || 'Dossier par défaut'}\n\n`;
+				content += `⏰ **Restaurée le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId(`view_restored_files_${archiveId}`)
+							.setLabel('Voir fichiers')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📁'),
+						new ButtonBuilder()
+							.setCustomId('list_all_archives')
+							.setLabel('Toutes les archives')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('📋'),
+						new ButtonBuilder()
+							.setCustomId('restore_another_archive')
+							.setLabel('Restaurer une autre')
+							.setStyle(ButtonStyle.Success)
+							.setEmoji('📤')
+					);
 
 				await interaction.editReply({
-					embeds: [embed],
+					content: content,
+					components: [buttons]
 				});
 			}
 			else {
@@ -457,23 +522,37 @@ module.exports = {
 			const result = await archiveManager.deleteArchive(archiveId);
 
 			if (result.success) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				const embed = new EmbedBuilder()
-					.setTitle('🗑️ Archive supprimée')
-					.setDescription('L\'archive a été supprimée avec succès.')
-					.setColor('#ff6b6b')
-					.addFields([
-						{
-							name: 'Archive supprimée',
-							value: `**ID:** ${archiveId}`,
-							inline: false,
-						},
-					])
-					.setTimestamp();
+				let content = `🗑️ **ARCHIVE SUPPRIMÉE** 🗑️\n\n`;
+				content += `✅ L'archive a été supprimée avec succès.\n\n`;
+				content += `📋 **Archive supprimée:**\n`;
+				content += `🆔 **ID:** ${archiveId}\n\n`;
+				content += `⏰ **Supprimée le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('list_remaining_archives')
+							.setLabel('Archives restantes')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📋'),
+						new ButtonBuilder()
+							.setCustomId('create_new_archive')
+							.setLabel('Créer nouvelle')
+							.setStyle(ButtonStyle.Success)
+							.setEmoji('➕'),
+						new ButtonBuilder()
+							.setCustomId('cleanup_more_archives')
+							.setLabel('Nettoyer plus')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('🧹')
+					);
 
 				await interaction.editReply({
-					embeds: [embed],
+					content: content,
+					components: [buttons]
 				});
 			}
 			else {
@@ -509,27 +588,39 @@ module.exports = {
 			const result = await archiveManager.cleanupOldArchives(âge);
 
 			if (result.success) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				const embed = new EmbedBuilder()
-					.setTitle('🧹 Nettoyage terminé')
-					.setDescription('Le nettoyage des anciennes archives a été effectué.')
-					.setColor('#00ff00')
-					.addFields([
-						{
-							name: 'Résultats du nettoyage',
-							value: [
-								`**Archives supprimées:** ${result.deletedCount || 0}`,
-								`**Espace libéré:** ${result.freedSpace ? this.formatSize(result.freedSpace) : 'Inconnu'}`,
-								`**Critère d'âge:** Plus de ${âge} jours`,
-							].join('\n'),
-							inline: false,
-						},
-					])
-					.setTimestamp();
+				let content = `🧹 **NETTOYAGE TERMINÉ** 🧹\n\n`;
+				content += `✅ Le nettoyage des anciennes archives a été effectué.\n\n`;
+				content += `📋 **Résultats du nettoyage:**\n`;
+				content += `🗑️ **Archives supprimées:** ${result.deletedCount || 0}\n`;
+				content += `💾 **Espace libéré:** ${result.freedSpace ? this.formatSize(result.freedSpace) : 'Inconnu'}\n`;
+				content += `📅 **Critère d'âge:** Plus de ${âge} jours\n\n`;
+				content += `⏰ **Nettoyage effectué le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('view_remaining_archives')
+							.setLabel('Archives restantes')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📋'),
+						new ButtonBuilder()
+							.setCustomId('schedule_auto_cleanup')
+							.setLabel('Programmer nettoyage')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('⏰'),
+						new ButtonBuilder()
+							.setCustomId('cleanup_more_archives')
+							.setLabel('Nettoyer plus')
+							.setStyle(ButtonStyle.Success)
+							.setEmoji('🧹')
+					);
 
 				await interaction.editReply({
-					embeds: [embed],
+					content: content,
+					components: [buttons]
 				});
 			}
 			else {
@@ -563,46 +654,85 @@ module.exports = {
 			const status = await archiveManager.getStatus();
 
 			if (status) {
-				const { EmbedBuilder } = require('discord.js');
+				const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-				const embed = new EmbedBuilder()
-					.setTitle('📊 Statut de l\'archivage')
-					.setDescription('État actuel du système d\'archivage')
-					.setColor(status.autoEnabled ? '#00ff00' : '#ff6b6b')
-					.addFields([
+				let content = `📊 **STATUT DE L'ARCHIVAGE** 📊\n\n`;
+				content += `📋 État actuel du système d'archivage\n\n`;
+
+				content += `⚙️ **Configuration:**\n`;
+				content += `${status.autoEnabled ? '✅' : '❌'} **Archivage automatique:** ${status.autoEnabled ? 'Activé' : 'Désactivé'}\n`;
+				content += `⏰ **Fréquence:** ${status.frequency || 'Non définie'} jour(s)\n`;
+				content += `📅 **Rétention:** ${status.retention || 'Non définie'} jour(s)\n`;
+				content += `🕒 **Dernière archive auto:** ${status.lastAutoArchive ? new Date(status.lastAutoArchive).toLocaleString('fr-FR') : 'Jamais'}\n\n`;
+
+				content += `📊 **Statistiques:**\n`;
+				content += `📦 **Total archives:** ${status.totalArchives || 0}\n`;
+				content += `🤖 **Archives automatiques:** ${status.autoArchives || 0}\n`;
+				content += `👤 **Archives manuelles:** ${status.manualArchives || 0}\n`;
+				content += `💾 **Espace utilisé:** ${status.totalSize ? this.formatSize(status.totalSize) : 'Inconnu'}\n\n`;
+
+				content += `🔮 **Prochaines actions:**\n`;
+				content += `📅 **Prochaine archive:** ${status.nextArchive ? new Date(status.nextArchive).toLocaleString('fr-FR') : 'Non planifiée'}\n`;
+				content += `🧹 **Prochaine purge:** ${status.nextCleanup ? new Date(status.nextCleanup).toLocaleString('fr-FR') : 'Non planifiée'}\n\n`;
+
+				content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Menu de sélection pour les actions rapides
+				const actionSelect = new StringSelectMenuBuilder()
+					.setCustomId('archive_quick_action')
+					.setPlaceholder('Actions rapides...')
+					.addOptions([
 						{
-							name: 'Configuration',
-							value: [
-								`**Archivage automatique:** ${status.autoEnabled ? '✅ Activé' : '❌ Désactivé'}`,
-								`**Fréquence:** ${status.frequency || 'Non définie'} jour(s)`,
-								`**Rétention:** ${status.retention || 'Non définie'} jour(s)`,
-								`**Dernière archive auto:** ${status.lastAutoArchive ? new Date(status.lastAutoArchive).toLocaleString('fr-FR') : 'Jamais'}`,
-							].join('\n'),
-							inline: false,
+							label: 'Créer archive manuelle',
+							description: 'Créer une nouvelle archive maintenant',
+							value: 'create_manual',
+							emoji: '📦'
 						},
 						{
-							name: 'Statistiques',
-							value: [
-								`**Total archives:** ${status.totalArchives || 0}`,
-								`**Archives automatiques:** ${status.autoArchives || 0}`,
-								`**Archives manuelles:** ${status.manualArchives || 0}`,
-								`**Espace utilisé:** ${status.totalSize ? this.formatSize(status.totalSize) : 'Inconnu'}`,
-							].join('\n'),
-							inline: false,
+							label: 'Configurer archivage auto',
+							description: 'Modifier les paramètres automatiques',
+							value: 'config_auto',
+							emoji: '⚙️'
 						},
 						{
-							name: 'Prochaines actions',
-							value: [
-								`**Prochaine archive:** ${status.nextArchive ? new Date(status.nextArchive).toLocaleString('fr-FR') : 'Non planifiée'}`,
-								`**Prochaine purge:** ${status.nextCleanup ? new Date(status.nextCleanup).toLocaleString('fr-FR') : 'Non planifiée'}`,
-							].join('\n'),
-							inline: false,
+							label: 'Nettoyer archives',
+							description: 'Supprimer les anciennes archives',
+							value: 'cleanup_old',
+							emoji: '🧹'
 						},
-					])
-					.setTimestamp();
+						{
+							label: 'Voir toutes les archives',
+							description: 'Lister toutes les archives disponibles',
+							value: 'list_all',
+							emoji: '📋'
+						}
+					]);
+
+				const selectRow = new ActionRowBuilder().addComponents(actionSelect);
+
+				// Boutons d'action
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('refresh_archive_status')
+							.setLabel('Actualiser')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('🔄'),
+						new ButtonBuilder()
+							.setCustomId('export_archive_report')
+							.setLabel('Rapport détaillé')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('📊'),
+						new ButtonBuilder()
+							.setCustomId('archive_help')
+							.setLabel('Aide')
+							.setStyle(ButtonStyle.Success)
+							.setEmoji('❓')
+					);
 
 				await interaction.editReply({
-					embeds: [embed],
+					content: content,
+					components: [selectRow, buttons]
 				});
 			}
 			else {
@@ -632,33 +762,65 @@ module.exports = {
 	async showCurrentConfig(interaction, archiveManager) {
 		try {
 			const config = await archiveManager.getConfig();
-			const { EmbedBuilder } = require('discord.js');
+			const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-			const embed = new EmbedBuilder()
-				.setTitle('⚙️ Configuration actuelle de l\'archivage')
-				.setDescription('Paramètres actuels du système d\'archivage')
-				.setColor('#3498db')
-				.addFields([
+			let content = `⚙️ **CONFIGURATION ACTUELLE DE L'ARCHIVAGE** ⚙️\n\n`;
+			content += `📋 Paramètres actuels du système d'archivage\n\n`;
+			content += `${config.autoEnabled ? '✅' : '❌'} **Archivage automatique:** ${config.autoEnabled ? 'Activé' : 'Désactivé'}\n`;
+			content += `⏰ **Fréquence:** ${config.frequency || 'Non définie'} jour(s)\n`;
+			content += `📅 **Rétention:** ${config.retention || 'Non définie'} jour(s)\n\n`;
+			content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour modifier la configuration
+			const configSelect = new StringSelectMenuBuilder()
+				.setCustomId('modify_archive_config')
+				.setPlaceholder('Modifier la configuration...')
+				.addOptions([
 					{
-						name: 'Archivage automatique',
-						value: config.autoEnabled ? '✅ Activé' : '❌ Désactivé',
-						inline: true,
+						label: 'Activer/Désactiver archivage auto',
+						description: 'Basculer l\'archivage automatique',
+						value: 'toggle_auto',
+						emoji: config.autoEnabled ? '❌' : '✅'
 					},
 					{
-						name: 'Fréquence',
-						value: `${config.frequency || 'Non définie'} jour(s)`,
-						inline: true,
+						label: 'Modifier fréquence',
+						description: 'Changer la fréquence d\'archivage',
+						value: 'change_frequency',
+						emoji: '⏰'
 					},
 					{
-						name: 'Rétention',
-						value: `${config.retention || 'Non définie'} jour(s)`,
-						inline: true,
-					},
-				])
-				.setTimestamp();
+						label: 'Modifier rétention',
+						description: 'Changer la durée de rétention',
+						value: 'change_retention',
+						emoji: '📅'
+					}
+				]);
+
+			const selectRow = new ActionRowBuilder().addComponents(configSelect);
+
+			// Boutons d'action
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('test_archive_config')
+						.setLabel('Tester config')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🧪'),
+					new ButtonBuilder()
+						.setCustomId('reset_archive_config')
+						.setLabel('Réinitialiser')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('export_archive_config')
+						.setLabel('Exporter config')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📤')
+				);
 
 			await interaction.reply({
-				embeds: [embed],
+				content: content,
+				components: [selectRow, buttons],
 				ephemeral: true,
 			});
 

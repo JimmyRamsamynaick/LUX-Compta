@@ -191,44 +191,115 @@ module.exports = {
 			const dashboards = dashboardManager.getAllDashboards();
 
 			if (dashboards.length === 0) {
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+				let content = `📊 **DASHBOARDS ACTIFS** 📊\n\n`;
+				content += `ℹ️ **Aucun dashboard actif trouvé.**\n\n`;
+				content += `💡 **Pour commencer:**\n`;
+				content += `• Utilisez \`/dashboard créer\` pour créer un nouveau dashboard\n`;
+				content += `• Choisissez le type de dashboard adapté à vos besoins\n`;
+				content += `• Configurez la mise à jour automatique si nécessaire\n\n`;
+				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action (Type 10)
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('dashboard_create_main')
+							.setLabel('Créer dashboard principal')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📊'),
+						new ButtonBuilder()
+							.setCustomId('dashboard_create_custom')
+							.setLabel('Dashboard personnalisé')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('⚙️'),
+						new ButtonBuilder()
+							.setCustomId('dashboard_help')
+							.setLabel('Aide')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('❓')
+					);
+
 				return await interaction.reply({
-					content: '📊 Aucun dashboard actif trouvé.',
-					ephemeral: true,
+					content: content,
+					components: [buttons],
+					ephemeral: true
 				});
 			}
 
-			const { EmbedBuilder } = require('discord.js');
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
-			const embed = new EmbedBuilder()
-				.setTitle('📊 Dashboards actifs')
-				.setDescription(`${dashboards.length} dashboard(s) trouvé(s)`)
-				.setColor('#00ff00')
-				.setTimestamp();
+			let content = `📊 **DASHBOARDS ACTIFS** 📊\n\n`;
+			content += `📈 **${dashboards.length} dashboard(s) trouvé(s)**\n\n`;
 
-			for (const dashboard of dashboards) {
-				const channel = await interaction.client.channels.fetch(dashboard.channelId);
-				const autoUpdateStatus = dashboard.autoUpdate ? '🟢 Activé' : '🔴 Désactivé';
-				const lastUpdate = dashboard.lastUpdate ?
-					`<t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:R>` :
-					'Jamais';
+			// Afficher les dashboards
+			for (let i = 0; i < Math.min(dashboards.length, 5); i++) {
+				const dashboard = dashboards[i];
+				try {
+					const channel = await interaction.client.channels.fetch(dashboard.channelId);
+					const autoUpdateStatus = dashboard.autoUpdate ? '🟢 Activé' : '🔴 Désactivé';
+					const lastUpdate = dashboard.lastUpdate ?
+						`<t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:R>` :
+						'Jamais';
 
-				embed.addFields([
-					{
-						name: `📺 ${channel.name}`,
-						value: [
-							`**ID:** ${dashboard.messageId}`,
-							`**Auto-update:** ${autoUpdateStatus}`,
-							`**Dernière MAJ:** ${lastUpdate}`,
-							`**Créé par:** <@${dashboard.userId}>`,
-						].join('\n'),
-						inline: true,
-					},
-				]);
+					content += `📺 **${channel.name}**\n`;
+					content += `   • **ID Message:** \`${dashboard.messageId}\`\n`;
+					content += `   • **Auto-update:** ${autoUpdateStatus}\n`;
+					content += `   • **Dernière MAJ:** ${lastUpdate}\n`;
+					content += `   • **Créé par:** <@${dashboard.userId}>\n\n`;
+				} catch (error) {
+					content += `📺 **Canal inconnu** (ID: ${dashboard.channelId})\n`;
+					content += `   • **Erreur:** Canal inaccessible\n\n`;
+				}
 			}
 
+			if (dashboards.length > 5) {
+				content += `... et ${dashboards.length - 5} autre(s) dashboard(s)\n\n`;
+			}
+
+			content += `⏰ **Liste mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour gérer un dashboard spécifique (Type 17)
+			const dashboardSelect = new ActionRowBuilder()
+				.addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId('dashboard_manage_select')
+						.setPlaceholder('Sélectionner un dashboard à gérer...')
+						.addOptions(
+							dashboards.slice(0, 25).map(dashboard => ({
+								label: `Dashboard ${dashboard.channelId}`,
+								value: dashboard.channelId,
+								description: `Auto-update: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
+								emoji: dashboard.autoUpdate ? '🟢' : '🔴'
+							}))
+						)
+				);
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('dashboard_refresh_all')
+						.setLabel('Actualiser tout')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('dashboard_create_new')
+						.setLabel('Créer nouveau')
+						.setStyle(ButtonStyle.Success)
+						.setEmoji('➕'),
+					new ButtonBuilder()
+						.setCustomId('dashboard_settings_global')
+						.setLabel('Paramètres globaux')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('⚙️')
+				);
+
 			await interaction.reply({
-				embeds: [embed],
-				ephemeral: true,
+				content: content,
+				components: [dashboardSelect, buttons],
+				ephemeral: true
 			});
 
 		}
@@ -303,67 +374,123 @@ module.exports = {
 
 	async showDashboardSettings(interaction, dashboardManager) {
 		try {
-			const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 			const channelId = interaction.channelId;
 			const dashboard = dashboardManager.getDashboardInfo(channelId);
 
 			if (!dashboard) {
+				let content = `⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n`;
+				content += `❌ **Aucun dashboard trouvé dans ce canal.**\n\n`;
+				content += `💡 **Pour commencer:**\n`;
+				content += `• Créez d'abord un dashboard avec \`/dashboard créer\`\n`;
+				content += `• Choisissez le type de dashboard adapté\n`;
+				content += `• Revenez ensuite configurer les paramètres\n\n`;
+				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action (Type 10)
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('dashboard_create_here')
+							.setLabel('Créer dashboard ici')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📊'),
+						new ButtonBuilder()
+							.setCustomId('dashboard_list_all')
+							.setLabel('Voir tous les dashboards')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('📋'),
+						new ButtonBuilder()
+							.setCustomId('dashboard_help_settings')
+							.setLabel('Aide')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('❓')
+					);
+
 				return await interaction.reply({
-					content: '❌ Aucun dashboard trouvé dans ce canal.',
-					ephemeral: true,
+					content: content,
+					components: [buttons],
+					ephemeral: true
 				});
 			}
 
-			const embed = new EmbedBuilder()
-				.setTitle('⚙️ Paramètres du Dashboard')
-				.setDescription('Configuration du dashboard de ce canal')
-				.setColor('#00ff00')
-				.addFields([
-					{
-						name: '📊 Informations',
-						value: [
-							`**ID Message:** ${dashboard.messageId}`,
-							`**Canal:** <#${dashboard.channelId}>`,
-							`**Créé par:** <@${dashboard.userId}>`,
-							`**Créé le:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:F>`,
-						].join('\n'),
-						inline: false,
-					},
-					{
-						name: '⚙️ Configuration',
-						value: [
-							`**Auto-update:** ${dashboard.autoUpdate ? '🟢 Activé' : '🔴 Désactivé'}`,
-							`**Dernière MAJ:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:R>`,
-						].join('\n'),
-						inline: false,
-					},
-				])
-				.setTimestamp();
+			let content = `⚙️ **PARAMÈTRES DU DASHBOARD** ⚙️\n\n`;
+			content += `📊 **Configuration du dashboard de ce canal**\n\n`;
 
+			// Informations générales
+			content += `📋 **Informations générales:**\n`;
+			content += `• **ID Message:** \`${dashboard.messageId}\`\n`;
+			content += `• **Canal:** <#${dashboard.channelId}>\n`;
+			content += `• **Créé par:** <@${dashboard.userId}>\n`;
+			content += `• **Créé le:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:F>\n\n`;
+
+			// Configuration
+			content += `⚙️ **Configuration actuelle:**\n`;
+			content += `• **Auto-update:** ${dashboard.autoUpdate ? '🟢 Activé' : '🔴 Désactivé'}\n`;
+			content += `• **Dernière MAJ:** <t:${Math.floor(dashboard.lastUpdate.getTime() / 1000)}:R>\n`;
+			content += `• **Type:** ${dashboard.type || 'Principal'}\n\n`;
+
+			content += `⏰ **Paramètres consultés:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour modifier les paramètres (Type 17)
+			const settingsSelect = new ActionRowBuilder()
+				.addComponents(
+					new StringSelectMenuBuilder()
+						.setCustomId('dashboard_settings_modify')
+						.setPlaceholder('Modifier un paramètre...')
+						.addOptions([
+							{
+								label: dashboard.autoUpdate ? 'Désactiver Auto-update' : 'Activer Auto-update',
+								value: 'toggle_auto_update',
+								description: `Actuellement: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
+								emoji: dashboard.autoUpdate ? '🔴' : '🟢'
+							},
+							{
+								label: 'Changer intervalle de MAJ',
+								value: 'change_interval',
+								description: 'Modifier la fréquence de mise à jour',
+								emoji: '⏱️'
+							},
+							{
+								label: 'Modifier type de dashboard',
+								value: 'change_type',
+								description: 'Changer le type d\'affichage',
+								emoji: '🔄'
+							},
+							{
+								label: 'Réinitialiser paramètres',
+								value: 'reset_settings',
+								description: 'Remettre la configuration par défaut',
+								emoji: '🔄'
+							}
+						])
+				);
+
+			// Boutons d'action (Type 10)
 			const buttons = new ActionRowBuilder()
 				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('dashboard_toggle_auto')
-						.setLabel(dashboard.autoUpdate ? 'Désactiver Auto-update' : 'Activer Auto-update')
-						.setStyle(dashboard.autoUpdate ? ButtonStyle.Danger : ButtonStyle.Success)
-						.setEmoji(dashboard.autoUpdate ? '🔴' : '🟢'),
 					new ButtonBuilder()
 						.setCustomId('dashboard_force_refresh')
 						.setLabel('Actualiser maintenant')
 						.setStyle(ButtonStyle.Primary)
 						.setEmoji('🔄'),
 					new ButtonBuilder()
+						.setCustomId('dashboard_export_config')
+						.setLabel('Exporter config')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📤'),
+					new ButtonBuilder()
 						.setCustomId('dashboard_delete_confirm')
 						.setLabel('Supprimer')
 						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️'),
+						.setEmoji('🗑️')
 				);
 
 			await interaction.reply({
-				embeds: [embed],
-				components: [buttons],
-				ephemeral: true,
+				content: content,
+				components: [settingsSelect, buttons],
+				ephemeral: true
 			});
 
 		}

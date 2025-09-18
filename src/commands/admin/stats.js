@@ -40,31 +40,11 @@ module.exports = {
 
 		try {
 			const stats = await statsManager.getStats(periode);
-			const embed = await this.createStatsEmbed(stats, periode, type, interaction.guild);
-
-			// Créer les boutons d'action
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId(`refresh_stats_${periode}_${type}`)
-						.setLabel('Actualiser')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId(`export_stats_${periode}`)
-						.setLabel('Exporter CSV')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📊'),
-					new ButtonBuilder()
-						.setCustomId(`detailed_stats_${periode}`)
-						.setLabel('Détails')
-						.setStyle(ButtonStyle.Success)
-						.setEmoji('📈'),
-				);
+			const { content, components } = await this.createStatsResponse(stats, periode, type, interaction.guild);
 
 			await interaction.editReply({
-				embeds: [embed],
-				components: [buttons],
+				content: content,
+				components: components,
 			});
 
 		}
@@ -77,86 +57,148 @@ module.exports = {
 		}
 	},
 
-	async createStatsEmbed(stats, periode, type, guild) {
-		const embed = new EmbedBuilder()
-			.setTitle(`📊 Statistiques - ${guild.name}`)
-			.setDescription(`Période: ${this.getPeriodLabel(periode)}`)
-			.setColor('#0099ff')
-			.setTimestamp()
-			.setThumbnail(guild.iconURL())
-			.setFooter({ text: 'LUX Compta' });
+	async createStatsResponse(stats, periode, type, guild) {
+		const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
+
+		let content = `📊 **STATISTIQUES - ${guild.name.toUpperCase()}** 📊\n\n`;
+		content += `📅 **Période:** ${this.getPeriodLabel(periode)}\n`;
+		content += `📋 **Type:** ${this.getTypeLabel(type)}\n\n`;
 
 		switch (type) {
 		case 'general':
-			embed.addFields(
-				{ name: '📈 Messages totaux', value: stats.messages.toString(), inline: true },
-				{ name: '👥 Membres actifs', value: stats.activeMembers.toString(), inline: true },
-				{ name: '📊 Canaux actifs', value: stats.activeChannels.toString(), inline: true },
-				{ name: '📅 Nouveaux membres', value: stats.newMembers.toString(), inline: true },
-				{ name: '👋 Membres partis', value: stats.leftMembers.toString(), inline: true },
-				{ name: '📈 Évolution', value: this.getEvolutionText(stats.evolution), inline: true },
-			);
+			content += `📈 **Messages totaux:** ${stats.messages}\n`;
+			content += `👥 **Membres actifs:** ${stats.activeMembers}\n`;
+			content += `📊 **Canaux actifs:** ${stats.activeChannels}\n`;
+			content += `📅 **Nouveaux membres:** ${stats.newMembers}\n`;
+			content += `👋 **Membres partis:** ${stats.leftMembers}\n`;
+			content += `📈 **Évolution:** ${this.getEvolutionText(stats.evolution)}\n\n`;
 			break;
 
 		case 'messages':
-			embed.addFields(
-				{ name: '💬 Messages totaux', value: stats.messages.toString(), inline: true },
-				{ name: '📊 Moyenne/jour', value: Math.round(stats.messagesPerDay || 0).toString(), inline: true },
-				{ name: '⏰ Pic d\'activité', value: stats.peakHour || 'N/A', inline: true },
-			);
+			content += `💬 **Messages totaux:** ${stats.messages}\n`;
+			content += `📊 **Moyenne/jour:** ${Math.round(stats.messagesPerDay || 0)}\n`;
+			content += `⏰ **Pic d'activité:** ${stats.peakHour || 'N/A'}\n\n`;
 
 			if (stats.topChannels && stats.topChannels.length > 0) {
+				content += `🏆 **Top Canaux:**\n`;
 				const topChannels = stats.topChannels
 					.slice(0, 5)
 					.map((ch, i) => `${i + 1}. <#${ch.id}> (${ch.messages} messages)`)
 					.join('\n');
-				embed.addFields({ name: '🏆 Top Canaux', value: topChannels, inline: false });
+				content += topChannels + '\n\n';
 			}
 			break;
 
 		case 'members':
-			embed.addFields(
-				{ name: '👥 Membres totaux', value: guild.memberCount.toString(), inline: true },
-				{ name: '🆕 Nouveaux membres', value: stats.newMembers.toString(), inline: true },
-				{ name: '👋 Membres partis', value: stats.leftMembers.toString(), inline: true },
-				{ name: '💬 Membres actifs', value: stats.activeMembers.toString(), inline: true },
-				{ name: '📊 Taux d\'activité', value: `${Math.round((stats.activeMembers / guild.memberCount) * 100)}%`, inline: true },
-				{ name: '📈 Croissance', value: `${stats.newMembers - stats.leftMembers > 0 ? '+' : ''}${stats.newMembers - stats.leftMembers}`, inline: true },
-			);
+			content += `👥 **Membres totaux:** ${guild.memberCount}\n`;
+			content += `🆕 **Nouveaux membres:** ${stats.newMembers}\n`;
+			content += `👋 **Membres partis:** ${stats.leftMembers}\n`;
+			content += `💬 **Membres actifs:** ${stats.activeMembers}\n`;
+			content += `📊 **Taux d'activité:** ${Math.round((stats.activeMembers / guild.memberCount) * 100)}%\n`;
+			content += `📈 **Croissance:** ${stats.newMembers - stats.leftMembers > 0 ? '+' : ''}${stats.newMembers - stats.leftMembers}\n\n`;
 
 			if (stats.topMembers && stats.topMembers.length > 0) {
+				content += `🏆 **Top Membres:**\n`;
 				const topMembers = stats.topMembers
 					.slice(0, 5)
 					.map((member, i) => `${i + 1}. <@${member.id}> (${member.messages} messages)`)
 					.join('\n');
-				embed.addFields({ name: '🏆 Top Membres', value: topMembers, inline: false });
+				content += topMembers + '\n\n';
 			}
 			break;
 
 		case 'channels':
+			content += `📊 **Canaux actifs:** ${stats.activeChannels}\n`;
+			content += `📈 **Canal le plus actif:** ${stats.topChannel ? `<#${stats.topChannel.id}>` : 'N/A'}\n`;
+			content += `💬 **Messages moyens/canal:** ${Math.round(stats.messages / stats.activeChannels || 0)}\n\n`;
+
 			if (stats.channelStats && stats.channelStats.length > 0) {
+				content += `📊 **Activité par canal:**\n`;
 				const channelList = stats.channelStats
 					.slice(0, 10)
 					.map((ch, i) => `${i + 1}. <#${ch.id}> - ${ch.messages} messages`)
 					.join('\n');
-				embed.addFields({ name: '📊 Activité par canal', value: channelList, inline: false });
+				content += channelList + '\n\n';
 			}
-
-			embed.addFields(
-				{ name: '📊 Canaux actifs', value: stats.activeChannels.toString(), inline: true },
-				{ name: '📈 Canal le plus actif', value: stats.topChannel ? `<#${stats.topChannel.id}>` : 'N/A', inline: true },
-				{ name: '💬 Messages moyens/canal', value: Math.round(stats.messages / stats.activeChannels || 0).toString(), inline: true },
-			);
 			break;
 		}
 
 		// Ajouter des informations sur les alertes si nécessaire
 		if (stats.alerts && stats.alerts.length > 0) {
+			content += `🚨 **Alertes:**\n`;
 			const alertText = stats.alerts.map(alert => `⚠️ ${alert}`).join('\n');
-			embed.addFields({ name: '🚨 Alertes', value: alertText, inline: false });
+			content += alertText + '\n\n';
 		}
 
-		return embed;
+		content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		// Menu de sélection pour changer de type (Type 17)
+		const typeSelect = new StringSelectMenuBuilder()
+			.setCustomId('stats_type_select')
+			.setPlaceholder('Changer le type de statistiques...')
+			.addOptions([
+				{
+					label: 'Général',
+					description: 'Vue d\'ensemble des statistiques',
+					value: 'general',
+					emoji: '📊'
+				},
+				{
+					label: 'Messages',
+					description: 'Statistiques des messages',
+					value: 'messages',
+					emoji: '💬'
+				},
+				{
+					label: 'Membres',
+					description: 'Statistiques des membres',
+					value: 'members',
+					emoji: '👥'
+				},
+				{
+					label: 'Canaux',
+					description: 'Statistiques des canaux',
+					value: 'channels',
+					emoji: '📊'
+				}
+			]);
+
+		const selectRow = new ActionRowBuilder().addComponents(typeSelect);
+
+		// Boutons d'action (Type 10)
+		const buttons = new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setCustomId(`refresh_stats_${periode}_${type}`)
+					.setLabel('Actualiser')
+					.setStyle(ButtonStyle.Primary)
+					.setEmoji('🔄'),
+				new ButtonBuilder()
+					.setCustomId(`export_stats_${periode}`)
+					.setLabel('Exporter CSV')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('📊'),
+				new ButtonBuilder()
+					.setCustomId(`detailed_stats_${periode}`)
+					.setLabel('Détails')
+					.setStyle(ButtonStyle.Success)
+					.setEmoji('📈')
+			);
+
+		return {
+			content: content,
+			components: [selectRow, buttons]
+		};
+	},
+
+	getTypeLabel(type) {
+		const labels = {
+			'general': 'Général',
+			'messages': 'Messages',
+			'members': 'Membres',
+			'channels': 'Canaux',
+		};
+		return labels[type] || type;
 	},
 
 	getPeriodLabel(period) {

@@ -71,20 +71,16 @@ module.exports = {
 			const reportPath = await reportManager.generateReport(periode, interaction.guild);
 			const stats = await statsManager.getStats(periode);
 
-			// Créer l'embed de confirmation
-			const embed = new EmbedBuilder()
-				.setTitle('📊 Rapport généré avec succès')
-				.setDescription(`Rapport ${periode} généré pour **${interaction.guild.name}**`)
-				.addFields(
-					{ name: '📈 Messages', value: stats.messages.toString(), inline: true },
-					{ name: '👥 Membres actifs', value: stats.activeMembers.toString(), inline: true },
-					{ name: '📅 Période', value: this.getPeriodLabel(periode), inline: true },
-				)
-				.setColor('#00ff00')
-				.setTimestamp()
-				.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
+			const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
-			// Créer les composants interactifs
+			let content = `📊 **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n`;
+			content += `📋 **Rapport ${periode} généré pour ${interaction.guild.name}**\n\n`;
+			content += `📈 **Messages:** ${stats.messages}\n`;
+			content += `👥 **Membres actifs:** ${stats.activeMembers}\n`;
+			content += `📅 **Période:** ${this.getPeriodLabel(periode)}\n\n`;
+			content += `⏰ **Généré le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Menu de sélection pour changer de période (Type 17)
 			const selectMenu = new StringSelectMenuBuilder()
 				.setCustomId('report_period_select')
 				.setPlaceholder('Choisir une période')
@@ -109,6 +105,9 @@ module.exports = {
 					},
 				]);
 
+			const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+
+			// Boutons d'action (Type 10)
 			const buttons = new ActionRowBuilder()
 				.addComponents(
 					new ButtonBuilder()
@@ -125,13 +124,11 @@ module.exports = {
 						.setCustomId(`view_report_${periode}`)
 						.setLabel('Visualiser')
 						.setStyle(ButtonStyle.Success)
-						.setEmoji('👁️'),
+						.setEmoji('👁️')
 				);
 
-			const selectRow = new ActionRowBuilder().addComponents(selectMenu);
-
 			await interaction.editReply({
-				embeds: [embed],
+				content: content,
 				components: [selectRow, buttons],
 			});
 
@@ -160,12 +157,10 @@ module.exports = {
 				});
 			}
 
-			const embed = new EmbedBuilder()
-				.setTitle('📋 Rapports disponibles')
-				.setDescription('Liste des rapports générés')
-				.setColor('#0099ff')
-				.setTimestamp()
-				.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+			let content = `📋 **RAPPORTS DISPONIBLES** 📋\n\n`;
+			content += `📊 **${reports.length} rapport(s) trouvé(s)**\n\n`;
 
 			// Grouper les rapports par type
 			const groupedReports = reports.reduce((acc, report) => {
@@ -176,19 +171,41 @@ module.exports = {
 			}, {});
 
 			Object.entries(groupedReports).forEach(([type, typeReports]) => {
+				content += `${this.getTypeEmoji(type)} **${this.getTypeLabel(type)}:**\n`;
 				const reportList = typeReports
 					.slice(0, 5) // Limiter à 5 rapports par type
 					.map(report => `• ${report.name} (${report.size})`)
 					.join('\n');
-
-				embed.addFields({
-					name: `${this.getTypeEmoji(type)} ${this.getTypeLabel(type)}`,
-					value: reportList || 'Aucun rapport',
-					inline: false,
-				});
+				content += reportList || 'Aucun rapport';
+				content += '\n\n';
 			});
 
-			await interaction.editReply({ embeds: [embed] });
+			content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('reports_refresh')
+						.setLabel('Actualiser')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('reports_archive')
+						.setLabel('Archiver anciens')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📦'),
+					new ButtonBuilder()
+						.setCustomId('reports_cleanup')
+						.setLabel('Nettoyer')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🗑️')
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [buttons]
+			});
 
 		}
 		catch (error) {
@@ -206,16 +223,54 @@ module.exports = {
 		await interaction.deferReply();
 
 		try {
-			const archivedCount = await reportManager.archiveOldReports();
+			const result = await reportManager.archiveOldReports();
 
-			const embed = new EmbedBuilder()
-				.setTitle('📦 Archivage terminé')
-				.setDescription(`${archivedCount} rapport(s) archivé(s) avec succès`)
-				.setColor('#ff9900')
-				.setTimestamp()
-				.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-			await interaction.editReply({ embeds: [embed] });
+			let content = `📦 **ARCHIVAGE DES RAPPORTS** 📦\n\n`;
+			content += `✅ **Archivage terminé avec succès !**\n\n`;
+			content += `📊 **Résultats:**\n`;
+			content += `• **${result.archived}** rapport(s) archivé(s)\n`;
+			content += `• **${result.deleted}** ancien(s) fichier(s) supprimé(s)\n`;
+			content += `• **${result.size}** d'espace libéré\n\n`;
+
+			if (result.errors && result.errors.length > 0) {
+				content += `⚠️ **Erreurs rencontrées:**\n`;
+				result.errors.slice(0, 3).forEach(error => {
+					content += `• ${error}\n`;
+				});
+				if (result.errors.length > 3) {
+					content += `• ... et ${result.errors.length - 3} autre(s) erreur(s)\n`;
+				}
+				content += '\n';
+			}
+
+			content += `⏰ **Archivage effectué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('archive_view')
+						.setLabel('Voir archives')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('📁'),
+					new ButtonBuilder()
+						.setCustomId('archive_restore')
+						.setLabel('Restaurer')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('↩️'),
+					new ButtonBuilder()
+						.setCustomId('archive_cleanup')
+						.setLabel('Nettoyer archives')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🗑️')
+				);
+
+			await interaction.editReply({
+				content: content,
+				components: [buttons]
+			});
 
 		}
 		catch (error) {

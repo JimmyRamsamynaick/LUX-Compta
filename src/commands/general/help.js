@@ -23,20 +23,16 @@ module.exports = {
 	},
 
 	async showGeneralHelp(interaction, isUpdate = false) {
-		const embed = new EmbedBuilder()
-			.setTitle('🤖 LUX Compta - Guide d\'utilisation')
-			.setDescription(`Bot de comptabilité et statistiques pour **${config.server.name}**`)
-			.setColor('#0099ff')
-			.setThumbnail(interaction.client.user.displayAvatarURL())
-			.setTimestamp()
-			.setFooter({ text: `Version ${config.bot.version}`, iconURL: interaction.client.user.displayAvatarURL() });
+		const { ButtonBuilder, ButtonStyle } = require('discord.js');
+
+		let content = `🤖 **LUX COMPTA - GUIDE D'UTILISATION** 🤖\n\n`;
+		content += `📊 **Bot de comptabilité et statistiques pour ${config.server.name}**\n\n`;
 
 		// Commandes générales
-		embed.addFields({
-			name: '📊 Commandes générales',
-			value: '`/help` - Afficher cette aide\n`/stats` - Voir les statistiques du serveur\n`/info` - Informations sur le bot',
-			inline: false,
-		});
+		content += `📊 **Commandes générales:**\n`;
+		content += `• \`/help\` - Afficher cette aide\n`;
+		content += `• \`/stats\` - Voir les statistiques du serveur\n`;
+		content += `• \`/info\` - Informations sur le bot\n\n`;
 
 		// Vérifier si l'utilisateur a les permissions admin
 		const isAdmin = interaction.member && interaction.member.roles && interaction.member.roles.cache.some(role =>
@@ -44,31 +40,33 @@ module.exports = {
 		);
 
 		if (isAdmin) {
-			embed.addFields({
-				name: '⚙️ Commandes administrateur',
-				value: '`/rapport` - Gérer les rapports\n`/config` - Configuration du bot\n`/maintenance` - Outils de maintenance',
-				inline: false,
-			});
+			content += `⚙️ **Commandes administrateur:**\n`;
+			content += `• \`/rapport\` - Gérer les rapports\n`;
+			content += `• \`/config\` - Configuration du bot\n`;
+			content += `• \`/maintenance\` - Outils de maintenance\n\n`;
 		}
 
 		// Fonctionnalités principales
-		embed.addFields(
-			{
-				name: '📈 Fonctionnalités',
-				value: '• Suivi des statistiques en temps réel\n• Génération de rapports CSV\n• Alertes d\'activité\n• Archivage automatique\n• Intégration Git',
-				inline: true,
-			},
-			{
-				name: '🔧 Composants interactifs',
-				value: '• Sélecteur de période\n• Boutons d\'action\n• Téléchargement de rapports\n• Envoi par email',
-				inline: true,
-			},
-		);
+		content += `📈 **Fonctionnalités principales:**\n`;
+		content += `• Suivi des statistiques en temps réel\n`;
+		content += `• Génération de rapports CSV\n`;
+		content += `• Alertes d'activité\n`;
+		content += `• Archivage automatique\n`;
+		content += `• Intégration Git\n\n`;
 
-		// Menu de sélection pour l'aide détaillée
+		content += `🔧 **Composants interactifs:**\n`;
+		content += `• Sélecteur de période\n`;
+		content += `• Boutons d'action\n`;
+		content += `• Téléchargement de rapports\n`;
+		content += `• Envoi par email\n\n`;
+
+		content += `⏰ **Guide consulté:** <t:${Math.floor(Date.now() / 1000)}:F>\n`;
+		content += `📋 **Version:** ${config.bot.version}`;
+
+		// Menu de sélection pour l'aide détaillée (Type 17)
 		const selectMenu = new StringSelectMenuBuilder()
 			.setCustomId('help_category_select')
-			.setPlaceholder('Choisir une catégorie pour plus de détails')
+			.setPlaceholder('Choisir une catégorie pour plus de détails...')
 			.addOptions([
 				{
 					label: 'Statistiques',
@@ -96,19 +94,44 @@ module.exports = {
 				},
 			]);
 
-		const row = new ActionRowBuilder().addComponents(selectMenu);
+		// Boutons d'action (Type 10)
+		const buttons = new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setCustomId('help_quick_start')
+					.setLabel('Guide rapide')
+					.setStyle(ButtonStyle.Primary)
+					.setEmoji('🚀'),
+				new ButtonBuilder()
+					.setCustomId('help_examples')
+					.setLabel('Exemples')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('📝'),
+				new ButtonBuilder()
+					.setCustomId('help_support')
+					.setLabel('Support')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('❓')
+			);
+
+		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
 		if (isUpdate) {
-			await interaction.update({ embeds: [embed], components: [row] });
+			await interaction.update({ 
+				content: content, 
+				components: [selectRow, buttons],
+				embeds: []
+			});
 		} else {
 			await interaction.reply({
-				embeds: [embed],
-				components: [row],
+				content: content,
+				components: [selectRow, buttons],
 			});
 		}
 	},
 
 	async showCommandHelp(interaction, commandName) {
+		const { ButtonBuilder, ButtonStyle } = require('discord.js');
 		const commandHelp = this.getCommandHelp(commandName);
 
 		if (!commandHelp) {
@@ -118,26 +141,81 @@ module.exports = {
 			});
 		}
 
-		const embed = new EmbedBuilder()
-			.setTitle(`📖 Aide - /${commandName}`)
-			.setDescription(commandHelp.description)
-			.setColor('#00ff00')
-			.setTimestamp()
-			.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
+		let content = `📖 **AIDE - /${commandName.toUpperCase()}** 📖\n\n`;
+		content += `📝 **Description:**\n${commandHelp.description}\n\n`;
 
 		if (commandHelp.usage) {
-			embed.addFields({ name: '💡 Utilisation', value: commandHelp.usage, inline: false });
+			content += `💡 **Utilisation:**\n${commandHelp.usage}\n\n`;
 		}
 
 		if (commandHelp.examples) {
-			embed.addFields({ name: '📝 Exemples', value: commandHelp.examples, inline: false });
+			content += `📝 **Exemples:**\n${commandHelp.examples}\n\n`;
 		}
 
 		if (commandHelp.permissions) {
-			embed.addFields({ name: '🔒 Permissions requises', value: commandHelp.permissions, inline: false });
+			content += `🔒 **Permissions requises:**\n${commandHelp.permissions}\n\n`;
 		}
 
-		await interaction.reply({ embeds: [embed] });
+		content += `⏰ **Aide consultée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		// Menu de sélection pour voir d'autres commandes (Type 17)
+		const commandSelect = new ActionRowBuilder()
+			.addComponents(
+				new StringSelectMenuBuilder()
+					.setCustomId('help_command_select')
+					.setPlaceholder('Voir l\'aide d\'une autre commande...')
+					.addOptions([
+						{
+							label: 'stats',
+							description: 'Statistiques du serveur',
+							value: 'stats',
+							emoji: '📊'
+						},
+						{
+							label: 'rapport',
+							description: 'Gestion des rapports',
+							value: 'rapport',
+							emoji: '📋'
+						},
+						{
+							label: 'config',
+							description: 'Configuration du bot',
+							value: 'config',
+							emoji: '⚙️'
+						},
+						{
+							label: 'help',
+							description: 'Système d\'aide',
+							value: 'help',
+							emoji: '❓'
+						}
+					])
+			);
+
+		// Boutons d'action (Type 10)
+		const buttons = new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setCustomId('help_back_main')
+					.setLabel('Retour au menu principal')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('🏠'),
+				new ButtonBuilder()
+					.setCustomId('help_try_command')
+					.setLabel('Essayer la commande')
+					.setStyle(ButtonStyle.Primary)
+					.setEmoji('🚀'),
+				new ButtonBuilder()
+					.setCustomId('help_more_info')
+					.setLabel('Plus d\'infos')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('ℹ️')
+			);
+
+		await interaction.reply({ 
+			content: content,
+			components: [commandSelect, buttons]
+		});
 	},
 
 	getCommandHelp(commandName) {
@@ -172,6 +250,8 @@ module.exports = {
 	},
 
 	async handleCategorySelect(interaction, category) {
+		const { ButtonBuilder, ButtonStyle } = require('discord.js');
+
 		// Si l'utilisateur sélectionne le menu principal, afficher l'aide générale
 		if (category === 'main_menu') {
 			await this.showGeneralHelp(interaction, true); // true pour indiquer que c'est une mise à jour
@@ -180,35 +260,27 @@ module.exports = {
 
 		const categoryHelp = this.getCategoryHelp(category);
 
-		const embed = new EmbedBuilder()
-			.setTitle(`📚 ${categoryHelp.title}`)
-			.setDescription(categoryHelp.description)
-			.setColor('#0099ff')
-			.setTimestamp()
-			.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
+		let content = `📚 **${categoryHelp.title.toUpperCase()}** 📚\n\n`;
+		content += `📝 **Description:**\n${categoryHelp.description}\n\n`;
 
 		if (categoryHelp.commands) {
+			content += `🔧 **Commandes disponibles:**\n`;
 			categoryHelp.commands.forEach(cmd => {
-				embed.addFields({
-					name: `/${cmd.name}`,
-					value: cmd.description,
-					inline: false,
-				});
+				content += `• **/${cmd.name}** - ${cmd.description}\n`;
 			});
+			content += `\n`;
 		}
 
 		if (categoryHelp.tips) {
-			embed.addFields({
-				name: '💡 Conseils',
-				value: categoryHelp.tips,
-				inline: false,
-			});
+			content += `💡 **Conseils d'utilisation:**\n${categoryHelp.tips}\n\n`;
 		}
 
-		// Créer le menu de sélection pour permettre de choisir une autre catégorie
+		content += `⏰ **Catégorie consultée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		// Créer le menu de sélection pour permettre de choisir une autre catégorie (Type 17)
 		const selectMenu = new StringSelectMenuBuilder()
 			.setCustomId('help_category_select')
-			.setPlaceholder('Choisir une autre catégorie ou revenir au menu principal')
+			.setPlaceholder('Choisir une autre catégorie ou revenir au menu principal...')
 			.addOptions([
 				{
 					label: 'Menu principal',
@@ -242,9 +314,33 @@ module.exports = {
 				},
 			]);
 
-		const row = new ActionRowBuilder().addComponents(selectMenu);
+		// Boutons d'action (Type 10)
+		const buttons = new ActionRowBuilder()
+			.addComponents(
+				new ButtonBuilder()
+					.setCustomId('help_category_demo')
+					.setLabel('Voir démo')
+					.setStyle(ButtonStyle.Primary)
+					.setEmoji('🎬'),
+				new ButtonBuilder()
+					.setCustomId('help_category_examples')
+					.setLabel('Exemples pratiques')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('📋'),
+				new ButtonBuilder()
+					.setCustomId('help_category_faq')
+					.setLabel('FAQ')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('❓')
+			);
 
-		await interaction.update({ embeds: [embed], components: [row] });
+		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+
+		await interaction.update({ 
+			content: content, 
+			components: [selectRow, buttons],
+			embeds: []
+		});
 	},
 
 	getCategoryHelp(category) {

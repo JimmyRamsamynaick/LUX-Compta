@@ -114,98 +114,129 @@ module.exports = {
 			);
 
 			if (emailResult.success) {
-				const embed = new EmbedBuilder()
-					.setTitle('✅ Email de test envoyé avec succès')
-					.setDescription('L\'email avec le thème lanterne nocturne a été envoyé.')
-					.setColor('#00ff00')
-					.addFields([
-						{
-							name: '📧 Destinataire',
-							value: destinataire,
-							inline: true,
-						},
-						{
-							name: '📝 Sujet',
-							value: sujet,
-							inline: true,
-						},
-						{
-							name: '🎨 Thème',
-							value: '🏮 Lanterne Nocturne',
-							inline: true,
-						},
-						{
-							name: '⏰ Envoyé à',
-							value: `${templateData.date} à ${templateData.time}`,
-							inline: false,
-						},
-						{
-							name: '📊 Statistiques incluses',
-							value: templateData.stats.map(s => `• ${s.label}: ${s.value}`).join('\n'),
-							inline: false,
-						},
-					])
-					.setTimestamp()
-					.setFooter({
-						text: 'LUX-Compta Email Test',
-						iconURL: interaction.client.user.displayAvatarURL(),
-					});
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				await interaction.editReply({ embeds: [embed] });
+				let content = `✅ **EMAIL DE TEST ENVOYÉ AVEC SUCCÈS** ✅\n\n`;
+				content += `🏮 **L'email avec le thème lanterne nocturne a été envoyé !**\n\n`;
+				content += `📋 **Détails de l'envoi:**\n`;
+				content += `• **📧 Destinataire:** ${destinataire}\n`;
+				content += `• **📝 Sujet:** ${sujet}\n`;
+				content += `• **🎨 Thème:** 🏮 Lanterne Nocturne\n`;
+				content += `• **⏰ Envoyé à:** ${templateData.date} à ${templateData.time}\n\n`;
+				content += `📊 **Statistiques incluses:**\n`;
+				content += templateData.stats.map(s => `• **${s.label}:** ${s.value}`).join('\n');
+				content += `\n\n⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action (Type 10)
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('email_test_again')
+							.setLabel('Tester à nouveau')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('🔄'),
+						new ButtonBuilder()
+							.setCustomId('email_test_other')
+							.setLabel('Autre destinataire')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('📧'),
+						new ButtonBuilder()
+							.setCustomId('email_view_template')
+							.setLabel('Voir template')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('👁️')
+					);
+
+				await interaction.editReply({
+					content: content,
+					components: [buttons]
+				});
 
 				// Log dans la console
 				console.log(`📧 Email de test envoyé à ${destinataire} avec le thème nocturne`);
 
 			}
 			else {
-				const errorEmbed = new EmbedBuilder()
-					.setTitle('❌ Erreur lors de l\'envoi')
-					.setDescription('L\'email n\'a pas pu être envoyé.')
-					.setColor('#ff0000')
-					.addFields([
-						{
-							name: '🚫 Erreur',
-							value: emailResult.error || 'Erreur inconnue',
-							inline: false,
-						},
-						{
-							name: '📧 Destinataire visé',
-							value: destinataire,
-							inline: true,
-						},
-						{
-							name: '📝 Sujet visé',
-							value: sujet,
-							inline: true,
-						},
-					])
-					.setTimestamp();
+				const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-				await interaction.editReply({ embeds: [errorEmbed] });
+				let content = `❌ **ERREUR LORS DE L'ENVOI** ❌\n\n`;
+				content += `⚠️ **L'email n'a pas pu être envoyé.**\n\n`;
+				content += `📋 **Détails de l'erreur:**\n`;
+				content += `• **🚫 Erreur:** ${emailResult.error || 'Erreur inconnue'}\n`;
+				content += `• **📧 Destinataire visé:** ${destinataire}\n`;
+				content += `• **📝 Sujet visé:** ${sujet}\n\n`;
+				content += `⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				// Boutons d'action (Type 10)
+				const buttons = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('email_retry')
+							.setLabel('Réessayer')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('🔄'),
+						new ButtonBuilder()
+							.setCustomId('email_check_config')
+							.setLabel('Vérifier config')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('⚙️'),
+						new ButtonBuilder()
+							.setCustomId('email_support')
+							.setLabel('Support')
+							.setStyle(ButtonStyle.Danger)
+							.setEmoji('🆘')
+					);
+
+				await interaction.editReply({
+					content: content,
+					components: [buttons]
+				});
 			}
 
 		}
 		catch (error) {
 			console.error('❌ Erreur dans la commande email-test:', error);
 
-			const errorEmbed = new EmbedBuilder()
-				.setTitle('❌ Erreur système')
-				.setDescription('Une erreur inattendue s\'est produite.')
-				.setColor('#ff0000')
-				.addFields([
-					{
-						name: '🐛 Détails de l\'erreur',
-						value: error.message || 'Erreur inconnue',
-						inline: false,
-					},
-				])
-				.setTimestamp();
+			const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+			let content = `❌ **ERREUR SYSTÈME** ❌\n\n`;
+			content += `⚠️ **Une erreur inattendue s'est produite.**\n\n`;
+			content += `📋 **Détails de l'erreur:**\n`;
+			content += `• **🐛 Erreur:** ${error.message || 'Erreur inconnue'}\n\n`;
+			content += `⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			// Boutons d'action (Type 10)
+			const buttons = new ActionRowBuilder()
+				.addComponents(
+					new ButtonBuilder()
+						.setCustomId('system_retry')
+						.setLabel('Réessayer')
+						.setStyle(ButtonStyle.Primary)
+						.setEmoji('🔄'),
+					new ButtonBuilder()
+						.setCustomId('system_logs')
+						.setLabel('Voir logs')
+						.setStyle(ButtonStyle.Secondary)
+						.setEmoji('📋'),
+					new ButtonBuilder()
+						.setCustomId('system_support')
+						.setLabel('Support technique')
+						.setStyle(ButtonStyle.Danger)
+						.setEmoji('🆘')
+				);
 
 			if (interaction.deferred) {
-				await interaction.editReply({ embeds: [errorEmbed] });
+				await interaction.editReply({
+					content: content,
+					components: [buttons]
+				});
 			}
 			else {
-				await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+				await interaction.reply({
+					content: content,
+					components: [buttons],
+					ephemeral: true
+				});
 			}
 		}
 	},
