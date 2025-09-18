@@ -570,10 +570,45 @@ module.exports = {
 	},
 
 	async downloadArchive(interaction, archiveManager, archiveId) {
-		await interaction.reply({
-			content: `💾 Téléchargement de l'archive ${archiveId} initié.`,
-			ephemeral: true,
-		});
+		try {
+			const fs = require('fs');
+			const path = require('path');
+			
+			// Construire le chemin vers l'archive
+			const archivePath = path.join(process.cwd(), 'archives', `${archiveId}.tar.gz`);
+			
+			// Vérifier si l'archive existe
+			if (!fs.existsSync(archivePath)) {
+				await interaction.reply({
+					content: `❌ Archive ${archiveId} introuvable.`,
+					ephemeral: true,
+				});
+				return;
+			}
+			
+			// Obtenir les informations du fichier
+			const stats = fs.statSync(archivePath);
+			const fileSize = this.formatSize(stats.size);
+			
+			// Créer l'attachment pour le téléchargement
+			const attachment = new AttachmentBuilder(archivePath, {
+				name: `${archiveId}.tar.gz`,
+				description: `Archive ${archiveId} (${fileSize})`
+			});
+			
+			await interaction.reply({
+				content: `💾 Téléchargement de l'archive ${archiveId} (${fileSize})`,
+				files: [attachment],
+				ephemeral: true,
+			});
+			
+		} catch (error) {
+			console.error('Erreur lors du téléchargement de l\'archive:', error);
+			await interaction.reply({
+				content: `❌ Erreur lors du téléchargement de l'archive ${archiveId}: ${error.message}`,
+				ephemeral: true,
+			});
+		}
 	},
 
 	async deleteArchive(interaction, archiveManager, archiveId) {
