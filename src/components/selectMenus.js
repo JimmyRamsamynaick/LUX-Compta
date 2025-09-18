@@ -365,14 +365,28 @@ module.exports = {
 		const alertsCommand = require('../commands/admin/alerts');
 
 		try {
-			// Créer une interaction simulée pour handleConfig
+			// Créer une interaction simulée complète pour handleConfig
 			const simulatedInteraction = {
 				...interaction,
+				isButton: () => false,
+				isStringSelectMenu: () => false,
+				isCommand: () => true,
+				reply: async (options) => {
+					return await interaction.reply(options);
+				},
+				editReply: async (options) => {
+					return await interaction.editReply(options);
+				},
+				followUp: async (options) => {
+					return await interaction.followUp(options);
+				},
 				options: {
 					getString: (name) => {
 						if (name === 'paramètre') return selectedConfig;
 						return null;
 					},
+					getChannel: () => null,
+					getBoolean: () => null,
 				},
 			};
 
