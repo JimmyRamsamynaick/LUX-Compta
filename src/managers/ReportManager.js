@@ -25,25 +25,39 @@ class ReportManager {
 
     async generateReport(period = 'daily') {
         try {
-            const timestamp = moment().format('DD-MM-YYYY');
-            const filename = `rapport_${period}_${timestamp}.csv`;
-            const filePath = path.join(this.reportsDir, filename);
+            // Générer le nom de fichier avec la date actuelle
+            const now = new Date();
+            const dateStr = `${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
+            const filename = `rapport_${period}_${dateStr}.csv`;
+            const filepath = path.join(this.reportsDir, filename);
             
             // Obtenir les données statistiques
             const data = await this.client.statsManager.generateCSVData(period);
             
-            // Créer le rapport CSV
-            await this.createCSVReport(filePath, data, period);
+            // Créer le contenu CSV avec les données
+            const csvContent = this.generateCSVContent(data, period);
             
-            console.log(`📊 Rapport ${period} généré: ${filename}`);
+            // Écrire le fichier
+            fs.writeFileSync(filepath, csvContent, 'utf8');
             
-            return {
-                filePath,
-                filename,
-                period,
-                timestamp,
-                data
-            };
+            console.log(`✅ Rapport ${period} généré: ${filename}`);
+            
+            // Archiver les anciens rapports si nécessaire
+            if (this.archiveManager) {
+                await this.archiveManager.archiveOldReports();
+            }
+            
+            // Envoyer par email si configuré
+            if (this.emailManager) {
+                try {
+                    await this.emailManager.sendReport(filepath, period);
+                    console.log(`📧 Rapport envoyé par email`);
+                } catch (error) {
+                    console.error('❌ Erreur lors de l\'envoi du rapport par email:', error.message);
+                }
+            }
+            
+            return { filename, filepath };
         } catch (error) {
             console.error(`❌ Erreur lors de la génération du rapport ${period}:`, error);
             return null;

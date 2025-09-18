@@ -3,131 +3,81 @@
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
-et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.html).
 
 ## [Non publié]
 
-### À venir
-- Dashboard web interactif
-- API REST pour les statistiques
-- Intégration avec d'autres bots
-- Système de plugins
-
-## [1.2.0] - 2024-01-XX
-
 ### Ajouté
-- Fonctionnalités bonus complètes
-- Alertes intelligentes de baisse d'activité
-- Archivage automatique mensuel
-- Dashboard visuel avec graphiques ASCII
-- Personnalisation avancée des seuils
-- Système de sauvegarde de configuration
-- Gestion des erreurs améliorée
+- Nouvelle fonctionnalité de rapport automatique
+- Système de sauvegarde automatique
+- Interface de configuration avancée
 
 ### Modifié
-- Interface utilisateur plus intuitive
-- Performance optimisée pour les gros serveurs
-- Meilleure gestion de la mémoire
-- Logs plus détaillés
+- Amélioration des performances du système de statistiques
+- Mise à jour de l'interface utilisateur
+- Optimisation de la gestion mémoire
 
 ### Corrigé
-- Problème de synchronisation Git
-- Erreurs de calcul des tendances
-- Fuites mémoire lors de la génération de rapports
+- Correction du bug de synchronisation des données
+- Résolution des problèmes de connexion intermittente
+- Correction des erreurs de formatage des rapports
 
-## [1.1.0] - 2024-01-XX
-
-### Ajouté
-- Composants interactifs complets (Type 17 et Type 10)
-- Système de navigation avancé
-- Gestion des modals pour la configuration
-- Boutons d'actualisation en temps réel
-- Sélecteurs de période dynamiques
-- Visualisation détaillée des statistiques
+## [1.0.2] - 2025-01-01
 
 ### Modifié
-- Architecture des composants refactorisée
-- Gestion des interactions améliorée
-- Interface plus responsive
+- Mise à jour du format des noms de fichiers vers DD-MM-YYYY
+- Amélioration de la cohérence du système de nommage
+- Optimisation des patterns de matching des dates
 
 ### Corrigé
-- Problèmes de timeout des interactions
-- Erreurs lors de la sélection multiple
-- Affichage incorrect des embeds
+- Correction des problèmes de format de date dans ReportManager
+- Résolution des erreurs de parsing dans ArchiveManager
+- Amélioration de la gestion des dates dans GitManager
 
-## [1.0.0] - 2024-01-XX
+## [1.0.1] - 2025-01-01
 
 ### Ajouté
-- **Fonctionnalités principales**
-  - Suivi complet des statistiques du serveur
-  - Génération de rapports CSV (quotidien, hebdomadaire, mensuel)
-  - Système de commandes administrateur
-  - Commandes générales pour tous les utilisateurs
+- Système de gestion des archives automatique
+- Fonctionnalité de rapport par email
+- Interface de configuration des paramètres
 
-- **Suivi des statistiques**
-  - Comptage des messages par canal et utilisateur
-  - Suivi des arrivées/départs de membres
-  - Analyse de l'activité du serveur
-  - Top rankings des membres et canaux actifs
-  - Calcul des tendances et évolutions
+### Modifié
+- Amélioration des performances de génération de rapports
+- Optimisation de la gestion des fichiers temporaires
+- Mise à jour de la documentation utilisateur
 
-- **Génération de rapports**
-  - Export CSV avec données détaillées
-  - Rapports périodiques automatisés
-  - Archivage des anciens rapports
-  - Modèles de rapport personnalisables
+### Corrigé
+- Correction des erreurs de validation des données
+- Résolution des problèmes de permissions de fichiers
+- Amélioration de la gestion des erreurs réseau
 
-- **Commandes administrateur**
-  - `/rapport` - Gestion complète des rapports
-    - `générer` - Génération de rapport pour une période
-    - `liste` - Liste des rapports disponibles
-    - `archiver` - Archivage des anciens rapports
-  - `/stats` - Affichage des statistiques détaillées
-  - `/config` - Configuration du bot
-    - `afficher` - Affichage de la configuration
-    - `modifier` - Modification des paramètres
-    - `reset` - Remise à zéro
-    - `backup` - Sauvegarde de configuration
+## [1.0.0] - 2025-01-01
 
-- **Commandes générales**
-  - `/help` - Système d'aide complet et interactif
+### Ajouté
+- Version initiale du système LUX-Compta
+- Bot Discord avec commandes de base
+- Système de génération de rapports automatiques
+- Gestion des statistiques de serveur Discord
+- Fonctionnalité d'archivage des données
+- Système de sauvegarde Git automatique
+- Configuration par variables d'environnement
+- Tests unitaires complets
+- Documentation complète du projet
 
-- **Automatisation Git**
-  - Configuration automatique de l'identité Git
-  - Commits automatiques et fréquents
-  - Push automatique vers le repository
-  - Création de tags pour les versions
-  - Sauvegarde automatique des données
+### Fonctionnalités principales
+- **StatsManager** : Collecte et analyse des statistiques Discord
+- **ReportManager** : Génération de rapports CSV et envoi par email
+- **ArchiveManager** : Archivage automatique des anciens rapports
+- **GitManager** : Sauvegarde automatique avec versioning Git
+- **EmailManager** : Envoi automatique de rapports par email
+- **Commandes Discord** : Interface utilisateur complète
 
-- **Gestionnaires**
-  - `StatsManager` - Gestion des statistiques
-  - `ReportManager` - Génération et gestion des rapports
-  - `EmailManager` - Envoi d'emails automatisé
-  - `GitManager` - Automatisation Git complète
-
-- **Système d'événements**
-  - Gestion des interactions (commandes, boutons, menus)
-  - Suivi des messages en temps réel
-  - Détection des arrivées/départs de membres
-  - Gestion des erreurs robuste
-
-- **Configuration**
-  - Fichier de configuration JSON
-  - Variables d'environnement sécurisées
-  - Paramètres personnalisables
-  - Système de permissions par rôles
-
-### Sécurité
-- Vérification des permissions administrateur
-- Gestion sécurisée des tokens et mots de passe
-- Validation des entrées utilisateur
-- Logs de sécurité
-
-### Documentation
-- README complet avec guide d'installation
-- Documentation des commandes
-- Exemples de configuration
-- Guide de contribution
+### Architecture
+- Structure modulaire avec managers spécialisés
+- Gestion d'erreurs robuste
+- Logging détaillé pour le debugging
+- Configuration flexible via .env
+- Tests automatisés avec Jest
 
 ---
 
