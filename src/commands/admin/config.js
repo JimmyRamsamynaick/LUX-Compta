@@ -38,6 +38,18 @@ module.exports = {
             subcommand
                 .setName('backup')
                 .setDescription('Sauvegarder la configuration actuelle')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('logs-channel')
+                .setDescription('📝 Configurer le canal pour les logs du bot')
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription('Canal où envoyer les logs')
+                        .setRequired(true)
+                        .addChannelTypes(0) // Text channel
+                )
         ),
 
     async execute(interaction) {
@@ -64,6 +76,9 @@ module.exports = {
                     break;
                 case 'backup':
                     await this.handleBackup(interaction);
+                    break;
+                case 'logs-channel':
+                    await this.handleLogsChannel(interaction);
                     break;
             }
         } catch (error) {
@@ -204,6 +219,128 @@ module.exports = {
                 content: '❌ Erreur lors de la sauvegarde de la configuration.',
                 ephemeral: true
             });
+        }
+    },
+
+    async handleLogsChannel(interaction) {
+        const channel = interaction.options.getChannel('channel');
+        
+        try {
+            // Vérifier que c'est un canal textuel
+            if (channel.type !== 0) {
+                return await interaction.reply({
+                    content: '❌ Le canal sélectionné doit être un canal textuel.',
+                    ephemeral: true
+                });
+            }
+
+            // Vérifier les permissions du bot dans ce canal
+            const botPermissions = channel.permissionsFor(interaction.client.user);
+            if (!botPermissions.has(['SendMessages', 'ViewChannel'])) {
+                return await interaction.reply({
+                    content: '❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).',
+                    ephemeral: true
+                });
+            }
+
+            // Sauvegarder la configuration
+            const configPath = path.join(__dirname, '../../../config.json');
+            const currentConfig = JSON.parse(await fs.readFile(configPath, 'utf8'));
+            
+            // Ajouter ou mettre à jour le canal de logs
+            if (!currentConfig.logs) {
+                currentConfig.logs = {};
+            }
+            currentConfig.logs.channelId = channel.id;
+            currentConfig.logs.channelName = channel.name;
+            currentConfig.logs.guildId = interaction.guild.id;
+            currentConfig.logs.updatedAt = new Date().toISOString();
+            currentConfig.logs.updatedBy = interaction.user.id;
+
+            // Sauvegarder
+            await fs.writeFile(configPath, JSON.stringify(currentConfig, null, 2));
+
+            // Mettre à jour la configuration en mémoire si elle existe
+            if (interaction.client.config) {
+                interaction.client.config.logs = currentConfig.logs;
+            }
+
+            // Envoyer un message de test dans le canal configuré
+            const testEmbed = new EmbedBuilder()
+                .setTitle('✅ Canal de logs configuré')
+                .setDescription('Ce canal a été configuré pour recevoir les logs du bot LUX-Compta.')
+                .setColor('#00ff00')
+                .addFields([
+                    {
+                        name: '👤 Configuré par',
+                        value: `<@${interaction.user.id}>`,
+                        inline: true
+                    },
+                    {
+                        name: '⏰ Date',
+                        value: new Date().toLocaleString('fr-FR'),
+                        inline: true
+                    },
+                    {
+                        name: '📋 Types de logs',
+                        value: '• Erreurs système\n• Commandes importantes\n• Rapports automatiques\n• Alertes de sécurité',
+                        inline: false
+                    }
+                ])
+                .setTimestamp()
+                .setFooter({ 
+                    text: 'LUX-Compta Logs', 
+                    iconURL: interaction.client.user.displayAvatarURL() 
+                });
+
+            await channel.send({ embeds: [testEmbed] });
+
+            // Répondre à l'utilisateur
+            const successEmbed = new EmbedBuilder()
+                .setTitle('✅ Canal de logs configuré avec succès')
+                .setDescription(`Le canal ${channel} a été configuré pour recevoir les logs du bot.`)
+                .setColor('#00ff00')
+                .addFields([
+                    {
+                        name: '📝 Canal configuré',
+                        value: `${channel} (${channel.id})`,
+                        inline: true
+                    },
+                    {
+                        name: '🔧 Configuration',
+                        value: 'Sauvegardée dans config.json',
+                        inline: true
+                    },
+                    {
+                        name: '✅ Test',
+                        value: 'Message de test envoyé',
+                        inline: true
+                    }
+                ])
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [successEmbed], ephemeral: true });
+
+            // Log dans la console
+            console.log(`📝 Canal de logs configuré: ${channel.name} (${channel.id}) par ${interaction.user.tag}`);
+
+        } catch (error) {
+            console.error('❌ Erreur lors de la configuration du canal de logs:', error);
+            
+            const errorEmbed = new EmbedBuilder()
+                .setTitle('❌ Erreur de configuration')
+                .setDescription('Impossible de configurer le canal de logs.')
+                .setColor('#ff0000')
+                .addFields([
+                    {
+                        name: '🚫 Erreur',
+                        value: error.message || 'Erreur inconnue',
+                        inline: false
+                    }
+                ])
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }
     },
 

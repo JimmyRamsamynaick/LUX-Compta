@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{subject}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e8e8e8;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(26, 26, 46, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.4);
+        }
+        
+        .lantern {
+            width: 60px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+            background: linear-gradient(to bottom, #ffd700, #ffb347);
+            border-radius: 10px 10px 5px 5px;
+            box-shadow: 
+                0 0 20px rgba(255, 215, 0, 0.6),
+                inset 0 0 10px rgba(255, 255, 255, 0.2);
+            animation: flicker 3s ease-in-out infinite alternate;
+        }
+        
+        .lantern::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 15px;
+            background: #8b4513;
+            border-radius: 50% 50% 0 0;
+        }
+        
+        .lantern::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes flicker {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 20px rgba(255, 215, 0, 0.6),
+                    inset 0 0 10px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 30px rgba(255, 215, 0, 0.8),
+                    inset 0 0 15px rgba(255, 255, 255, 0.3);
+            }
+        }
+        
+        .header h1 {
+            color: #ffd700;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        
+        .header p {
+            color: #b8b8b8;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .message-box {
+            background: rgba(22, 33, 62, 0.6);
+            border-left: 4px solid #ffd700;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .message-box h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        
+        .message-box p {
+            color: #d0d0d0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .stat-card {
+            background: rgba(16, 21, 62, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #b8b8b8;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            color: #1a1a2e;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .footer {
+            background: rgba(16, 16, 30, 0.9);
+            padding: 25px 30px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .footer p {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .no-reply {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #ffd700, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #ffd700, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ffd700, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 4s linear infinite;
+            opacity: 0.6;
+        }
+        
+        @keyframes twinkle {
+            from { transform: translateX(0); }
+            to { transform: translateX(-200px); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="container">
+        <div class="header">
+            <div class="lantern"></div>
+            <h1>🏮 {{title}}</h1>
+            <p>{{subtitle}}</p>
+        </div>
+        
+        <div class="content">
+            <div class="no-reply">
+                ⚠️ Ceci est un email automatique - Ne pas répondre à ce message
+            </div>
+            
+            <div class="message-box">
+                <h2>{{messageTitle}}</h2>
+                <p>{{messageContent}}</p>
+                
+                {{#if stats}}
+                <div class="stats-grid">
+                    {{#each stats}}
+                    <div class="stat-card">
+                        <span class="stat-number">{{value}}</span>
+                        <div class="stat-label">{{label}}</div>
+                    </div>
+                    {{/each}}
+                </div>
+                {{/if}}
+                
+                {{#if actionUrl}}
+                <a href="{{actionUrl}}" class="button">{{actionText}}</a>
+                {{/if}}
+            </div>
+            
+            {{#if additionalContent}}
+            <div class="message-box">
+                <h2>Informations supplémentaires</h2>
+                <p>{{additionalContent}}</p>
+            </div>
+            {{/if}}
+        </div>
+        
+        <div class="footer">
+            <p>🤖 LUX-Compta Bot - Système de gestion automatisé</p>
+            <p>📅 Généré le {{date}} à {{time}}</p>
+            <p>🌙 Thème Lanterne Nocturne</p>
+        </div>
+    </div>
+</body>
+</html>
