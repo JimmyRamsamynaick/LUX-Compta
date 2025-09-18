@@ -356,7 +356,6 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 ### 🌐 Communauté
 - **Discord** : Serveur de support (lien sur demande)
-- **Twitter** : [@JimmyRamsamy](https://twitter.com/JimmyRamsamy)
 
 ---
 

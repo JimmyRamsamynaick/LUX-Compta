@@ -56,6 +56,8 @@ module.exports = {
 		),
 
 	async execute(interaction) {
+		// Le bot peut toujours exécuter ses propres commandes admin
+		// Pas de vérification de permissions utilisateur nécessaire
 		const reportManager = interaction.client.managers.report;
 		const emailManager = interaction.client.managers.email;
 		const subcommand = interaction.options.getSubcommand();

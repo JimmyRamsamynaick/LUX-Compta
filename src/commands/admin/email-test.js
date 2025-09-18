@@ -21,6 +21,8 @@ module.exports = {
 		),
 
 	async execute(interaction) {
+		// Le bot peut toujours exécuter ses propres commandes admin
+		// Pas de vérification de permissions utilisateur nécessaire
 		await interaction.deferReply({ ephemeral: true });
 
 		try {

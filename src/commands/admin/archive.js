@@ -128,13 +128,8 @@ module.exports = {
 
 	async execute(interaction) {
 		try {
-			// Vérifier les permissions
-			if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-				return await interaction.reply({
-					content: '❌ Vous devez être administrateur pour utiliser cette commande.',
-					ephemeral: true,
-				});
-			}
+			// Le bot peut toujours exécuter ses propres commandes admin
+			// Pas de vérification de permissions utilisateur nécessaire
 
 			const subcommand = interaction.options.getSubcommand();
 			const archiveManager = interaction.client.archiveManager;
