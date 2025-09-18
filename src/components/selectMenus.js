@@ -361,16 +361,18 @@ module.exports = {
 	},
 
 	async handleAlertsConfigModify(interaction) {
-		const selectedConfig = interaction.values[0];
-		const alertsCommand = require('../commands/admin/alerts');
-
 		try {
-			// Créer une interaction simulée complète pour handleConfig
+			const selectedConfig = interaction.values[0];
+			const alertsCommand = require('../commands/admin/alerts');
+
+			// Simuler une interaction de commande slash complète pour handleConfig
 			const simulatedInteraction = {
 				...interaction,
 				isButton: () => false,
 				isStringSelectMenu: () => false,
 				isCommand: () => true,
+				replied: false,
+				deferred: false,
 				reply: async (options) => {
 					return await interaction.reply(options);
 				},
@@ -379,6 +381,9 @@ module.exports = {
 				},
 				followUp: async (options) => {
 					return await interaction.followUp(options);
+				},
+				deferReply: async (options) => {
+					return await interaction.deferReply(options);
 				},
 				options: {
 					getString: (name) => {
