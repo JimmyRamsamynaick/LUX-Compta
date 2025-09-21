@@ -430,12 +430,13 @@ module.exports = {
 					style: 'SECONDARY',
 					emoji: '🧪'
 				},
-				new ButtonBuilder()
-					.setCustomId('alerts_test_logs')
-					.setLabel('Voir logs')
-					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('📋'),
-			);
+				{
+					customId: 'alerts_test_logs',
+					label: 'Voir logs',
+					style: 'SECONDARY',
+					emoji: '📋'
+				}
+			]);
 
 			// Utiliser le nouveau format de réponse
 			await interaction.editReply(createResponse(

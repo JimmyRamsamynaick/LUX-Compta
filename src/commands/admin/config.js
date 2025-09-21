@@ -148,10 +148,10 @@ module.exports = {
 Utilisez les boutons ci-dessous pour modifier la configuration.`;
 
 		// Menu de sélection pour les paramètres - Utilisation de ComponentBuilder
-	const selectRow = ComponentBuilder.createSelectMenu({
-		customId: 'config_parameter_select',
-		placeholder: 'Choisir un paramètre à modifier...',
-		options: [
+	const selectRow = ComponentBuilder.createSelectMenu(
+		'config_parameter_select',
+		'Choisir un paramètre à modifier...',
+		[
 			{
 				label: 'Seuil d\'alerte activité',
 				description: 'Modifier le seuil d\'alerte d\'activité',
@@ -183,7 +183,7 @@ Utilisez les boutons ci-dessous pour modifier la configuration.`;
 				emoji: '👑',
 			},
 		]
-	});
+	);
 
 	// Boutons d'action - Utilisation de ComponentBuilder
 	const buttons = ComponentBuilder.createActionButtons([
