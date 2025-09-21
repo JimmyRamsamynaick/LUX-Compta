@@ -3,18 +3,29 @@ const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilde
 const config = require('../../../config.json');
 
 // Fonction utilitaire pour créer le nouveau format de réponse
-function createResponse(title, content) {
-	return {
-		flags: 32768,
-		components: [{
-			type: 1,
-			components: [{
-				type: 17,
-				title: title,
-				content: content
-			}]
-		}]
-	};
+function createResponse(title, content, components = [], files = []) {
+    const response = {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## ℹ️ ${title}\n\n${content}`
+            }]
+        }]
+    };
+    
+    // Ajouter les composants (boutons, menus) si fournis
+    if (components && components.length > 0) {
+        response.components = response.components.concat(components);
+    }
+    
+    // Ajouter les fichiers si fournis
+    if (files && files.length > 0) {
+        response.files = files;
+    }
+    
+    return response;
 }
 
 module.exports = {
@@ -58,18 +69,19 @@ module.exports = {
 			const stats = await statsManager.getStats(periode);
 			const { content, components } = await this.createStatsResponse(stats, periode, type, interaction.guild);
 
-			await interaction.editReply({
-				content: content,
-				components: components,
-			});
+			await interaction.editReply(createResponse(
+				'Statistiques du Serveur',
+				content,
+				components
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la récupération des statistiques:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la récupération des statistiques.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la récupération des statistiques.'
+			));
 		}
 	},
 
@@ -250,10 +262,10 @@ module.exports = {
 
 		} catch (error) {
 			console.error('❌ Erreur lors de l\'actualisation:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de l\'actualisation des statistiques.',
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de l\'actualisation des statistiques.'
+			));
 		}
 	},
 
@@ -293,17 +305,17 @@ module.exports = {
 			content += `⏰ Dernière mise à jour: <t:${Math.floor(Date.now() / 1000)}:F>\n\n`;
 			content += '📊 Vous pouvez maintenant consulter les statistiques les plus récentes.';
 
-			await interaction.editReply({
-				content: content,
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Statistiques Actualisées',
+				content
+			));
 
 		} catch (error) {
 			console.error('❌ Erreur lors de l\'actualisation:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de l\'actualisation des statistiques.',
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de l\'actualisation des statistiques.'
+			));
 		}
 	},
 
@@ -333,11 +345,12 @@ module.exports = {
 			content += `📁 Fichier: ${filename}\n`;
 			content += `⏰ Généré le: <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({
-				content: content,
-				files: [attachment],
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Export des Statistiques',
+				content,
+				[],
+				[attachment]
+			));
 
 			// Nettoyer le fichier temporaire après envoi
 			setTimeout(async () => {
@@ -350,10 +363,10 @@ module.exports = {
 
 		} catch (error) {
 			console.error('❌ Erreur lors de l\'export:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de l\'export des statistiques.',
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de l\'export des statistiques.'
+			));
 		}
 	},
 
@@ -393,17 +406,17 @@ module.exports = {
 
 			content += `⏰ Données du: <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({
-				content: content,
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Statistiques Détaillées',
+				content
+			));
 
 		} catch (error) {
 			console.error('❌ Erreur lors de la récupération des stats détaillées:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la récupération des statistiques détaillées.',
-				components: []
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la récupération des statistiques détaillées.'
+			));
 		}
 	},
 

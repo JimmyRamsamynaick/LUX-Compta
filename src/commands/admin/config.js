@@ -4,19 +4,24 @@ const path = require('path');
 const config = require('../../../config.json');
 
 // Fonction utilitaire pour créer le nouveau format de réponse
-function createResponse(title, content) {
-	return {
-		flags: 32768,
-		components: [{
-			type: 17,
-			components: [
-				{
-					type: 10,
-					content: `## ℹ️ ${title}\n\n${content}`
-				}
-			]
-		}]
-	};
+function createResponse(title, content, components = []) {
+    const response = {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## ℹ️ ${title}\n\n${content}`
+            }]
+        }]
+    };
+    
+    // Ajouter les composants (boutons, menus) si fournis
+    if (components && components.length > 0) {
+        response.components = response.components.concat(components);
+    }
+    
+    return response;
 }
 
 module.exports = {
@@ -261,10 +266,11 @@ module.exports = {
 						.setEmoji('🔄'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [restartButton],
-			});
+			await interaction.editReply(createResponse(
+				'Configuration Réinitialisée',
+				content,
+				[restartButton]
+			));
 
 			// Redémarrer le bot pour appliquer les changements
 			setTimeout(() => {
@@ -274,10 +280,10 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('Erreur lors de la réinitialisation:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la réinitialisation de la configuration.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la réinitialisation de la configuration.'
+			));
 		}
 	},
 
@@ -310,18 +316,19 @@ module.exports = {
 						.setEmoji('👁️'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [actionButtons],
-			});
+			await interaction.editReply(createResponse(
+				'Configuration Sauvegardée',
+				content,
+				[actionButtons]
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la sauvegarde:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la sauvegarde de la configuration.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la sauvegarde de la configuration.'
+			));
 		}
 	},
 
