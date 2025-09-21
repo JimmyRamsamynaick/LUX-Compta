@@ -430,18 +430,12 @@ module.exports = {
 						.setEmoji('📋'),
 				);
 
-			// Utiliser editReply ou followUp selon l'état de l'interaction
-			if (interaction.deferred) {
-				await interaction.editReply({
-					content: content,
-					components: [testSelect, buttons],
-				});
-			} else {
-				await interaction.followUp({
-					content: content,
-					components: [testSelect, buttons],
-				});
-			}
+			// Utiliser le nouveau format de réponse
+			await interaction.editReply(createResponse(
+				'Test d\'Alerte',
+				content,
+				[testSelect, buttons]
+			));
 		}
 		catch (error) {
 			console.error('❌ Erreur lors du test d\'alerte:', error);
@@ -452,15 +446,11 @@ module.exports = {
 			content += `📝 **Type demandé:** ${type || 'Non spécifié'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Utiliser editReply ou followUp selon l'état de l'interaction
-			if (interaction.deferred) {
-				await interaction.editReply({ content: content });
-			} else {
-				await interaction.followUp({ 
-					content: content,
-					ephemeral: true 
-				});
-			}
+			// Utiliser le nouveau format de réponse pour l'erreur
+			await interaction.editReply(createResponse(
+				'Erreur de Test',
+				content
+			));
 		}
 	},
 
