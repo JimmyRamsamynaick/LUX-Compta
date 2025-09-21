@@ -135,17 +135,17 @@ class AlertManager {
 		try {
 			const config = JSON.parse(await fs.readFile(this.configPath, 'utf8'));
 
-			if (!config.enabled) {
+			if (!config.alerts?.enabled) {
 				console.log('⚠️ Alertes désactivées');
 				return;
 			}
 
-			if (!config.channel_id) {
+			if (!config.alerts?.channelId) {
 				console.log('⚠️ Canal d\'alerte non configuré');
 				return;
 			}
 
-			const channel = this.client.channels.cache.get(config.channel_id);
+			const channel = this.client.channels.cache.get(config.alerts.channelId);
 			if (!channel) {
 				console.log('⚠️ Canal d\'alerte introuvable');
 				return;

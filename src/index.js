@@ -109,6 +109,12 @@ client.once(Events.ClientReady, async (readyClient) => {
 	await client.statsManager.initialize();
 	await client.reportManager.initialize();
 
+	// Démarrer le planificateur d'alertes
+	if (client.alertManager) {
+		client.alertManager.startAlertScheduler();
+		console.log('🚨 Planificateur d\'alertes démarré');
+	}
+
 	console.log('📊 Tous les systèmes sont opérationnels!');
 });
 
