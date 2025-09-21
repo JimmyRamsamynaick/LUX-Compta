@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
+const config = require('../../../config.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -202,11 +204,11 @@ module.exports = {
 			content += '✅ **Thème appliqué avec succès !**\n\n';
 			content += `⏰ **Appliqué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection de thème
-			const selectMenu = new StringSelectMenuBuilder()
-				.setCustomId('customization_select')
-				.setPlaceholder('Choisir un thème...')
-				.addOptions(
+			// Menu de sélection de thème (Type 17) - Utilisation de ComponentBuilder
+			const selectMenu = ComponentBuilder.createSelectMenu({
+				customId: 'customization_select',
+				placeholder: 'Choisir un thème...',
+				options: [
 					{
 						label: 'Thème Sombre',
 						description: 'Interface sombre et moderne',
@@ -225,13 +227,12 @@ module.exports = {
 						value: 'blue',
 						emoji: '💙',
 					},
-				);
-
-			const row = new ActionRowBuilder().addComponents(selectMenu);
+				]
+			});
 
 			await interaction.reply({
 				content: content,
-				components: [row],
+				components: [selectMenu],
 				ephemeral: true,
 			});
 		}

@@ -1,11 +1,13 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
+const config = require('../../../config.json');
 
 // Fonction pour créer le nouveau format de réponse
 function createResponse(title, content, components = [], files = []) {
 	return {
 		content: `# ${title}\n\n${content}`,
 		components: components,
-		files
+		files: files
 	};
 }
 
@@ -180,25 +182,27 @@ module.exports = {
 				});
 				content += `\n⏰ **Mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('alerts_config_view')
-							.setLabel('Voir config')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('👁️'),
-						new ButtonBuilder()
-							.setCustomId('alerts_config_test')
-							.setLabel('Tester')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧪'),
-						new ButtonBuilder()
-							.setCustomId('alerts_config_advanced')
-							.setLabel('Avancé')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('⚙️'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+				const buttons = ComponentBuilder.createActionButtons([
+					{
+						customId: 'alerts_config_view',
+						label: 'Voir config',
+						style: 'PRIMARY',
+						emoji: '👁️'
+					},
+					{
+						customId: 'alerts_config_test',
+						label: 'Tester',
+						style: 'SECONDARY',
+						emoji: '🧪'
+					},
+					{
+						customId: 'alerts_config_advanced',
+						label: 'Avancé',
+						style: 'SECONDARY',
+						emoji: '⚙️'
+					}
+				]);
 
 				const configResponse = createResponse(
 					'Configuration des Alertes',
@@ -255,55 +259,55 @@ module.exports = {
 					content += `📊 **Nouvelle valeur:** ${value}\n`;
 					content += `⏰ **Mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-					// Menu de sélection pour autres seuils (Type 17)
-					const thresholdSelect = new ActionRowBuilder()
-						.addComponents(
-							new StringSelectMenuBuilder()
-								.setCustomId('alerts_threshold_select')
-								.setPlaceholder('🎯 Modifier un autre seuil')
-								.addOptions([
-									{
-										label: 'Membres actifs',
-										value: 'active_members',
-										emoji: '👥',
-									},
-									{
-										label: 'Messages par heure',
-										value: 'messages_per_hour',
-										emoji: '💬',
-									},
-									{
-										label: 'Nouveaux membres',
-										value: 'new_members',
-										emoji: '🆕',
-									},
-									{
-										label: 'Erreurs système',
-										value: 'system_errors',
-										emoji: '⚠️',
-									},
-								]),
-						);
+					// Menu de sélection pour autres seuils (Type 17) - Utilisation de ComponentBuilder
+					const thresholdSelect = ComponentBuilder.createSelectMenu(
+						'alerts_threshold_select',
+						'🎯 Modifier un autre seuil',
+						[
+							{
+								label: 'Membres actifs',
+								value: 'active_members',
+								emoji: '👥'
+							},
+							{
+								label: 'Messages par heure',
+								value: 'messages_per_hour',
+								emoji: '💬'
+							},
+							{
+								label: 'Nouveaux membres',
+								value: 'new_members',
+								emoji: '🆕'
+							},
+							{
+								label: 'Erreurs système',
+								value: 'system_errors',
+								emoji: '⚠️'
+							}
+						]
+					);
 
-					// Boutons d'action (Type 10)
-					const buttons = new ActionRowBuilder()
-						.addComponents(
-							new ButtonBuilder()
-								.setCustomId('alerts_threshold_test')
-								.setLabel('Tester ce seuil')
-								.setStyle(ButtonStyle.Primary)
-								.setEmoji('🧪'),
-							new ButtonBuilder()
-								.setCustomId('alerts_threshold_view_all')
-								.setLabel('Voir tous les seuils')
-								.setStyle(ButtonStyle.Secondary)
-								.setEmoji('📊'),
-							new ButtonBuilder()
-								.setCustomId('alerts_threshold_reset')
-								.setLabel('Réinitialiser')
-								.setStyle(ButtonStyle.Danger)
-								.setEmoji('🔄'),
-						);
+					// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+					const buttons = ComponentBuilder.createActionButtons([
+						{
+							customId: 'alerts_threshold_test',
+							label: 'Tester ce seuil',
+							style: 'PRIMARY',
+							emoji: '🧪'
+						},
+						{
+							customId: 'alerts_threshold_view_all',
+							label: 'Voir tous les seuils',
+							style: 'SECONDARY',
+							emoji: '📊'
+						},
+						{
+							customId: 'alerts_threshold_reset',
+							label: 'Réinitialiser',
+							style: 'DANGER',
+							emoji: '🔄'
+						}
+					]);
 
 					await interaction.editReply(createResponse(
 						'Configuration des Seuils',
@@ -316,7 +320,10 @@ module.exports = {
 					content += '🔍 **Vérifiez que le nom du seuil est correct.**\n';
 					content += `⏰ **Tentative:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-					await interaction.editReply({ content: content });
+					await interaction.editReply(createResponse(
+						'Erreur Seuils',
+						content
+					));
 				}
 			}
 			else {
@@ -333,7 +340,10 @@ module.exports = {
 
 				content += `\n⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				await interaction.editReply({ content: content });
+				await interaction.editReply(createResponse(
+					'Seuils d\'Alertes',
+					content
+				));
 			}
 		}
 		catch (error) {
@@ -344,7 +354,10 @@ module.exports = {
 			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			await interaction.editReply(createResponse(
+				'Erreur Seuils',
+				content
+			));
 		}
 	},
 
@@ -375,55 +388,54 @@ module.exports = {
 			content += `• **Message:** ${testResult.message || 'Aucun message'}\n\n`;
 			content += `⏰ **Test effectué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour autres tests (Type 17)
-			const testSelect = new ActionRowBuilder()
-				.addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId('alerts_test_select')
-						.setPlaceholder('🧪 Tester un autre type')
-						.addOptions([
-							{
-								label: 'Alerte de membres',
-								value: 'members',
-								emoji: '👥',
-							},
-							{
-								label: 'Alerte de messages',
-								value: 'messages',
-								emoji: '💬',
-							},
-							{
-								label: 'Alerte système',
-								value: 'system',
-								emoji: '⚙️',
-							},
-							{
-								label: 'Alerte de modération',
-								value: 'moderation',
-								emoji: '🛡️',
-							},
-						]),
-				);
+			// Menu de sélection pour autres tests (Type 17) - Utilisation de ComponentBuilder
+			const testSelect = ComponentBuilder.createSelectMenu(
+				'alerts_test_select',
+				'🧪 Tester un autre type',
+				[
+					{
+						label: 'Alerte de membres',
+						value: 'members',
+						emoji: '👥'
+					},
+					{
+						label: 'Alerte de messages',
+						value: 'messages',
+						emoji: '💬'
+					},
+					{
+						label: 'Alerte système',
+						value: 'system',
+						emoji: '⚡'
+					},
+					{
+						label: 'Alerte de modération',
+						value: 'moderation',
+						emoji: '🛡️'
+					}
+				]
+			);
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('alerts_test_again')
-						.setLabel('Tester à nouveau')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('alerts_test_all')
-						.setLabel('Tester tout')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('🧪'),
-					new ButtonBuilder()
-						.setCustomId('alerts_test_logs')
-						.setLabel('Voir logs')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📋'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+			const buttons = ComponentBuilder.createActionButtons([
+				{
+					customId: 'alerts_test_again',
+					label: 'Tester à nouveau',
+					style: 'PRIMARY',
+					emoji: '🔄'
+				},
+				{
+					customId: 'alerts_test_all',
+					label: 'Tester tout',
+					style: 'SECONDARY',
+					emoji: '🧪'
+				},
+				new ButtonBuilder()
+					.setCustomId('alerts_test_logs')
+					.setLabel('Voir logs')
+					.setStyle(ButtonStyle.Secondary)
+					.setEmoji('📋'),
+			);
 
 			// Utiliser le nouveau format de réponse
 			await interaction.editReply(createResponse(
@@ -463,7 +475,10 @@ module.exports = {
 				content += '💡 **Les alertes apparaîtront ici une fois déclenchées.**\n';
 				content += `⏰ **Recherche effectuée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				await interaction.editReply({ content: content });
+				await interaction.editReply(createResponse(
+					'Historique des Alertes',
+					content
+				));
 				return;
 			}
 
@@ -478,60 +493,61 @@ module.exports = {
 
 			content += `⏰ **Historique mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour filtrer (Type 17)
-			const filterSelect = new ActionRowBuilder()
-				.addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId('alerts_history_filter')
-						.setPlaceholder('🔍 Filtrer par type')
-						.addOptions([
-							{
-								label: 'Toutes les alertes',
-								value: 'all',
-								emoji: '📊',
-							},
-							{
-								label: 'Alertes membres',
-								value: 'members',
-								emoji: '👥',
-							},
-							{
-								label: 'Alertes messages',
-								value: 'messages',
-								emoji: '💬',
-							},
-							{
-								label: 'Alertes système',
-								value: 'system',
-								emoji: '⚙️',
-							},
-						]),
-				);
+			// Menu de sélection pour filtrer (Type 17) - Utilisation de ComponentBuilder
+			const filterSelect = ComponentBuilder.createSelectMenu(
+				'alerts_history_filter',
+				'🔍 Filtrer par type',
+				[
+					{
+						label: 'Toutes les alertes',
+						value: 'all',
+						emoji: '📊'
+					},
+					{
+						label: 'Alertes membres',
+						value: 'members',
+						emoji: '👥'
+					},
+					{
+						label: 'Alertes messages',
+						value: 'messages',
+						emoji: '💬'
+					},
+					{
+						label: 'Alertes système',
+						value: 'system',
+						emoji: '⚙️'
+					}
+				]
+			);
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('alerts_history_refresh')
-						.setLabel('Actualiser')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('alerts_history_export')
-						.setLabel('Exporter')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤'),
-					new ButtonBuilder()
-						.setCustomId('alerts_history_clear')
-						.setLabel('Vider historique')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+			const buttons = ComponentBuilder.createActionButtons([
+				{
+					customId: 'alerts_history_refresh',
+					label: 'Actualiser',
+					style: 'PRIMARY',
+					emoji: '🔄'
+				},
+				{
+					customId: 'alerts_history_export',
+					label: 'Exporter',
+					style: 'SECONDARY',
+					emoji: '📤'
+				},
+				{
+					customId: 'alerts_history_clear',
+					label: 'Vider historique',
+					style: 'DANGER',
+					emoji: '🗑️'
+				}
+			]);
 
-			await interaction.editReply({
-				content: content,
-				components: [filterSelect, buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Historique des Alertes',
+				content,
+				[filterSelect, buttons]
+			));
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la récupération de l\'historique:', error);
@@ -541,7 +557,10 @@ module.exports = {
 			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			await interaction.editReply(createResponse(
+				'Erreur Historique',
+				content
+			));
 		}
 	},
 
@@ -569,60 +588,61 @@ module.exports = {
 
 			content += `⏰ **Statut mis à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour actions rapides (Type 17)
-			const quickActions = new ActionRowBuilder()
-				.addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId('alerts_quick_action')
-						.setPlaceholder('⚡ Actions rapides')
-						.addOptions([
-							{
-								label: 'Activer les alertes',
-								value: 'enable',
-								emoji: '✅',
-							},
-							{
-								label: 'Désactiver les alertes',
-								value: 'disable',
-								emoji: '❌',
-							},
-							{
-								label: 'Configurer canal',
-								value: 'set_channel',
-								emoji: '📢',
-							},
-							{
-								label: 'Réinitialiser config',
-								value: 'reset_config',
-								emoji: '🔄',
-							},
-						]),
-				);
+			// Menu de sélection pour actions rapides (Type 17) - Utilisation de ComponentBuilder
+			const quickActions = ComponentBuilder.createSelectMenu(
+				'alerts_quick_action',
+				'⚡ Actions rapides',
+				[
+					{
+						label: 'Activer les alertes',
+						value: 'enable',
+						emoji: '✅'
+					},
+					{
+						label: 'Désactiver les alertes',
+						value: 'disable',
+						emoji: '❌'
+					},
+					{
+						label: 'Configurer canal',
+						value: 'set_channel',
+						emoji: '📢'
+					},
+					{
+						label: 'Réinitialiser config',
+						value: 'reset_config',
+						emoji: '🔄'
+					}
+				]
+			);
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('alerts_status_refresh')
-						.setLabel('Actualiser')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('alerts_status_report')
-						.setLabel('Rapport détaillé')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📊'),
-					new ButtonBuilder()
-						.setCustomId('alerts_status_help')
-						.setLabel('Aide')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('❓'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+			const buttons = ComponentBuilder.createActionButtons([
+				{
+					customId: 'alerts_status_refresh',
+					label: 'Actualiser',
+					style: 'PRIMARY',
+					emoji: '🔄'
+				},
+				{
+					customId: 'alerts_status_report',
+					label: 'Rapport détaillé',
+					style: 'SECONDARY',
+					emoji: '📊'
+				},
+				{
+					customId: 'alerts_status_help',
+					label: 'Aide',
+					style: 'SECONDARY',
+					emoji: '❓'
+				}
+			]);
 
-			await interaction.editReply({
-				content: content,
-				components: [quickActions, buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Statut des Alertes',
+				content,
+				[quickActions, buttons]
+			));
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la récupération du statut:', error);
@@ -632,7 +652,10 @@ module.exports = {
 			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			await interaction.editReply(createResponse(
+				'Erreur Statut',
+				content
+			));
 		}
 	},
 
@@ -728,10 +751,11 @@ module.exports = {
 
 			// Utiliser editReply si déjà répondu, sinon reply
 			const replyMethod = interaction.replied || interaction.deferred ? 'editReply' : 'reply';
-			await interaction[replyMethod]({
-				content: content,
-				components: [configSelect, buttons],
-			});
+			await interaction[replyMethod](createResponse(
+				'Configuration des Alertes',
+				content,
+				[configSelect, buttons]
+			));
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de l\'affichage de la configuration:', error);
@@ -743,7 +767,10 @@ module.exports = {
 
 			// Utiliser editReply si déjà répondu, sinon reply
 			const replyMethod = interaction.replied || interaction.deferred ? 'editReply' : 'reply';
-			await interaction[replyMethod]({ content: content });
+			await interaction[replyMethod](createResponse(
+				'Erreur Configuration',
+				content
+			));
 		}
 	},
 

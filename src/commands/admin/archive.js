@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
+const config = require('../../../config.json');
 
 // Fonction pour créer le nouveau format de réponse
 function createResponse(title, content, components = [], files = []) {
@@ -227,25 +229,27 @@ module.exports = {
 				content += `📁 **Fichiers:** ${result.fileCount || 0}\n\n`;
 				content += `⏰ **Créée le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId(`view_archive_${result.archiveId}`)
-							.setLabel('Voir détails')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('👁️'),
-						new ButtonBuilder()
-							.setCustomId(`download_archive_${result.archiveId}`)
-							.setLabel('Télécharger')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('⬇️'),
-						new ButtonBuilder()
-							.setCustomId('create_another_archive')
-							.setLabel('Créer une autre')
-							.setStyle(ButtonStyle.Success)
-							.setEmoji('➕'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+				const buttons = ComponentBuilder.createActionButtons([
+					{
+						customId: `view_archive_${result.archiveId}`,
+						label: 'Voir détails',
+						style: 'PRIMARY',
+						emoji: '👁️'
+					},
+					{
+						customId: `download_archive_${result.archiveId}`,
+						label: 'Télécharger',
+						style: 'SECONDARY',
+						emoji: '⬇️'
+					},
+					{
+						customId: 'create_another_archive',
+						label: 'Créer une autre',
+						style: 'SUCCESS',
+						emoji: '➕'
+					}
+				]);
 
 				await interaction.editReply(createResponse(
 					'Archive Créée',
@@ -313,25 +317,27 @@ module.exports = {
 				content += changes.map(change => `✅ ${change}`).join('\n');
 				content += `\n\n⏰ **Mise à jour le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('view_archive_config')
-							.setLabel('Voir config complète')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('⚙️'),
-						new ButtonBuilder()
-							.setCustomId('test_archive_config')
-							.setLabel('Tester config')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧪'),
-						new ButtonBuilder()
-							.setCustomId('reset_archive_config')
-							.setLabel('Réinitialiser')
-							.setStyle(ButtonStyle.Danger)
-							.setEmoji('🔄'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+			const buttons = ComponentBuilder.createActionButtons([
+				{
+					customId: 'view_archive_config',
+					label: 'Voir config complète',
+					style: 'PRIMARY',
+					emoji: '⚙️'
+				},
+				{
+					customId: 'test_archive_config',
+					label: 'Tester config',
+					style: 'SECONDARY',
+					emoji: '🧪'
+				},
+				{
+					customId: 'reset_archive_config',
+					label: 'Réinitialiser',
+					style: 'DANGER',
+					emoji: '🔄'
+				}
+			]);
 
 				await interaction.reply(createResponse(
 					'Configuration Mise à Jour',
@@ -384,45 +390,44 @@ module.exports = {
 
 				content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Menu de sélection pour gérer les archives
-				const archiveSelect = new StringSelectMenuBuilder()
-					.setCustomId('manage_archive_select')
-					.setPlaceholder('Sélectionner une archive à gérer...')
-					.addOptions(
-						archives.slice(0, 25).map(archive => ({
-							label: archive.name || archive.id,
-							description: `${archive.type} - ${new Date(archive.created).toLocaleDateString('fr-FR')}`,
-							value: archive.id,
-							emoji: '📦',
-						})),
-					);
+				// Menu de sélection pour gérer les archives (Type 17) - Utilisation de ComponentBuilder
+				const archiveSelect = ComponentBuilder.createSelectMenu(
+					'manage_archive_select',
+					'Sélectionner une archive à gérer...',
+					archives.slice(0, 25).map(archive => ({
+						label: archive.name || archive.id,
+						description: `${archive.type} - ${new Date(archive.created).toLocaleDateString('fr-FR')}`,
+						value: archive.id,
+						emoji: '📦'
+					}))
+				);
 
-				const selectRow = new ActionRowBuilder().addComponents(archiveSelect);
-
-				// Boutons d'action
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('refresh_archives')
-							.setLabel('Actualiser')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('🔄'),
-						new ButtonBuilder()
-							.setCustomId('create_new_archive')
-							.setLabel('Nouvelle archive')
-							.setStyle(ButtonStyle.Success)
-							.setEmoji('➕'),
-						new ButtonBuilder()
-							.setCustomId('cleanup_archives')
-							.setLabel('Nettoyer')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('🧹'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+				const buttons = ComponentBuilder.createActionButtons([
+					{
+						customId: 'refresh_archives',
+						label: 'Actualiser',
+						style: 'PRIMARY',
+						emoji: '🔄'
+					},
+					{
+						customId: 'create_new_archive',
+						label: 'Nouvelle archive',
+						style: 'SUCCESS',
+						emoji: '➕'
+					},
+					{
+						customId: 'cleanup_archives',
+						label: 'Nettoyer',
+						style: 'SECONDARY',
+						emoji: '🧹'
+					}
+				]);
 
 				await interaction.editReply(createResponse(
 					'Archives Disponibles',
 					content,
-					[selectRow, buttons]
+					[archiveSelect, buttons]
 				));
 			}
 			else {

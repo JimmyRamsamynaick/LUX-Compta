@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
 
 const config = require('../../../config.json');
 
@@ -142,62 +143,63 @@ module.exports = {
 
 		content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-		// Menu de sélection pour changer de type (Type 17)
-		const typeSelect = new StringSelectMenuBuilder()
-			.setCustomId('stats_type_select')
-			.setPlaceholder('Changer le type de statistiques...')
-			.addOptions([
+		// Menu de sélection pour changer de type (Type 17) - Utilisation de ComponentBuilder
+		const typeSelect = ComponentBuilder.createSelectMenu({
+			customId: 'stats_type_select',
+			placeholder: 'Changer le type de statistiques...',
+			options: [
 				{
 					label: 'Général',
 					description: 'Vue d\'ensemble des statistiques',
 					value: 'general',
-					emoji: '📊',
+					emoji: '📊'
 				},
 				{
 					label: 'Messages',
 					description: 'Statistiques des messages',
 					value: 'messages',
-					emoji: '💬',
+					emoji: '💬'
 				},
 				{
 					label: 'Membres',
 					description: 'Statistiques des membres',
 					value: 'members',
-					emoji: '👥',
+					emoji: '👥'
 				},
 				{
 					label: 'Canaux',
 					description: 'Statistiques des canaux',
 					value: 'channels',
-					emoji: '📊',
-				},
-			]);
+					emoji: '📊'
+				}
+			]
+		});
 
-		const selectRow = new ActionRowBuilder().addComponents(typeSelect);
-
-		// Boutons d'action (Type 10)
-		const buttons = new ActionRowBuilder()
-			.addComponents(
-				new ButtonBuilder()
-					.setCustomId(`refresh_stats_${periode}_${type}`)
-					.setLabel('Actualiser')
-					.setStyle(ButtonStyle.Primary)
-					.setEmoji('🔄'),
-				new ButtonBuilder()
-					.setCustomId(`export_stats_${periode}`)
-					.setLabel('Exporter CSV')
-					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('📊'),
-				new ButtonBuilder()
-					.setCustomId(`detailed_stats_${periode}`)
-					.setLabel('Détails')
-					.setStyle(ButtonStyle.Success)
-					.setEmoji('📈'),
-			);
+		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: `refresh_stats_${periode}_${type}`,
+				label: 'Actualiser',
+				style: 'PRIMARY',
+				emoji: '🔄'
+			},
+			{
+				customId: `export_stats_${periode}`,
+				label: 'Exporter CSV',
+				style: 'SECONDARY',
+				emoji: '📊'
+			},
+			{
+				customId: `detailed_stats_${periode}`,
+				label: 'Détails',
+				style: 'SUCCESS',
+				emoji: '📈'
+			}
+		]);
 
 		return {
 			content: content,
-			components: [selectRow, buttons],
+			components: [typeSelect, buttons],
 		};
 	},
 
@@ -269,10 +271,19 @@ module.exports = {
 			}
 		} catch (error) {
 			console.error('Erreur dans handleStatsButton:', error);
-			await interaction.reply({
-				content: '❌ Une erreur est survenue lors du traitement de votre demande.',
-				ephemeral: true
-			});
+			
+			let content = '❌ **ERREUR DE TRAITEMENT** ❌\n\n';
+			content += '⚠️ **Une erreur est survenue lors du traitement de votre demande.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `📝 **Action:** ${customId || 'Non spécifiée'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.reply(createResponse(
+				'Erreur Stats',
+				content,
+				[],
+				[]
+			));
 		}
 	},
 
@@ -415,10 +426,10 @@ module.exports = {
 		content += '• L\'export inclut toutes les données disponibles\n\n';
 		content += '💡 **Conseil:** Actualisez régulièrement pour avoir les données les plus récentes.';
 
-		await interaction.update({
-			content: content,
-			components: []
-		});
+		await interaction.update(createResponse(
+			'Aide Statistiques',
+			content
+		));
 	},
 
 	async showStatsConfig(interaction) {
@@ -435,10 +446,10 @@ module.exports = {
 		content += '• Données d\'engagement\n\n';
 		content += '💾 **Stockage:** Les données sont sauvegardées localement et dans le cloud.';
 
-		await interaction.update({
-			content: content,
-			components: []
-		});
+		await interaction.update(createResponse(
+			'Configuration Statistiques',
+			content
+		));
 	},
 
 	generateCSV(stats) {

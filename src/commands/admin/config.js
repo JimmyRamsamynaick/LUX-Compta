@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('../../../config.json');
@@ -95,112 +96,128 @@ module.exports = {
 	},
 
 	async handleShow(interaction) {
-		let content = '⚙️ **CONFIGURATION ACTUELLE** 🔧\n\n';
-		content += '📋 **Paramètres de configuration du bot LUX Compta**\n\n';
+		let content = `Voici la configuration complète de **${config.bot.name}** pour le serveur **${config.server.name}**.
 
-		// Bot settings
-		content += '🤖 **Bot**\n';
-		content += `📝 **Nom:** ${config.bot.name}\n`;
-		content += `🔢 **Version:** ${config.bot.version}\n`;
-		content += `⌨️ **Préfixe:** ${config.bot.prefix}\n\n`;
+🤖 **Informations du Bot**
+**Nom:** ${config.bot.name}
+**Description:** ${config.bot.description}
+**Version:** ${config.bot.version}
+**Statut:** ${config.bot.status}
+**Activité:** ${config.bot.activity.name}
 
-		// Server settings
-		content += '🌍 **Serveur**\n';
-		content += `🏷️ **Nom:** ${config.server.name}\n`;
-		content += `🕐 **Fuseau:** ${config.server.timezone}\n\n`;
+🏢 **Serveur**
+**Nom:** ${config.server.name}
+**Fuseau horaire:** ${config.server.timezone}
 
-		// Reports settings
-		content += '📊 **Rapports**\n';
-		content += `📄 **Formats:** ${config.reports.formats.join(', ')}\n`;
-		content += `🗂️ **Auto-archivage:** ${config.reports.autoArchive ? '✅ Activé' : '❌ Désactivé'}\n\n`;
+📊 **Statistiques**
+**Suivi des membres:** ${config.statistics.track.members ? '✅' : '❌'}
+**Suivi des messages:** ${config.statistics.track.messages ? '✅' : '❌'}
+**Activité vocale:** ${config.statistics.track.voice_activity ? '✅' : '❌'}
+**Réactions:** ${config.statistics.track.reactions ? '✅' : '❌'}
+**Canaux:** ${config.statistics.track.channels ? '✅' : '❌'}
 
-		// Alerts settings
-		content += '🚨 **Alertes**\n';
-		content += `🔔 **Activées:** ${config.alerts.enabled ? '✅ Oui' : '❌ Non'}\n`;
-		content += `📈 **Seuil:** ${config.alerts.activityThreshold}%\n`;
-		content += `⏱️ **Cooldown:** ${config.alerts.cooldown}h\n\n`;
+📈 **Rapports**
+**Formats disponibles:** ${config.reports.formats.join(', ')}
+**Rapport quotidien:** ${config.reports.periods.daily.enabled ? '✅' : '❌'} (${config.reports.periods.daily.time})
+**Rapport hebdomadaire:** ${config.reports.periods.weekly.enabled ? '✅' : '❌'} (${config.reports.periods.weekly.day} à ${config.reports.periods.weekly.time})
+**Rapport mensuel:** ${config.reports.periods.monthly.enabled ? '✅' : '❌'} (${config.reports.periods.monthly.day} jour à ${config.reports.periods.monthly.time})
+**Auto-archivage:** ${config.reports.auto_archive.enabled ? '✅' : '❌'} (après ${config.reports.auto_archive.after_days} jours)
 
-		// Git settings
-		content += '🔧 **Git**\n';
-		content += `🔄 **Auto-commit:** ${config.git.autoCommit ? '✅ Activé' : '❌ Désactivé'}\n`;
-		content += `📅 **Fréquence:** ${config.git.frequency}\n`;
-		content += `🏷️ **Tags auto:** ${config.git.autoTag ? '✅ Activé' : '❌ Désactivé'}\n\n`;
+🚨 **Alertes**
+**Statut:** ${config.alerts.enabled ? '✅ Activées' : '❌ Désactivées'}
+**Seuil baisse membres:** ${config.alerts.thresholds.member_decrease}
+**Seuil baisse messages:** ${config.alerts.thresholds.message_decrease}
+**Seuil baisse activité:** ${config.alerts.thresholds.activity_decrease}%
+**Cooldown:** ${config.alerts.cooldown_hours}h
+**Canal d'alertes:** <#${config.alerts.channelId}>
 
-		// Permissions settings
-		content += '👥 **Permissions**\n';
-		content += `👑 **Admins:** ${config.permissions.admin_roles.join(', ')}\n`;
-		content += `📊 **Accès stats:** ${config.permissions.stats_access.join(', ')}\n\n`;
+🔧 **Git**
+**Auto-commit:** ${config.git.auto_commit ? '✅' : '❌'}
+**Fréquence:** ${config.git.commit_frequency}
+**Création de tags:** ${config.git.create_tags ? '✅' : '❌'}
 
-		content += `⏰ **Généré le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+👥 **Permissions**
+**Rôles admin:** ${config.permissions.admin_roles.join(', ')}
+**Accès rapports:** ${config.permissions.report_access.join(', ')}
+**Accès stats:** ${config.permissions.stats_access.join(', ')}
 
-		// Menu de sélection pour les paramètres (Type 17)
-		const selectMenu = new StringSelectMenuBuilder()
-			.setCustomId('config_parameter_select')
-			.setPlaceholder('Choisir un paramètre à modifier...')
-			.addOptions([
-				{
-					label: 'Seuil d\'alerte activité',
-					description: 'Modifier le seuil d\'alerte d\'activité',
-					value: 'alert_threshold',
-					emoji: '📈',
-				},
-				{
-					label: 'Canal d\'alertes',
-					description: 'Configurer le canal d\'alertes',
-					value: 'alert_channel',
-					emoji: '📢',
-				},
-				{
-					label: 'Fréquence des commits Git',
-					description: 'Modifier la fréquence des commits automatiques',
-					value: 'git_frequency',
-					emoji: '📅',
-				},
-				{
-					label: 'Auto-archivage',
-					description: 'Activer/désactiver l\'auto-archivage',
-					value: 'auto_archive',
-					emoji: '🗂️',
-				},
-				{
-					label: 'Rôles admin',
-					description: 'Gérer les rôles administrateurs',
-					value: 'admin_roles',
-					emoji: '👑',
-				},
-			]);
+📝 **Logs**
+**Canal:** <#${config.logs.channelId}>
+**Dernière mise à jour:** ${new Date(config.logs.updatedAt).toLocaleString('fr-FR')}
 
-		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+Utilisez les boutons ci-dessous pour modifier la configuration.`;
 
-		// Boutons d'action (Type 10)
-		const buttons = new ActionRowBuilder()
-			.addComponents(
-				new ButtonBuilder()
-					.setCustomId('config_modify')
-					.setLabel('Modifier')
-					.setStyle(ButtonStyle.Primary)
-					.setEmoji('✏️'),
-				new ButtonBuilder()
-					.setCustomId('config_backup')
-					.setLabel('Sauvegarder')
-					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('💾'),
-				new ButtonBuilder()
-					.setCustomId('config_reset')
-					.setLabel('Réinitialiser')
-					.setStyle(ButtonStyle.Danger)
-					.setEmoji('🔄'),
-				new ButtonBuilder()
-					.setCustomId('config_refresh')
-					.setLabel('Actualiser')
-					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('🔄'),
-			);
+		// Menu de sélection pour les paramètres - Utilisation de ComponentBuilder
+	const selectRow = ComponentBuilder.createSelectMenu({
+		customId: 'config_parameter_select',
+		placeholder: 'Choisir un paramètre à modifier...',
+		options: [
+			{
+				label: 'Seuil d\'alerte activité',
+				description: 'Modifier le seuil d\'alerte d\'activité',
+				value: 'alert_threshold',
+				emoji: '📈',
+			},
+			{
+				label: 'Canal d\'alertes',
+				description: 'Configurer le canal d\'alertes',
+				value: 'alert_channel',
+				emoji: '📢',
+			},
+			{
+				label: 'Fréquence des commits Git',
+				description: 'Modifier la fréquence des commits automatiques',
+				value: 'git_frequency',
+				emoji: '📅',
+			},
+			{
+				label: 'Auto-archivage',
+				description: 'Activer/désactiver l\'auto-archivage',
+				value: 'auto_archive',
+				emoji: '🗂️',
+			},
+			{
+				label: 'Rôles admin',
+				description: 'Gérer les rôles administrateurs',
+				value: 'admin_roles',
+				emoji: '👑',
+			},
+		]
+	});
 
-		await interaction.reply({
-			content: content,
-			components: [selectRow, buttons],
-		});
+	// Boutons d'action - Utilisation de ComponentBuilder
+	const buttons = ComponentBuilder.createActionButtons([
+		{
+			customId: 'config_modify',
+			label: 'Modifier',
+			style: 'PRIMARY',
+			emoji: '✏️'
+		},
+		{
+			customId: 'config_backup',
+			label: 'Sauvegarder',
+			style: 'SECONDARY',
+			emoji: '💾'
+		},
+		{
+			customId: 'config_reset',
+			label: 'Réinitialiser',
+			style: 'DANGER',
+			emoji: '🔄'
+		},
+		{
+			customId: 'config_refresh',
+			label: 'Actualiser',
+			style: 'SECONDARY',
+			emoji: '🔄'
+		}
+	]);
+
+		await interaction.reply(createResponse(
+		`Configuration de ${config.bot.name}`,
+		content,
+		[selectRow, buttons]
+	));
 	},
 
 	async handleModify(interaction) {
@@ -325,17 +342,19 @@ module.exports = {
 		try {
 			// Vérifier que c'est un canal textuel
 			if (channel.type !== 0) {
-				return await interaction.reply({
-					content: '❌ Le canal sélectionné doit être un canal textuel.',
-				});
+				return await interaction.reply(createResponse(
+					'Erreur de Configuration',
+					'❌ Le canal sélectionné doit être un canal textuel.'
+				));
 			}
 
 			// Vérifier les permissions du bot dans ce canal
 			const botPermissions = channel.permissionsFor(interaction.client.user);
 			if (!botPermissions.has(['SendMessages', 'ViewChannel'])) {
-				return await interaction.reply({
-					content: '❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).',
-				});
+				return await interaction.reply(createResponse(
+					'Erreur de Permissions',
+					'❌ Le bot n\'a pas les permissions nécessaires dans ce canal (Voir le canal, Envoyer des messages).'
+				));
 			}
 
 			// Sauvegarder la configuration
@@ -392,9 +411,10 @@ module.exports = {
 			});
 
 			// Répondre à l'utilisateur
-			await interaction.reply({
-				content: `✅ **Canal de logs configuré avec succès**\n\nLe canal ${channel} a été configuré pour recevoir les logs du bot.\n\n📝 **Canal configuré**\n${channel} (${channel.id})\n\n🔧 **Configuration**\nSauvegardée dans config.json\n\n✅ **Test**\nMessage de test envoyé`,
-			});
+			await interaction.reply(createResponse(
+				'Canal de Logs Configuré',
+				`✅ **Canal de logs configuré avec succès**\n\nLe canal ${channel} a été configuré pour recevoir les logs du bot.\n\n📝 **Canal configuré**\n${channel} (${channel.id})\n\n🔧 **Configuration**\nSauvegardée dans config.json\n\n✅ **Test**\nMessage de test envoyé`
+			));
 
 			// Log dans la console
 			console.log(`📝 Canal de logs configuré: ${channel.name} (${channel.id}) par ${interaction.user.tag}`);
@@ -403,9 +423,10 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur lors de la configuration du canal de logs:', error);
 
-			await interaction.reply({
-				content: `❌ **Erreur de configuration**\n\nImpossible de configurer le canal de logs.\n\n🚫 **Erreur**\n${error.message || 'Erreur inconnue'}`,
-			});
+			await interaction.reply(createResponse(
+				'Erreur de Configuration',
+				`❌ **Erreur de configuration**\n\nImpossible de configurer le canal de logs.\n\n🚫 **Erreur**\n${error.message || 'Erreur inconnue'}`
+			));
 		}
 	},
 

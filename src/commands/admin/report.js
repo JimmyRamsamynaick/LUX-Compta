@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
 
 // Fonction pour créer le nouveau format de réponse
 function createResponse(title, content, components = [], files = []) {
@@ -99,7 +100,10 @@ module.exports = {
 			));
 			}
 			else {
-				await interaction.reply({ content: content,  });
+				await interaction.reply(createResponse(
+					'Erreur Report',
+					content
+				));
 			}
 		}
 	},
@@ -129,25 +133,27 @@ module.exports = {
 			content += `• **📅 Période:** ${this.getPeriodLabel(period)}\n\n`;
 			content += `⏰ **Généré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('report_download')
-						.setLabel('Télécharger')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('💾'),
-					new ButtonBuilder()
-						.setCustomId('report_send_email')
-						.setLabel('Envoyer par mail')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📧'),
-					new ButtonBuilder()
-						.setCustomId('report_view')
-						.setLabel('Aperçu')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('👁️'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'report_download',
+				label: 'Télécharger',
+				style: 'PRIMARY',
+				emoji: '💾'
+			},
+			{
+				customId: 'report_send_email',
+				label: 'Envoyer par mail',
+				style: 'SECONDARY',
+				emoji: '📧'
+			},
+			{
+				customId: 'report_view',
+				label: 'Aperçu',
+				style: 'SECONDARY',
+				emoji: '👁️'
+			}
+		]);
 
 			await interaction.editReply(createResponse(
 				'Rapport Généré',
@@ -162,7 +168,10 @@ module.exports = {
 			content += `📅 **Période demandée:** ${this.getPeriodLabel(period)}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			await interaction.editReply(createResponse(
+				'Erreur Génération',
+				content
+			));
 		}
 	},
 
@@ -207,55 +216,55 @@ module.exports = {
 
 			content += `⏰ **Liste mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour filtrer par période (Type 17)
-			const periodSelect = new ActionRowBuilder()
-				.addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId('report_filter_period')
-						.setPlaceholder('🔍 Filtrer par période')
-						.addOptions([
-							{
-								label: 'Tous les rapports',
-								value: 'all',
-								emoji: '📊',
-							},
-							{
-								label: 'Quotidien',
-								value: 'daily',
-								emoji: '📅',
-							},
-							{
-								label: 'Hebdomadaire',
-								value: 'weekly',
-								emoji: '📆',
-							},
-							{
-								label: 'Mensuel',
-								value: 'monthly',
-								emoji: '🗓️',
-							},
-						]),
-				);
+			// Menu de sélection pour filtrer par période (Type 17) - Utilisation de ComponentBuilder
+		const periodSelect = ComponentBuilder.createSelectMenu({
+			customId: 'report_filter_period',
+			placeholder: '🔍 Filtrer par période',
+			options: [
+				{
+					label: 'Tous les rapports',
+					value: 'all',
+					emoji: '📊'
+				},
+				{
+					label: 'Quotidien',
+					value: 'daily',
+					emoji: '📅'
+				},
+				{
+					label: 'Hebdomadaire',
+					value: 'weekly',
+					emoji: '📆'
+				},
+				{
+					label: 'Mensuel',
+					value: 'monthly',
+					emoji: '🗓️'
+				}
+			]
+		});
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('reports_refresh')
-						.setLabel('Actualiser')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('reports_export')
-						.setLabel('Exporter liste')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤'),
-					new ButtonBuilder()
-						.setCustomId('reports_cleanup')
-						.setLabel('Nettoyer')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️'),
-				);
+		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'reports_refresh',
+				label: 'Actualiser',
+				style: 'PRIMARY',
+				emoji: '🔄'
+			},
+			{
+				customId: 'reports_export',
+				label: 'Exporter liste',
+				style: 'SECONDARY',
+				emoji: '📤'
+			},
+			{
+				customId: 'reports_cleanup',
+				label: 'Nettoyer',
+				style: 'DANGER',
+				emoji: '🗑️'
+			}
+		]);
 
 			await interaction.editReply(createResponse(
 				'Liste des Rapports',
@@ -286,7 +295,10 @@ module.exports = {
 		content += `📤 **Envoi du rapport "${filename}" par email...**\n\n`;
 		content += `⏰ **Démarré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-		await interaction.editReply({ content: content });
+		await interaction.editReply(createResponse(
+			'Envoi en cours',
+			content
+		));
 
 		try {
 			const result = await emailManager.sendReport(filename, email);
@@ -320,10 +332,11 @@ module.exports = {
 						.setEmoji('📜'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Rapport Envoyé',
+				content,
+				[buttons]
+			));
 		}
 		catch (error) {
 			content = '❌ **ERREUR D\'ENVOI** ❌\n\n';
@@ -333,7 +346,10 @@ module.exports = {
 			content += `📧 **Email:** ${email || 'Email par défaut'}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			await interaction.editReply(createResponse(
+				'Erreur Envoi',
+				content
+			));
 		}
 	},
 
@@ -369,53 +385,85 @@ module.exports = {
 				await this.selectReportFormat(interaction, format);
 			}
 			else {
-				await interaction.reply({
-					content: '❌ Action de rapport non reconnue.',
-					ephemeral: true,
-				});
+				let content = '❌ **ACTION NON RECONNUE** ❌\n\n';
+				content += '⚠️ **L\'action de rapport demandée n\'est pas reconnue.**\n\n';
+				content += `🔍 **Action:** ${customId}\n`;
+				content += `⏰ **Tentative:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				await interaction.reply(createResponse(
+					'Action Inconnue',
+					content
+				));
 			}
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la gestion du bouton rapport:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de l\'exécution de l\'action de rapport.',
-				ephemeral: true,
-			});
+			
+			let content = '❌ **ERREUR BOUTON RAPPORT** ❌\n\n';
+			content += '⚠️ **Erreur lors de l\'exécution de l\'action de rapport.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `📝 **Action:** ${customId || 'Non spécifiée'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.reply(createResponse(
+				'Erreur Action Rapport',
+				content
+			));
 		}
 	},
 
 	async generateReport(interaction) {
-		await interaction.reply({
-			content: '📊 Rapport généré avec succès !',
-			ephemeral: true,
-		});
+		let content = '📊 **RAPPORT GÉNÉRÉ** 📊\n\n';
+		content += '✅ **Le rapport a été généré avec succès !**\n\n';
+		content += `⏰ **Généré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		await interaction.reply(createResponse(
+			'Génération Réussie',
+			content
+		));
 	},
 
 	async scheduleReport(interaction) {
-		await interaction.reply({
-			content: '⏰ Rapport programmé avec succès !',
-			ephemeral: true,
-		});
+		let content = '⏰ **RAPPORT PROGRAMMÉ** ⏰\n\n';
+		content += '✅ **Le rapport a été programmé avec succès !**\n\n';
+		content += `📅 **Programmé:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		await interaction.reply(createResponse(
+			'Programmation Réussie',
+			content
+		));
 	},
 
 	async exportReport(interaction) {
-		await interaction.reply({
-			content: '📤 Rapport exporté avec succès !',
-			ephemeral: true,
-		});
+		let content = '📤 **RAPPORT EXPORTÉ** 📤\n\n';
+		content += '✅ **Le rapport a été exporté avec succès !**\n\n';
+		content += `💾 **Exporté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		await interaction.reply(createResponse(
+			'Export Réussi',
+			content
+		));
 	},
 
 	async selectReportType(interaction, reportType) {
-		await interaction.reply({
-			content: `✅ Type de rapport "${reportType}" sélectionné.`,
-			ephemeral: true,
-		});
+		let content = '✅ **TYPE SÉLECTIONNÉ** ✅\n\n';
+		content += `📊 **Type de rapport "${reportType}" sélectionné.**\n\n`;
+		content += `⏰ **Sélectionné:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		await interaction.reply(createResponse(
+			'Type Sélectionné',
+			content
+		));
 	},
 
 	async selectReportFormat(interaction, format) {
-		await interaction.reply({
-			content: `✅ Format "${format}" sélectionné pour le rapport.`,
-			ephemeral: true,
-		});
-	},
+		let content = '✅ **FORMAT SÉLECTIONNÉ** ✅\n\n';
+		content += `📄 **Format "${format}" sélectionné pour le rapport.**\n\n`;
+		content += `⏰ **Sélectionné:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+		await interaction.reply(createResponse(
+			'Format Sélectionné',
+			content
+		));
+	}
 };

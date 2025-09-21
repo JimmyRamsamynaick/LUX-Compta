@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
+const config = require('../../../config.json');
 
 const fs = require('fs').promises;
 const path = require('path');
@@ -138,25 +140,27 @@ module.exports = {
 				content += templateData.stats.map(s => `• **${s.label}:** ${s.value}`).join('\n');
 				content += `\n\n⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('email_test_again')
-							.setLabel('Tester à nouveau')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('🔄'),
-						new ButtonBuilder()
-							.setCustomId('email_test_other')
-							.setLabel('Autre destinataire')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('📧'),
-						new ButtonBuilder()
-							.setCustomId('email_view_template')
-							.setLabel('Voir template')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('👁️'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+				const buttons = ComponentBuilder.createActionButtons([
+					{
+						customId: 'email_test_again',
+						label: 'Tester à nouveau',
+						style: 'PRIMARY',
+						emoji: '🔄'
+					},
+					{
+						customId: 'email_test_other',
+						label: 'Autre destinataire',
+						style: 'SECONDARY',
+						emoji: '📧'
+					},
+					{
+						customId: 'email_view_template',
+						label: 'Voir template',
+						style: 'SECONDARY',
+						emoji: '👁️'
+					}
+				]);
 
 				await interaction.editReply(createResponse(
 					'Email Envoyé',
@@ -178,25 +182,27 @@ module.exports = {
 				content += `• **📝 Sujet visé:** ${sujet}\n\n`;
 				content += `⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('email_retry')
-							.setLabel('Réessayer')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('🔄'),
-						new ButtonBuilder()
-							.setCustomId('email_check_config')
-							.setLabel('Vérifier config')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('⚙️'),
-						new ButtonBuilder()
-							.setCustomId('email_support')
-							.setLabel('Support')
-							.setStyle(ButtonStyle.Danger)
-							.setEmoji('🆘'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+			const buttons = ComponentBuilder.createActionButtons([
+				{
+					customId: 'email_retry',
+					label: 'Réessayer',
+					style: 'PRIMARY',
+					emoji: '🔄'
+				},
+				{
+					customId: 'email_check_config',
+					label: 'Vérifier config',
+					style: 'SECONDARY',
+					emoji: '⚙️'
+				},
+				{
+					customId: 'email_support',
+					label: 'Support',
+					style: 'DANGER',
+					emoji: '🆘'
+				}
+			]);
 
 				await interaction.editReply(createResponse(
 					'Erreur d\'Envoi',
@@ -216,25 +222,27 @@ module.exports = {
 			content += `• **🐛 Erreur:** ${error.message || 'Erreur inconnue'}\n\n`;
 			content += `⏰ **Timestamp:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('system_retry')
-						.setLabel('Réessayer')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('system_logs')
-						.setLabel('Voir logs')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📋'),
-					new ButtonBuilder()
-						.setCustomId('system_support')
-						.setLabel('Support technique')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🆘'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'system_retry',
+				label: 'Réessayer',
+				style: 'PRIMARY',
+				emoji: '🔄'
+			},
+			{
+				customId: 'system_logs',
+				label: 'Voir logs',
+				style: 'SECONDARY',
+				emoji: '📋'
+			},
+			{
+				customId: 'system_support',
+				label: 'Support technique',
+				style: 'DANGER',
+				emoji: '🆘'
+			}
+		]);
 
 			const errorResponse = createResponse(
 				'Erreur Système',

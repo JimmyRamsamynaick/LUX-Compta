@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
 
 // Fonction pour créer le nouveau format de réponse
 function createResponse(title, content, components = [], files = []) {
@@ -128,10 +129,17 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la création du dashboard:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la création du dashboard.',
-				
-			});
+			
+			let content = '❌ **ERREUR DE CRÉATION** ❌\n\n';
+			content += '⚠️ **Impossible de créer le dashboard.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `📝 **Type demandé:** ${type || 'Non spécifié'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.reply(createResponse(
+				'Erreur Création Dashboard',
+				content
+			));
 		}
 	},
 
@@ -157,10 +165,17 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la gestion du dashboard:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la gestion du dashboard.',
-				
-			});
+			
+			let content = '❌ **ERREUR DE GESTION** ❌\n\n';
+			content += '⚠️ **Impossible de gérer le dashboard.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `📝 **Action demandée:** ${action || 'Non spécifiée'}\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.reply(createResponse(
+				'Erreur Gestion Dashboard',
+				content
+			));
 		}
 	},
 
@@ -176,25 +191,48 @@ module.exports = {
 				const status = enabled ? 'activée' : 'désactivée';
 				const intervalText = enabled ? ` (intervalle: ${interval} minutes)` : '';
 
-				await interaction.reply({
-					content: `✅ Mise à jour automatique ${status}${intervalText}.`,
-					
-				});
+				let content = '✅ **MISE À JOUR AUTOMATIQUE** ✅\n\n';
+				content += `🔄 **Statut:** Mise à jour automatique ${status}${intervalText}\n\n`;
+				content += '📊 **Configuration actuelle:**\n';
+				content += `• **Canal:** <#${interaction.channelId}>\n`;
+				content += `• **Intervalle:** ${interval} minutes\n`;
+				content += `• **Statut:** ${enabled ? '🟢 Activé' : '🔴 Désactivé'}\n\n`;
+				content += `⏰ **Configuré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				await interaction.reply(createResponse(
+					'Configuration Auto-Update',
+					content
+				));
 			}
 			else {
-				await interaction.reply({
-					content: '❌ Aucun dashboard trouvé dans ce canal.',
-					
-				});
+				let content = '❌ **DASHBOARD INTROUVABLE** ❌\n\n';
+				content += '⚠️ **Aucun dashboard trouvé dans ce canal.**\n\n';
+				content += '💡 **Pour créer un dashboard:**\n';
+				content += '• Utilisez `/dashboard créer`\n';
+				content += '• Choisissez le type approprié\n';
+				content += '• Configurez ensuite la mise à jour automatique\n\n';
+				content += `⏰ **Vérification:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+				await interaction.reply(createResponse(
+					'Dashboard Non Trouvé',
+					content
+				));
 			}
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la configuration de l\'auto-update:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la configuration de la mise à jour automatique.',
-				
-			});
+			
+			let content = '❌ **ERREUR AUTO-UPDATE** ❌\n\n';
+			content += '⚠️ **Impossible de configurer la mise à jour automatique.**\n\n';
+			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
+			content += `📝 **Paramètres:** Activé: ${enabled}, Intervalle: ${interval}min\n`;
+			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+
+			await interaction.reply(createResponse(
+				'Erreur Auto-Update',
+				content
+			));
 		}
 	},
 
@@ -212,31 +250,33 @@ module.exports = {
 				content += '• Configurez la mise à jour automatique si nécessaire\n\n';
 				content += `⏰ **Consulté:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				// Boutons d'action (Type 10)
-				const buttons = new ActionRowBuilder()
-					.addComponents(
-						new ButtonBuilder()
-							.setCustomId('dashboard_create_main')
-							.setLabel('Créer dashboard principal')
-							.setStyle(ButtonStyle.Primary)
-							.setEmoji('📊'),
-						new ButtonBuilder()
-							.setCustomId('dashboard_create_custom')
-							.setLabel('Dashboard personnalisé')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('⚙️'),
-						new ButtonBuilder()
-							.setCustomId('dashboard_help')
-							.setLabel('Aide')
-							.setStyle(ButtonStyle.Secondary)
-							.setEmoji('❓'),
-					);
+				// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'dashboard_create_main',
+				label: 'Créer dashboard principal',
+				style: 'PRIMARY',
+				emoji: '📊'
+			},
+			{
+				customId: 'dashboard_create_custom',
+				label: 'Dashboard personnalisé',
+				style: 'SECONDARY',
+				emoji: '⚙️'
+			},
+			{
+				customId: 'dashboard_help',
+				label: 'Aide',
+				style: 'SECONDARY',
+				emoji: '❓'
+			}
+		]);
 
-				return await interaction.reply({
-					content: content,
-					components: [buttons],
-					
-				});
+				return await interaction.reply(createResponse(
+					'Dashboards Actifs',
+					content,
+					[dashboardSelect, buttons]
+				));
 			}
 
 
@@ -271,47 +311,45 @@ module.exports = {
 
 			content += `⏰ **Liste mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour gérer un dashboard spécifique (Type 17)
-			const dashboardSelect = new ActionRowBuilder()
-				.addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId('dashboard_manage_select')
-						.setPlaceholder('Sélectionner un dashboard à gérer...')
-						.addOptions(
-							dashboards.slice(0, 25).map(dashboard => ({
-								label: `Dashboard ${dashboard.channelId}`,
-								value: dashboard.channelId,
-								description: `Auto-update: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
-								emoji: dashboard.autoUpdate ? '🟢' : '🔴',
-							})),
-						),
-				);
+			// Menu de sélection pour gérer un dashboard spécifique (Type 17) - Utilisation de ComponentBuilder
+		const dashboardSelect = ComponentBuilder.createSelectMenu({
+			customId: 'dashboard_manage_select',
+			placeholder: 'Sélectionner un dashboard à gérer...',
+			options: dashboards.slice(0, 25).map(dashboard => ({
+				label: `Dashboard ${dashboard.channelId}`,
+				value: dashboard.channelId,
+				description: `Auto-update: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
+				emoji: dashboard.autoUpdate ? '🟢' : '🔴',
+			}))
+		});
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('dashboard_refresh_all')
-						.setLabel('Actualiser tout')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('dashboard_create_new')
-						.setLabel('Créer nouveau')
-						.setStyle(ButtonStyle.Success)
-						.setEmoji('➕'),
-					new ButtonBuilder()
-						.setCustomId('dashboard_settings_global')
-						.setLabel('Paramètres globaux')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('⚙️'),
-				);
+		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'dashboard_refresh_all',
+				label: 'Actualiser tout',
+				style: 'PRIMARY',
+				emoji: '🔄'
+			},
+			{
+				customId: 'dashboard_create_new',
+				label: 'Créer nouveau',
+				style: 'SUCCESS',
+				emoji: '➕'
+			},
+			{
+				customId: 'dashboard_settings_global',
+				label: 'Paramètres globaux',
+				style: 'SECONDARY',
+				emoji: '⚙️'
+			}
+		]);
 
-			await interaction.reply({
-				content: content,
-				components: [dashboardSelect, buttons],
-				
-			});
+			await interaction.reply(createResponse(
+				'Dashboards Actifs',
+				content,
+				[dashboardSelect, buttons]
+			));
 
 		}
 		catch (error) {
@@ -395,59 +433,59 @@ module.exports = {
 			content += `• **Notifications:** ${settings.notifications ? '✅ Activées' : '❌ Désactivées'}\n\n`;
 			content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour les paramètres (Type 17)
-			const settingsSelect = new ActionRowBuilder()
-				.addComponents(
-					new StringSelectMenuBuilder()
-						.setCustomId('dashboard_settings_select')
-						.setPlaceholder('Modifier un paramètre...')
-						.addOptions([
-							{
-								label: 'Auto-update',
-								description: 'Activer/désactiver la mise à jour automatique',
-								value: 'auto_update',
-								emoji: '🔄',
-							},
-							{
-								label: 'Intervalle',
-								description: 'Modifier l\'intervalle de mise à jour',
-								value: 'interval',
-								emoji: '⏱️',
-							},
-							{
-								label: 'Thème',
-								description: 'Changer le thème du dashboard',
-								value: 'theme',
-								emoji: '🎨',
-							},
-							{
-								label: 'Notifications',
-								description: 'Gérer les notifications',
-								value: 'notifications',
-								emoji: '🔔',
-							},
-						]),
-				);
+			// Menu de sélection pour les paramètres (Type 17) - Utilisation de ComponentBuilder
+		const settingsSelect = ComponentBuilder.createSelectMenu({
+			customId: 'dashboard_settings_select',
+			placeholder: 'Modifier un paramètre...',
+			options: [
+				{
+					label: 'Auto-update',
+					description: 'Activer/désactiver la mise à jour automatique',
+					value: 'auto_update',
+					emoji: '🔄',
+				},
+				{
+					label: 'Intervalle',
+					description: 'Modifier l\'intervalle de mise à jour',
+					value: 'interval',
+					emoji: '⏱️',
+				},
+				{
+					label: 'Thème',
+					description: 'Changer le thème du dashboard',
+					value: 'theme',
+					emoji: '🎨',
+				},
+				{
+					label: 'Notifications',
+					description: 'Gérer les notifications',
+					value: 'notifications',
+					emoji: '🔔',
+				},
+			]
+		});
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('dashboard_settings_save')
-						.setLabel('Sauvegarder')
-						.setStyle(ButtonStyle.Success)
-						.setEmoji('💾'),
-					new ButtonBuilder()
-						.setCustomId('dashboard_settings_reset')
-						.setLabel('Réinitialiser')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('dashboard_settings_export')
-						.setLabel('Exporter')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📤'),
-				);
+		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'dashboard_settings_save',
+				label: 'Sauvegarder',
+				style: 'SUCCESS',
+				emoji: '💾'
+			},
+			{
+				customId: 'dashboard_settings_reset',
+				label: 'Réinitialiser',
+				style: 'DANGER',
+				emoji: '🔄'
+			},
+			{
+				customId: 'dashboard_settings_export',
+				label: 'Exporter',
+				style: 'SECONDARY',
+				emoji: '📤'
+			}
+		]);
 
 			await interaction.reply({
 				content: content,

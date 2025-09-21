@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const ComponentBuilder = require('../../utils/componentBuilder');
 
 const config = require('../../../config.json');
 
@@ -89,11 +90,11 @@ module.exports = {
 			content += `📅 **Période:** ${this.getPeriodLabel(periode)}\n\n`;
 			content += `⏰ **Généré le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Menu de sélection pour changer de période (Type 17)
-			const selectMenu = new StringSelectMenuBuilder()
-				.setCustomId('report_period_select')
-				.setPlaceholder('Choisir une période')
-				.addOptions([
+			// Menu de sélection pour changer de période (Type 17) - Utilisation de ComponentBuilder
+			const selectMenu = ComponentBuilder.createSelectMenu({
+				customId: 'report_period_select',
+				placeholder: 'Choisir une période',
+				options: [
 					{
 						label: 'Aujourd\'hui',
 						description: 'Rapport quotidien',
@@ -112,35 +113,36 @@ module.exports = {
 						value: 'monthly',
 						emoji: '📈',
 					},
-				]);
+				]
+			});
 
-			const selectRow = new ActionRowBuilder().addComponents(selectMenu);
-
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId(`download_report_${periode}`)
-						.setLabel('Télécharger')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('📥'),
-					new ButtonBuilder()
-						.setCustomId(`email_report_${periode}`)
-						.setLabel('Envoyer par mail')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📧'),
-					new ButtonBuilder()
-						.setCustomId(`view_report_${periode}`)
-						.setLabel('Visualiser')
-						.setStyle(ButtonStyle.Success)
-						.setEmoji('👁️'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+			const buttons = ComponentBuilder.createActionButtons([
+				{
+					customId: `download_report_${periode}`,
+					label: 'Télécharger',
+					style: 'PRIMARY',
+					emoji: '📥'
+				},
+				{
+					customId: `email_report_${periode}`,
+					label: 'Envoyer par mail',
+					style: 'SECONDARY',
+					emoji: '📧'
+				},
+				{
+					customId: `view_report_${periode}`,
+					label: 'Visualiser',
+					style: 'SUCCESS',
+					emoji: '👁️'
+				}
+			]);
 
 			await interaction.editReply(createResponse(
-				'Rapport Généré',
-				content,
-				[selectRow, buttons]
-			));
+			'Rapport Généré',
+			content,
+			[selectMenu, buttons]
+		));
 
 		}
 		catch (error) {
@@ -191,25 +193,27 @@ module.exports = {
 
 			content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('reports_refresh')
-						.setLabel('Actualiser')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('🔄'),
-					new ButtonBuilder()
-						.setCustomId('reports_archive')
-						.setLabel('Archiver anciens')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('📦'),
-					new ButtonBuilder()
-						.setCustomId('reports_cleanup')
-						.setLabel('Nettoyer')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'reports_refresh',
+				label: 'Actualiser',
+				style: 'PRIMARY',
+				emoji: '🔄'
+			},
+			{
+				customId: 'reports_archive',
+				label: 'Archiver anciens',
+				style: 'SECONDARY',
+				emoji: '📦'
+			},
+			{
+				customId: 'reports_cleanup',
+				label: 'Nettoyer',
+				style: 'DANGER',
+				emoji: '🗑️'
+			}
+		]);
 
 			await interaction.editReply(createResponse(
 				'Rapports Disponibles',
@@ -256,25 +260,27 @@ module.exports = {
 
 			content += `⏰ **Archivage effectué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			// Boutons d'action (Type 10)
-			const buttons = new ActionRowBuilder()
-				.addComponents(
-					new ButtonBuilder()
-						.setCustomId('archive_view')
-						.setLabel('Voir archives')
-						.setStyle(ButtonStyle.Primary)
-						.setEmoji('📁'),
-					new ButtonBuilder()
-						.setCustomId('archive_restore')
-						.setLabel('Restaurer')
-						.setStyle(ButtonStyle.Secondary)
-						.setEmoji('↩️'),
-					new ButtonBuilder()
-						.setCustomId('archive_cleanup')
-						.setLabel('Nettoyer archives')
-						.setStyle(ButtonStyle.Danger)
-						.setEmoji('🗑️'),
-				);
+			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'archive_view',
+				label: 'Voir archives',
+				style: 'PRIMARY',
+				emoji: '📁'
+			},
+			{
+				customId: 'archive_restore',
+				label: 'Restaurer',
+				style: 'SECONDARY',
+				emoji: '↩️'
+			},
+			{
+				customId: 'archive_cleanup',
+				label: 'Nettoyer archives',
+				style: 'DANGER',
+				emoji: '🗑️'
+			}
+		]);
 
 			await interaction.editReply(createResponse(
 				'Archivage Terminé',
