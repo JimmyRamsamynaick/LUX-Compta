@@ -1,17 +1,10 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-// Fonction utilitaire pour créer le nouveau format de réponse
+// Fonction pour créer le nouveau format de réponse
 function createResponse(title, content) {
-    return {
-        flags: 32768,
-        components: [{
-            type: 17,
-            components: [{
-                type: 10,
-                content: `## ℹ️ ${title}\n\n${content}`
-            }]
-        }]
-    };
+	return {
+		content: `# ${title}\n\n${content}`
+	};
 }
 
 module.exports = {

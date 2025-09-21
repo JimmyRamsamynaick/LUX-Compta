@@ -7,22 +7,8 @@ const path = require('path');
 function createResponse(title, content, components = [], files = []) {
 	return {
 		content: `# ${title}\n\n${content}`,
-		components: [
-			{
-				type: 1,
-				components: [
-					{
-						type: 17,
-						style: 1,
-						label: title,
-						disabled: true,
-						custom_id: 'title_placeholder'
-					}
-				]
-			},
-			...components
-		],
-		files: files
+		components: components,
+		files
 	};
 }
 

@@ -1,29 +1,12 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
-// Fonction utilitaire pour créer le nouveau format de réponse
+// Fonction pour créer le nouveau format de réponse
 function createResponse(title, content, components = [], files = []) {
-    const response = {
-        flags: 32768,
-        components: [{
-            type: 17,
-            components: [{
-                type: 10,
-                content: `## 📊 ${title}\n\n${content}`
-            }]
-        }]
-    };
-    
-    // Ajouter les composants (boutons, menus) si fournis
-    if (components && components.length > 0) {
-        response.components = response.components.concat(components);
-    }
-    
-    // Ajouter les fichiers si fournis
-    if (files && files.length > 0) {
-        response.files = files;
-    }
-    
-    return response;
+	return {
+		content: `# ${title}\n\n${content}`,
+		components: components,
+		files
+	};
 }
 
 module.exports = {

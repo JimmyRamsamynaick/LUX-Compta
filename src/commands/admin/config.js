@@ -3,25 +3,12 @@ const fs = require('fs').promises;
 const path = require('path');
 const config = require('../../../config.json');
 
-// Fonction utilitaire pour créer le nouveau format de réponse
+// Fonction pour créer le nouveau format de réponse
 function createResponse(title, content, components = []) {
-    const response = {
-        flags: 32768,
-        components: [{
-            type: 17,
-            components: [{
-                type: 10,
-                content: `## ℹ️ ${title}\n\n${content}`
-            }]
-        }]
-    };
-    
-    // Ajouter les composants (boutons, menus) si fournis
-    if (components && components.length > 0) {
-        response.components = response.components.concat(components);
-    }
-    
-    return response;
+	return {
+		content: `# ${title}\n\n${content}`,
+		components: components
+	};
 }
 
 module.exports = {
