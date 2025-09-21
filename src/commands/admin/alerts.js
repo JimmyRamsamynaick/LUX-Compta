@@ -148,6 +148,8 @@ module.exports = {
 
 	async handleConfig(interaction, alertManager) {
 		try {
+			// Différer la réponse pour avoir le temps de traiter
+			await interaction.deferReply();
 			// Si c'est une interaction de bouton, afficher la configuration actuelle
 			if (interaction.isButton()) {
 				await this.showCurrentConfig(interaction, alertManager);
