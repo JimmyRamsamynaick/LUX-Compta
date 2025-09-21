@@ -1,5 +1,19 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content) {
+    return {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## ℹ️ ${title}\n\n${content}`
+            }]
+        }]
+    };
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('alerts')
@@ -90,9 +104,10 @@ module.exports = {
 			const alertManager = interaction.client.alertManager;
 
 			if (!alertManager) {
-				return await interaction.reply({
-					content: '❌ Le gestionnaire d\'alertes n\'est pas disponible.',
-				});
+				return await interaction.reply(createResponse(
+					'Erreur',
+					'❌ Le gestionnaire d\'alertes n\'est pas disponible.'
+				));
 			}
 
 			switch (subcommand) {
@@ -117,13 +132,16 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur dans la commande alerts:', error);
 
-			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
+			const errorResponse = createResponse(
+				'Erreur',
+				'❌ Une erreur est survenue lors de l\'exécution de la commande.'
+			);
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage });
+				await interaction.followUp(errorResponse);
 			}
 			else {
-				await interaction.reply({ content: errorMessage });
+				await interaction.reply(errorResponse);
 			}
 		}
 	},
@@ -187,16 +205,16 @@ module.exports = {
 
 				// Vérifier si l'interaction n'a pas déjà été répondue
 				if (!interaction.replied && !interaction.deferred) {
-					await interaction.reply({
-						content: content,
-						components: [buttons],
-					});
+					await interaction.editReply(createResponse(
+						'Configuration des Alertes',
+						content
+					));
 				} else {
 					// Si déjà répondue, utiliser editReply
-					await interaction.editReply({
-						content: content,
-						components: [buttons],
-					});
+					await interaction.editReply(createResponse(
+						'Configuration des Alertes',
+						content
+					));
 				}
 			}
 			else {
@@ -209,15 +227,16 @@ module.exports = {
 			console.error('❌ Erreur lors de la configuration:', error);
 			// Vérifier si l'interaction n'a pas déjà été répondue
 			if (!interaction.replied && !interaction.deferred) {
-				await interaction.reply({
-					content: '❌ Erreur lors de la configuration des alertes.',
-				});
+				await interaction.editReply(createResponse(
+					'Erreur',
+					'❌ Erreur lors de la configuration des alertes.'
+				));
 			} else {
 				// Si déjà répondue, utiliser followUp
-				await interaction.followUp({
-					content: '❌ Erreur lors de la configuration des alertes.',
-					ephemeral: true,
-				});
+				await interaction.followUp(createResponse(
+					'Erreur',
+					'❌ Erreur lors de la configuration des alertes.'
+				));
 			}
 		}
 	},
@@ -289,10 +308,10 @@ module.exports = {
 								.setEmoji('🔄'),
 						);
 
-					await interaction.editReply({
-						content: content,
-						components: [thresholdSelect, buttons],
-					});
+					await interaction.editReply(createResponse(
+						'Configuration des Seuils',
+						content
+					));
 				}
 				else {
 					let content = '❌ **ERREUR** ❌\n\n';

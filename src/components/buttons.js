@@ -1,6 +1,22 @@
-const { EmbedBuilder, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs').promises;
 const path = require('path');
+
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content) {
+	return {
+		flags: 32768,
+		components: [{
+			type: 17,
+			components: [
+				{
+					type: 10,
+					content: `## ℹ️ ${title}\n\n${content}`
+				}
+			]
+		}]
+	};
+}
 
 module.exports = {
 	// Gestionnaire pour les boutons de téléchargement de rapport (Type 10)
@@ -17,10 +33,10 @@ module.exports = {
 			const fileExists = await fs.access(reportPath).then(() => true).catch(() => false);
 
 			if (!fileExists) {
-				return interaction.editReply({
-					content: '❌ Erreur lors de la génération du rapport.',
-					
-				});
+				return interaction.editReply(createResponse(
+					'Erreur',
+					'❌ Erreur lors de la génération du rapport.'
+				));
 			}
 
 			// Créer l'attachment pour le téléchargement
@@ -35,18 +51,18 @@ module.exports = {
 				.setTimestamp()
 				.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
 
-			await interaction.editReply({
-				embeds: [embed],
-				files: [attachment],
-			});
+			await interaction.editReply(createResponse(
+				'Téléchargement',
+				`📥 Rapport ${this.getPeriodLabel(period)} généré avec succès`
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors du téléchargement du rapport:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors du téléchargement du rapport.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors du téléchargement du rapport.'
+			));
 		}
 	},
 
@@ -145,15 +161,18 @@ module.exports = {
 				});
 			}
 
-			await interaction.editReply({ embeds: [embed] });
+			await interaction.editReply(createResponse(
+				'Visualisation',
+				`👁️ Rapport ${this.getPeriodLabel(period)} visualisé avec succès`
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la visualisation du rapport:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la visualisation du rapport.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la visualisation du rapport.'
+			));
 		}
 	},
 
@@ -248,15 +267,18 @@ module.exports = {
 				.setTimestamp()
 				.setFooter({ text: 'LUX Compta', iconURL: interaction.client.user.displayAvatarURL() });
 
-			await interaction.editReply({ embeds: [embed] });
+			await interaction.editReply(createResponse(
+				'Email Envoyé',
+				`📧 Rapport ${this.getPeriodLabel(period)} envoyé avec succès à ${emailAddress}`
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de l\'envoi de l\'email:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de l\'envoi de l\'email. Vérifiez la configuration email.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de l\'envoi de l\'email. Vérifiez la configuration email.'
+			));
 		}
 	},
 
@@ -324,6 +346,92 @@ module.exports = {
 				{ name: '👋 Membres partis', value: stats.leftMembers.toString(), inline: true },
 			);
 			break;
+		}
+	},
+
+	async showConfigModifyOptions(interaction) {
+		try {
+			const embed = new EmbedBuilder()
+				.setTitle('🔧 Modifier la configuration')
+				.setDescription('Sélectionnez le paramètre à modifier')
+				.setColor('#3498db');
+
+			const components = [
+				new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('config_modify_alerts')
+							.setLabel('Alertes')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('🚨'),
+						new ButtonBuilder()
+							.setCustomId('config_modify_channels')
+							.setLabel('Canaux')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('📺'),
+						new ButtonBuilder()
+							.setCustomId('config_modify_roles')
+							.setLabel('Rôles')
+							.setStyle(ButtonStyle.Primary)
+							.setEmoji('👥'),
+					),
+			];
+
+			await interaction.reply(createResponse('Configuration', { embeds: [embed], components }));
+		}
+		catch (error) {
+			console.error('Erreur lors de l\'affichage des options de modification:', error);
+			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de l\'affichage des options de modification.'));
+		}
+	},
+
+	async handleConfigReset(interaction) {
+		try {
+			const embed = new EmbedBuilder()
+				.setTitle('⚠️ Réinitialisation de la configuration')
+				.setDescription('Êtes-vous sûr de vouloir réinitialiser la configuration ? Cette action est irréversible.')
+				.setColor('#e74c3c');
+
+			const components = [
+				new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('config_reset_confirm')
+							.setLabel('Confirmer')
+							.setStyle(ButtonStyle.Danger)
+							.setEmoji('✅'),
+						new ButtonBuilder()
+							.setCustomId('config_reset_cancel')
+							.setLabel('Annuler')
+							.setStyle(ButtonStyle.Secondary)
+							.setEmoji('❌'),
+					),
+			];
+
+			await interaction.reply(createResponse('Confirmation', { embeds: [embed], components }));
+		}
+		catch (error) {
+			console.error('Erreur lors de la réinitialisation:', error);
+			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de la réinitialisation de la configuration.'));
+		}
+	},
+
+	async handleConfigBackup(interaction) {
+		try {
+			const configPath = path.join(__dirname, '../../config.json');
+			const config = JSON.parse(await fs.readFile(configPath, 'utf8'));
+			
+			const backupData = JSON.stringify(config, null, 2);
+			const attachment = new AttachmentBuilder(Buffer.from(backupData), { name: 'config-backup.json' });
+
+			await interaction.reply(createResponse('Sauvegarde', {
+				content: '📁 Voici votre sauvegarde de configuration :',
+				files: [attachment]
+			}));
+		}
+		catch (error) {
+			console.error('Erreur lors de la sauvegarde:', error);
+			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de la création de la sauvegarde.'));
 		}
 	},
 };

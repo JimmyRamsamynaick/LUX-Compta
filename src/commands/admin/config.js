@@ -3,6 +3,22 @@ const fs = require('fs').promises;
 const path = require('path');
 const config = require('../../../config.json');
 
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content) {
+	return {
+		flags: 32768,
+		components: [{
+			type: 17,
+			components: [
+				{
+					type: 10,
+					content: `## ℹ️ ${title}\n\n${content}`
+				}
+			]
+		}]
+	};
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('config')
@@ -79,10 +95,10 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('Erreur dans la commande config:', error);
-			await interaction.reply({
-				content: '❌ Une erreur est survenue lors de l\'exécution de la commande.',
-				
-			});
+			await interaction.reply(createResponse(
+				'Erreur',
+				'❌ Une erreur est survenue lors de l\'exécution de la commande.'
+			));
 		}
 	},
 

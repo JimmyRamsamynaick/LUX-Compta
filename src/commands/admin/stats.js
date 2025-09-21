@@ -2,6 +2,21 @@ const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilde
 
 const config = require('../../../config.json');
 
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content) {
+	return {
+		flags: 32768,
+		components: [{
+			type: 1,
+			components: [{
+				type: 17,
+				title: title,
+				content: content
+			}]
+		}]
+	};
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('stats')

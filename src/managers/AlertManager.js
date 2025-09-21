@@ -674,6 +674,19 @@ class AlertManager {
 			};
 		}
 	}
+
+	async getTestLogs() {
+		try {
+			const alertData = JSON.parse(await fs.readFile(this.alertsPath, 'utf8'));
+			const testLogs = alertData.testLogs || [];
+			
+			return testLogs.slice(-10); // Retourner les 10 derniers logs de test
+		}
+		catch (error) {
+			console.error('❌ Erreur lors de la récupération des logs de test:', error);
+			return [];
+		}
+	}
 }
 
 module.exports = AlertManager;

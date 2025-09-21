@@ -1,5 +1,19 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content) {
+    return {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## ℹ️ ${title}\n\n${content}`
+            }]
+        }]
+    };
+}
+
 module.exports = {
 	// Gestionnaire pour le sélecteur de période (Type 17)
 	async handlePeriodSelect(interaction) {
@@ -79,18 +93,18 @@ module.exports = {
 			const originalComponents = interaction.message.components;
 			const selectMenuRow = originalComponents[0]; // Le menu de sélection est généralement en premier
 
-			await interaction.editReply({
-				embeds: [embed],
-				components: [selectMenuRow, buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Statistiques',
+				`📊 Statistiques mises à jour pour **${this.getPeriodLabel(selectedPeriod)}**`
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la sélection de période:', error);
-			await interaction.followUp({
-				content: '❌ Erreur lors de la récupération des données pour cette période.',
-				
-			});
+			await interaction.followUp(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la récupération des données pour cette période.'
+			));
 		}
 	},
 
@@ -161,18 +175,18 @@ module.exports = {
 			const originalComponents = interaction.message.components;
 			const selectMenuRow = originalComponents[0];
 
-			await interaction.editReply({
-				embeds: [embed],
-				components: [selectMenuRow, buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Rapport',
+				`📊 Rapport généré pour le type sélectionné`
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la sélection de type de rapport:', error);
-			await interaction.followUp({
-				content: '❌ Erreur lors de la récupération des rapports.',
-				
-			});
+			await interaction.followUp(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la récupération des rapports.'
+			));
 		}
 	},
 
@@ -361,8 +375,10 @@ module.exports = {
 	},
 
 	async handleAlertsConfigModify(interaction) {
+		console.log(`🔧 handleAlertsConfigModify appelé avec valeurs: ${interaction.values}`);
 		try {
 			const selectedConfig = interaction.values[0];
+			console.log(`📋 Configuration sélectionnée: ${selectedConfig}`);
 			const alertsCommand = require('../commands/admin/alerts');
 
 			// Simuler une interaction de commande slash complète pour handleConfig
@@ -399,21 +415,23 @@ module.exports = {
 				},
 			};
 
+			console.log(`🚀 Appel de handleConfig avec paramètre: ${selectedConfig}`);
 			await alertsCommand.handleConfig(simulatedInteraction, interaction.client.alertManager);
+			console.log(`✅ handleConfig terminé avec succès`);
 		} catch (error) {
 			console.error('❌ Erreur lors de la modification de la configuration:', error);
 			// Vérifier si l'interaction n'a pas déjà été répondue
 			if (!interaction.replied && !interaction.deferred) {
-				await interaction.reply({
-					content: '❌ Erreur lors de la modification de la configuration des alertes.',
-					ephemeral: true,
-				});
+				await interaction.reply(createResponse(
+					'Erreur',
+					'❌ Erreur lors de la modification de la configuration des alertes.'
+				));
 			} else {
 				// Si déjà répondue, utiliser followUp
-				await interaction.followUp({
-					content: '❌ Erreur lors de la modification de la configuration des alertes.',
-					ephemeral: true,
-				});
+				await interaction.followUp(createResponse(
+					'Erreur',
+					'❌ Erreur lors de la modification de la configuration des alertes.'
+				));
 			}
 		}
 	},

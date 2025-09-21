@@ -76,6 +76,7 @@ module.exports = {
 
 	async handleComponents(interaction) {
 		const customId = interaction.customId;
+		console.log(`🔍 Interaction détectée - CustomId: ${customId}, Type: ${interaction.type}`);
 
 		// Gestion des sélecteurs de période (Type 17)
 		if (customId === 'report_period_select') {
@@ -121,6 +122,7 @@ module.exports = {
 
 		// Gestion des sélecteurs de configuration d'alertes
 		if (customId === 'alerts_config_modify') {
+			console.log(`✅ Traitement du menu alerts_config_modify avec valeurs: ${interaction.values}`);
 			const selectMenus = require('../components/selectMenus');
 			await selectMenus.handleAlertsConfigModify(interaction);
 			return;
