@@ -1,18 +1,29 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
 // Fonction utilitaire pour créer le nouveau format de réponse
-function createResponse(title, content) {
-	return {
-		flags: 32768,
-		components: [{
-			type: 1,
-			components: [{
-				type: 17,
-				title: title,
-				content: content
-			}]
-		}]
-	};
+function createResponse(title, content, components = [], files = []) {
+    const response = {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## 📊 ${title}\n\n${content}`
+            }]
+        }]
+    };
+    
+    // Ajouter les composants (boutons, menus) si fournis
+    if (components && components.length > 0) {
+        response.components = response.components.concat(components);
+    }
+    
+    // Ajouter les fichiers si fournis
+    if (files && files.length > 0) {
+        response.files = files;
+    }
+    
+    return response;
 }
 
 module.exports = {
@@ -99,7 +110,10 @@ module.exports = {
 			content += `⏰ **Heure:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.editReply({ content: content });
+				await interaction.editReply(createResponse(
+				'Erreur',
+				content
+			));
 			}
 			else {
 				await interaction.reply({ content: content,  });
@@ -116,11 +130,13 @@ module.exports = {
 		content += `📊 **Génération du rapport ${this.getPeriodLabel(period)} en cours...**\n\n`;
 		content += `⏰ **Démarré:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-		await interaction.editReply({ content: content });
+		await interaction.editReply(createResponse(
+			'Génération en cours',
+			content
+		));
 
 		try {
 			const result = await reportManager.generateReport(period);
-
 
 			content = '✅ **RAPPORT GÉNÉRÉ AVEC SUCCÈS** ✅\n\n';
 			content += `📊 **Le rapport ${this.getPeriodLabel(period)} a été généré avec succès !**\n\n`;
@@ -150,10 +166,11 @@ module.exports = {
 						.setEmoji('👁️'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Rapport Généré',
+				content,
+				[buttons]
+			));
 		}
 		catch (error) {
 			content = '❌ **ERREUR DE GÉNÉRATION** ❌\n\n';
@@ -182,7 +199,10 @@ module.exports = {
 				content += '💡 **Suggestion:** Utilisez `/report generate` pour créer un nouveau rapport.\n';
 				content += `⏰ **Recherche effectuée:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-				await interaction.editReply({ content: content });
+				await interaction.editReply(createResponse(
+					'Aucun Rapport',
+					content
+				));
 				return;
 			}
 
@@ -254,10 +274,11 @@ module.exports = {
 						.setEmoji('🗑️'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [periodSelect, buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Liste des Rapports',
+				content,
+				[periodSelect, buttons]
+			));
 		}
 		catch (error) {
 			let content = '❌ **ERREUR** ❌\n\n';
@@ -265,7 +286,10 @@ module.exports = {
 			content += `🔍 **Détails:** ${error.message}\n`;
 			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
-			await interaction.editReply({ content: content });
+			await interaction.editReply(createResponse(
+				'Erreur',
+				content
+			));
 		}
 	},
 

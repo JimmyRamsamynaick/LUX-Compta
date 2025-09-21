@@ -2,6 +2,32 @@ const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilde
 
 const config = require('../../../config.json');
 
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content, components = [], files = []) {
+    const response = {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## 📊 ${title}\n\n${content}`
+            }]
+        }]
+    };
+    
+    // Ajouter les composants (boutons, menus) si fournis
+    if (components && components.length > 0) {
+        response.components = response.components.concat(components);
+    }
+    
+    // Ajouter les fichiers si fournis
+    if (files && files.length > 0) {
+        response.files = files;
+    }
+    
+    return response;
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('rapport')
@@ -127,18 +153,19 @@ module.exports = {
 						.setEmoji('👁️'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [selectRow, buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Rapport Généré',
+				content,
+				[selectRow, buttons]
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la génération du rapport:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la génération du rapport.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la génération du rapport.'
+			));
 		}
 	},
 
@@ -151,10 +178,10 @@ module.exports = {
 			const reports = await reportManager.listReports();
 
 			if (reports.length === 0) {
-				return interaction.editReply({
-					content: '📋 Aucun rapport disponible.',
-					
-				});
+				return interaction.editReply(createResponse(
+					'Aucun Rapport',
+					'📋 Aucun rapport disponible.'
+				));
 			}
 
 
@@ -201,18 +228,19 @@ module.exports = {
 						.setEmoji('🗑️'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Rapports Disponibles',
+				content,
+				[buttons]
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de la liste des rapports:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la récupération de la liste des rapports.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la récupération de la liste des rapports.'
+			));
 		}
 	},
 
@@ -265,18 +293,19 @@ module.exports = {
 						.setEmoji('🗑️'),
 				);
 
-			await interaction.editReply({
-				content: content,
-				components: [buttons],
-			});
+			await interaction.editReply(createResponse(
+				'Archivage Terminé',
+				content,
+				[buttons]
+			));
 
 		}
 		catch (error) {
 			console.error('Erreur lors de l\'archivage:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de l\'archivage des rapports.',
-				
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de l\'archivage des rapports.'
+			));
 		}
 	},
 
