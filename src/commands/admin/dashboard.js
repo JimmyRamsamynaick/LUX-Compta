@@ -1,5 +1,28 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
+// Fonction pour créer le nouveau format de réponse
+function createResponse(title, content, components = [], files = []) {
+	return {
+		content: `# ${title}\n\n${content}`,
+		components: [
+			{
+				type: 1,
+				components: [
+					{
+						type: 17,
+						style: 1,
+						label: title,
+						disabled: true,
+						custom_id: 'title_placeholder'
+					}
+				]
+			},
+			...components
+		],
+		files: files
+	};
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('dashboard')
@@ -69,10 +92,10 @@ module.exports = {
 			const dashboardManager = interaction.client.dashboardManager;
 
 			if (!dashboardManager) {
-				return await interaction.reply({
-					content: '❌ Le gestionnaire de dashboard n\'est pas disponible.',
-					
-				});
+				return await interaction.reply(createResponse(
+					'Erreur',
+					'❌ Le gestionnaire de dashboard n\'est pas disponible.'
+				));
 			}
 
 			switch (subcommand) {
@@ -91,13 +114,16 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur dans la commande dashboard:', error);
 
-			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
+			const errorResponse = createResponse(
+				'Erreur',
+				'❌ Une erreur est survenue lors de l\'exécution de la commande.'
+			);
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage,  });
+				await interaction.followUp(errorResponse);
 			}
 			else {
-				await interaction.reply({ content: errorMessage,  });
+				await interaction.reply(errorResponse);
 			}
 		}
 	},

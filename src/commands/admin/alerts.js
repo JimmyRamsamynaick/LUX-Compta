@@ -1,24 +1,26 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
-// Fonction utilitaire pour créer le nouveau format de réponse
-function createResponse(title, content, components = []) {
-    const response = {
-        flags: 32768,
-        components: [{
-            type: 17,
-            components: [{
-                type: 10,
-                content: `## ℹ️ ${title}\n\n${content}`
-            }]
-        }]
-    };
-    
-    // Ajouter les composants (boutons, menus) si fournis
-    if (components && components.length > 0) {
-        response.components = response.components.concat(components);
-    }
-    
-    return response;
+// Fonction pour créer le nouveau format de réponse
+function createResponse(title, content, components = [], files = []) {
+	return {
+		content: `# ${title}\n\n${content}`,
+		components: [
+			{
+				type: 1,
+				components: [
+					{
+						type: 17,
+						style: 1,
+						label: title,
+						disabled: true,
+						custom_id: 'title_placeholder'
+					}
+				]
+			},
+			...components
+		],
+		files: files
+	};
 }
 
 module.exports = {
@@ -212,18 +214,18 @@ module.exports = {
 							.setEmoji('⚙️'),
 					);
 
+				const configResponse = createResponse(
+					'Configuration des Alertes',
+					content,
+					[buttons]
+				);
+
 				// Vérifier si l'interaction n'a pas déjà été répondue
 				if (!interaction.replied && !interaction.deferred) {
-					await interaction.editReply(createResponse(
-						'Configuration des Alertes',
-						content
-					));
+					await interaction.reply(configResponse);
 				} else {
 					// Si déjà répondue, utiliser editReply
-					await interaction.editReply(createResponse(
-						'Configuration des Alertes',
-						content
-					));
+					await interaction.editReply(configResponse);
 				}
 			}
 			else {

@@ -269,6 +269,16 @@ module.exports = {
 			}
 		}
 
+		// Gestion des menus select alerts
+		if (customId === 'alert_action_select') {
+			const alertsCommand = require('../commands/admin/alerts');
+			const alertManager = interaction.client.alertManager;
+			if (alertManager) {
+				await alertManager.handleAlertButton(interaction, interaction.values[0], 'general');
+			}
+			return;
+		}
+
 		// Gestion des menus select dashboard
 		if (customId === 'dashboard_select') {
 			const dashboardCommand = require('../commands/admin/dashboard');

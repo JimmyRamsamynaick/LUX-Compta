@@ -3,6 +3,29 @@ const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilde
 const fs = require('fs').promises;
 const path = require('path');
 
+// Fonction pour créer le nouveau format de réponse
+function createResponse(title, content, components = [], files = []) {
+	return {
+		content: `# ${title}\n\n${content}`,
+		components: [
+			{
+				type: 1,
+				components: [
+					{
+						type: 17,
+						style: 1,
+						label: title,
+						disabled: true,
+						custom_id: 'title_placeholder'
+					}
+				]
+			},
+			...components
+		],
+		files: files
+	};
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('email-test')
@@ -32,9 +55,10 @@ module.exports = {
 
 			// Vérifier si l'EmailManager est disponible
 			if (!interaction.client.emailManager) {
-				return await interaction.editReply({
-					content: '❌ Le gestionnaire d\'emails n\'est pas disponible.',
-				});
+				return await interaction.editReply(createResponse(
+					'Erreur',
+					'❌ Le gestionnaire d\'emails n\'est pas disponible.'
+				));
 			}
 
 			// Charger le template nocturne
@@ -45,9 +69,10 @@ module.exports = {
 				template = await fs.readFile(templatePath, 'utf8');
 			}
 			catch (error) {
-				return await interaction.editReply({
-					content: '❌ Impossible de charger le template d\'email nocturne.',
-				});
+				return await interaction.editReply(createResponse(
+					'Erreur',
+					'❌ Impossible de charger le template d\'email nocturne.'
+				));
 			}
 
 			// Données pour le template
@@ -147,10 +172,11 @@ module.exports = {
 							.setEmoji('👁️'),
 					);
 
-				await interaction.editReply({
-					content: content,
-					components: [buttons],
-				});
+				await interaction.editReply(createResponse(
+					'Email Envoyé',
+					content,
+					[buttons]
+				));
 
 				// Log dans la console
 				console.log(`📧 Email de test envoyé à ${destinataire} avec le thème nocturne`);
@@ -186,10 +212,11 @@ module.exports = {
 							.setEmoji('🆘'),
 					);
 
-				await interaction.editReply({
-					content: content,
-					components: [buttons],
-				});
+				await interaction.editReply(createResponse(
+					'Erreur d\'Envoi',
+					content,
+					[buttons]
+				));
 			}
 
 		}
@@ -223,18 +250,17 @@ module.exports = {
 						.setEmoji('🆘'),
 				);
 
+			const errorResponse = createResponse(
+				'Erreur Système',
+				content,
+				[buttons]
+			);
+
 			if (interaction.deferred) {
-				await interaction.editReply({
-					content: content,
-					components: [buttons],
-				});
+				await interaction.editReply(errorResponse);
 			}
 			else {
-				await interaction.reply({
-					content: content,
-					components: [buttons],
-					
-				});
+				await interaction.reply(errorResponse);
 			}
 		}
 	},

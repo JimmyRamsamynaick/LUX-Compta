@@ -1,5 +1,31 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
+// Fonction utilitaire pour créer le nouveau format de réponse
+function createResponse(title, content, components = [], files = []) {
+    const response = {
+        flags: 32768,
+        components: [{
+            type: 17,
+            components: [{
+                type: 10,
+                content: `## ℹ️ ${title}\n\n${content}`
+            }]
+        }]
+    };
+    
+    // Ajouter les composants (boutons, menus) si fournis
+    if (components && components.length > 0) {
+        response.components = response.components.concat(components);
+    }
+    
+    // Ajouter les fichiers si fournis
+    if (files && files.length > 0) {
+        response.files = files;
+    }
+    
+    return response;
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('archive')
@@ -135,10 +161,10 @@ module.exports = {
 			const archiveManager = interaction.client.archiveManager;
 
 			if (!archiveManager) {
-				return await interaction.reply({
-					content: '❌ Le gestionnaire d\'archives n\'est pas disponible.',
-					
-				});
+				return await interaction.reply(createResponse(
+					'Erreur',
+					'❌ Le gestionnaire d\'archives n\'est pas disponible.'
+				));
 			}
 
 			switch (subcommand) {
@@ -169,13 +195,16 @@ module.exports = {
 		catch (error) {
 			console.error('❌ Erreur dans la commande archive:', error);
 
-			const errorMessage = '❌ Une erreur est survenue lors de l\'exécution de la commande.';
+			const errorResponse = createResponse(
+				'Erreur',
+				'❌ Une erreur est survenue lors de l\'exécution de la commande.'
+			);
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: errorMessage,  });
+				await interaction.followUp(errorResponse);
 			}
 			else {
-				await interaction.reply({ content: errorMessage,  });
+				await interaction.reply(errorResponse);
 			}
 		}
 	},
@@ -235,31 +264,33 @@ module.exports = {
 							.setEmoji('➕'),
 					);
 
-				await interaction.editReply({
-					content: content,
-					components: [buttons],
-				});
+				await interaction.editReply(createResponse(
+					'Archive Créée',
+					content,
+					[buttons]
+				));
 			}
 			else {
-				await interaction.editReply({
-					content: `❌ Erreur lors de la création de l'archive: ${result.error || 'Erreur inconnue'}`,
-				});
+				await interaction.editReply(createResponse(
+					'Erreur',
+					`❌ Erreur lors de la création de l'archive: ${result.error || 'Erreur inconnue'}`
+				));
 			}
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la création d\'archive:', error);
 
+			const errorResponse = createResponse(
+				'Erreur',
+				'❌ Erreur lors de la création de l\'archive.'
+			);
+
 			if (interaction.deferred) {
-				await interaction.editReply({
-					content: '❌ Erreur lors de la création de l\'archive.',
-				});
+				await interaction.editReply(errorResponse);
 			}
 			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de la création de l\'archive.',
-					
-				});
+				await interaction.reply(errorResponse);
 			}
 		}
 	},
@@ -319,11 +350,11 @@ module.exports = {
 							.setEmoji('🔄'),
 					);
 
-				await interaction.reply({
-					content: content,
-					components: [buttons],
-					
-				});
+				await interaction.reply(createResponse(
+					'Configuration Mise à Jour',
+					content,
+					[buttons]
+				));
 			}
 			else {
 				// Afficher la configuration actuelle
@@ -333,10 +364,10 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la configuration:', error);
-			await interaction.reply({
-				content: '❌ Erreur lors de la configuration de l\'archivage.',
-				
-			});
+			await interaction.reply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la configuration de l\'archivage.'
+			));
 		}
 	},
 
@@ -405,31 +436,33 @@ module.exports = {
 							.setEmoji('🧹'),
 					);
 
-				await interaction.editReply({
-					content: content,
-					components: [selectRow, buttons],
-				});
+				await interaction.editReply(createResponse(
+					'Archives Disponibles',
+					content,
+					[selectRow, buttons]
+				));
 			}
 			else {
-				await interaction.editReply({
-					content: '📭 Aucune archive trouvée.',
-				});
+				await interaction.editReply(createResponse(
+					'Aucune Archive',
+					'📭 Aucune archive trouvée.'
+				));
 			}
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la liste des archives:', error);
 
+			const errorResponse = createResponse(
+				'Erreur',
+				'❌ Erreur lors de la récupération de la liste des archives.'
+			);
+
 			if (interaction.deferred) {
-				await interaction.editReply({
-					content: '❌ Erreur lors de la récupération de la liste des archives.',
-				});
+				await interaction.editReply(errorResponse);
 			}
 			else {
-				await interaction.reply({
-					content: '❌ Erreur lors de la récupération de la liste des archives.',
-					
-				});
+				await interaction.reply(errorResponse);
 			}
 		}
 	},
@@ -472,10 +505,11 @@ module.exports = {
 							.setEmoji('📤'),
 					);
 
-				await interaction.editReply({
-					content: content,
-					components: [buttons],
-				});
+				await interaction.editReply(createResponse(
+					'Archive Restaurée',
+					content,
+					[buttons]
+				));
 			}
 			else {
 
@@ -501,18 +535,20 @@ module.exports = {
 							.setEmoji('❓'),
 					);
 
-				await interaction.editReply({
-					content: content,
-					components: [buttons],
-				});
+				await interaction.editReply(createResponse(
+					'Erreur de Restauration',
+					content,
+					[buttons]
+				));
 			}
 
 		}
 		catch (error) {
 			console.error('❌ Erreur lors de la restauration:', error);
-			await interaction.editReply({
-				content: '❌ Erreur lors de la restauration de l\'archive.',
-			});
+			await interaction.editReply(createResponse(
+				'Erreur',
+				'❌ Erreur lors de la restauration de l\'archive.'
+			));
 		}
 	},
 
