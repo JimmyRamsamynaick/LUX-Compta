@@ -195,7 +195,7 @@ module.exports = {
 
 		try {
 			// Forcer la mise à jour des statistiques
-			await statsManager.updateStats(interaction.guild);
+			await statsManager.loadStats();
 			const stats = await statsManager.getStats(period);
 
 			// Recréer l'embed avec les nouvelles données

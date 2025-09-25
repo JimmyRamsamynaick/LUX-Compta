@@ -268,7 +268,7 @@ module.exports = {
 
 		try {
 			// Actualiser les statistiques
-			await this.client.statsManager.updateStats();
+			await this.client.statsManager.loadStats();
 
 			// Réafficher les statistiques avec les nouvelles données
 			const period = 'daily'; // Par défaut
@@ -423,8 +423,17 @@ module.exports = {
 				return;
 			}
 
+			// Vérifier si l'interaction n'a pas déjà été traitée
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans handleRefreshStats');
+				return;
+			}
+
+			// Différer la réponse pour éviter les timeouts
+			await interaction.deferUpdate();
+
 			// Actualiser les statistiques
-			await interaction.client.statsManager.updateStats();
+			await interaction.client.statsManager.loadStats();
 
 			// Réafficher les statistiques avec les nouvelles données
 			const period = 'daily'; // Par défaut
