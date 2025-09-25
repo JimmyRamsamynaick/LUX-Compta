@@ -66,6 +66,15 @@ module.exports = {
 
 		try {
 			// Vérifier si l'interaction est encore valide avant de defer
+			const InteractionHandler = require('../../utils/interactionHandler');
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				await interaction.reply({
+					content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
+					flags: 64 // MessageFlags.Ephemeral
+				});
+				return;
+			}
+
 			if (!interaction.replied && !interaction.deferred) {
 				await interaction.deferReply();
 			}

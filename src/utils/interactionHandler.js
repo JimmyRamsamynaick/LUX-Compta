@@ -74,19 +74,19 @@ class InteractionHandler {
 			return;
 		}
 
+		// Vérifier si l'interaction a déjà été traitée pour éviter les erreurs 40060
+		if (interaction.replied || interaction.deferred) {
+			console.warn('Interaction déjà traitée, impossible de répondre à l\'erreur');
+			return;
+		}
+
 		const errorMessage = {
 			content: '❌ Une erreur est survenue lors du traitement de votre demande.',
 			flags: 64 // MessageFlags.Ephemeral
 		};
 
 		try {
-			if (interaction.replied) {
-				await interaction.followUp(errorMessage);
-			} else if (isDeferred || interaction.deferred) {
-				await interaction.editReply(errorMessage);
-			} else {
-				await interaction.reply(errorMessage);
-			}
+			await interaction.reply(errorMessage);
 		} catch (replyError) {
 			console.error('Erreur lors de l\'envoi de la réponse d\'erreur:', replyError);
 		}
@@ -98,12 +98,18 @@ class InteractionHandler {
 	 * @returns {boolean}
 	 */
 	static isInteractionValid(interaction) {
-		// Vérifier si l'interaction n'a pas expiré (15 minutes max)
+		// Vérifier si l'interaction n'a pas expiré (3 secondes max pour éviter les timeouts Discord)
 		const now = Date.now();
 		const interactionTime = interaction.createdTimestamp;
-		const maxAge = 15 * 60 * 1000; // 15 minutes
+		const maxAge = 2.5 * 1000; // 2.5 secondes pour être sûr
 
-		return (now - interactionTime) < maxAge;
+		const isValid = (now - interactionTime) < maxAge;
+		
+		if (!isValid) {
+			console.warn(`Interaction expirée: ${now - interactionTime}ms depuis la création`);
+		}
+
+		return isValid;
 	}
 
 	/**
