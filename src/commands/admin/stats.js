@@ -463,9 +463,22 @@ module.exports = {
 	},
 
 	async handleExportStats(interaction) {
-		await interaction.deferUpdate();
-
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
 		try {
+			// Vérifier si l'interaction est valide et n'a pas déjà été traitée
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				console.warn('Interaction expirée dans handleExportStats');
+				return;
+			}
+
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans handleExportStats');
+				return;
+			}
+
+			await interaction.deferUpdate();
+
 			const stats = await this.client.statsManager.getStats();
 			const csvData = this.generateCSV(stats);
 			
@@ -506,17 +519,38 @@ module.exports = {
 
 		} catch (error) {
 			console.error('❌ Erreur lors de l\'export:', error);
-			await interaction.editReply(createResponse(
-				'Erreur',
-				'❌ Erreur lors de l\'export des statistiques.'
-			));
+			
+			// Vérifier si on peut encore répondre à l'interaction
+			if (!interaction.replied && interaction.deferred) {
+				try {
+					await interaction.editReply(createResponse(
+						'Erreur',
+						'❌ Erreur lors de l\'export des statistiques.'
+					));
+				} catch (replyError) {
+					console.error('Erreur lors de la réponse d\'erreur:', replyError);
+				}
+			}
 		}
 	},
 
 	async handleDetailedStats(interaction) {
-		await interaction.deferUpdate();
-
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
 		try {
+			// Vérifier si l'interaction est valide et n'a pas déjà été traitée
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				console.warn('Interaction expirée dans handleDetailedStats');
+				return;
+			}
+
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans handleDetailedStats');
+				return;
+			}
+
+			await interaction.deferUpdate();
+
 			const stats = await this.client.statsManager.getDetailedStats();
 
 			let content = '📈 **STATISTIQUES DÉTAILLÉES** 📈\n\n';
@@ -564,41 +598,75 @@ module.exports = {
 	},
 
 	async showStatsHelp(interaction) {
-		let content = '❓ **AIDE - STATISTIQUES** ❓\n\n';
-		content += '📊 **Fonctionnalités disponibles:**\n';
-		content += '• **Actualiser** - Met à jour les données en temps réel\n';
-		content += '• **Exporter** - Télécharge un fichier CSV\n';
-		content += '• **Détaillées** - Affiche plus d\'informations\n\n';
-		content += '🔧 **Utilisation:**\n';
-		content += '• Utilisez les boutons pour interagir\n';
-		content += '• Les données sont mises à jour automatiquement\n';
-		content += '• L\'export inclut toutes les données disponibles\n\n';
-		content += '💡 **Conseil:** Actualisez régulièrement pour avoir les données les plus récentes.';
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
+		try {
+			// Vérifier si l'interaction est valide et n'a pas déjà été traitée
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				console.warn('Interaction expirée dans showStatsHelp');
+				return;
+			}
 
-		await interaction.update(createResponse(
-			'Aide Statistiques',
-			content
-		));
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans showStatsHelp');
+				return;
+			}
+
+			let content = '❓ **AIDE - STATISTIQUES** ❓\n\n';
+			content += '📊 **Fonctionnalités disponibles:**\n';
+			content += '• **Actualiser** - Met à jour les données en temps réel\n';
+			content += '• **Exporter** - Télécharge un fichier CSV\n';
+			content += '• **Détaillées** - Affiche plus d\'informations\n\n';
+			content += '🔧 **Utilisation:**\n';
+			content += '• Utilisez les boutons pour interagir\n';
+			content += '• Les données sont mises à jour automatiquement\n';
+			content += '• L\'export inclut toutes les données disponibles\n\n';
+			content += '💡 **Conseil:** Actualisez régulièrement pour avoir les données les plus récentes.';
+
+			await interaction.update(createResponse(
+				'Aide Statistiques',
+				content
+			));
+		} catch (error) {
+			console.error('❌ Erreur dans showStatsHelp:', error);
+		}
 	},
 
 	async showStatsConfig(interaction) {
-		let content = '⚙️ **CONFIGURATION - STATISTIQUES** ⚙️\n\n';
-		content += '🔧 **Paramètres actuels:**\n';
-		content += '• Mise à jour automatique: Activée\n';
-		content += '• Fréquence: Toutes les 5 minutes\n';
-		content += '• Rétention: 30 jours\n';
-		content += '• Format export: CSV\n\n';
-		content += '📊 **Types de données collectées:**\n';
-		content += '• Messages par canal\n';
-		content += '• Activité des membres\n';
-		content += '• Statistiques temporelles\n';
-		content += '• Données d\'engagement\n\n';
-		content += '💾 **Stockage:** Les données sont sauvegardées localement et dans le cloud.';
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
+		try {
+			// Vérifier si l'interaction est valide et n'a pas déjà été traitée
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				console.warn('Interaction expirée dans showStatsConfig');
+				return;
+			}
 
-		await interaction.update(createResponse(
-			'Configuration Statistiques',
-			content
-		));
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans showStatsConfig');
+				return;
+			}
+
+			let content = '⚙️ **CONFIGURATION - STATISTIQUES** ⚙️\n\n';
+			content += '🔧 **Paramètres actuels:**\n';
+			content += '• Mise à jour automatique: Activée\n';
+			content += '• Fréquence: Toutes les 5 minutes\n';
+			content += '• Rétention: 30 jours\n';
+			content += '• Format export: CSV\n\n';
+			content += '📊 **Types de données collectées:**\n';
+			content += '• Messages par canal\n';
+			content += '• Activité des membres\n';
+			content += '• Statistiques temporelles\n';
+			content += '• Données d\'engagement\n\n';
+			content += '💾 **Stockage:** Les données sont sauvegardées localement et dans le cloud.';
+
+			await interaction.update(createResponse(
+				'Configuration Statistiques',
+				content
+			));
+		} catch (error) {
+			console.error('❌ Erreur dans showStatsConfig:', error);
+		}
 	},
 
 	generateCSV(stats) {
