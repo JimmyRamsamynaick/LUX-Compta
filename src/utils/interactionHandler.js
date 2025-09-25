@@ -98,10 +98,10 @@ class InteractionHandler {
 	 * @returns {boolean}
 	 */
 	static isInteractionValid(interaction) {
-		// Vérifier si l'interaction n'a pas expiré (3 secondes max pour éviter les timeouts Discord)
+		// Vérifier si l'interaction n'a pas expiré (augmenter le délai pour éviter les faux positifs)
 		const now = Date.now();
 		const interactionTime = interaction.createdTimestamp;
-		const maxAge = 2.5 * 1000; // 2.5 secondes pour être sûr
+		const maxAge = 14 * 1000; // 14 secondes pour laisser plus de temps
 
 		const isValid = (now - interactionTime) < maxAge;
 		

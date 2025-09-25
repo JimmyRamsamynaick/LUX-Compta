@@ -388,21 +388,27 @@ module.exports = {
 		const InteractionHandler = require('../../utils/interactionHandler');
 		
 		try {
+			// Vérifier si l'interaction n'a pas déjà été traitée
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans handleStatsButton');
+				return;
+			}
+
 			// Vérifier si l'interaction est valide
 			if (!InteractionHandler.isInteractionValid(interaction)) {
-				if (!interaction.replied && !interaction.deferred) {
+				try {
 					await interaction.reply({
-					content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
-					flags: 64 // MessageFlags.Ephemeral
-				});
+						content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
+						flags: 64 // MessageFlags.Ephemeral
+					});
+				} catch (error) {
+					console.error('Erreur lors de la réponse d\'interaction expirée:', error);
 				}
 				return;
 			}
 
 			// Différer l'interaction pour les boutons
-			if (!interaction.deferred && !interaction.replied) {
-				await interaction.deferUpdate();
-			}
+			await interaction.deferUpdate();
 
 			const customId = interaction.customId;
 
