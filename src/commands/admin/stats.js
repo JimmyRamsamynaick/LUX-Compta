@@ -65,8 +65,10 @@ module.exports = {
 		const statsManager = interaction.client.statsManager;
 
 		try {
-			// Defer immédiatement pour éviter les timeouts
-			await interaction.deferReply();
+			// Vérifier si l'interaction est encore valide avant de defer
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.deferReply();
+			}
 
 			const stats = await statsManager.getStats(periode);
 			const { content, components } = await this.createStatsResponse(stats, periode, type, interaction.guild);
@@ -291,7 +293,7 @@ module.exports = {
 				if (!interaction.replied && !interaction.deferred) {
 					await interaction.reply({
 						content: '❌ Cette interaction a expiré. Veuillez relancer la commande `/stats`.',
-						ephemeral: true
+						flags: 64 // MessageFlags.Ephemeral
 					});
 				}
 			} catch (error) {
@@ -310,9 +312,9 @@ module.exports = {
 				// Type d'interaction non supporté
 				if (!interaction.replied && !interaction.deferred) {
 					await interaction.reply({
-						content: '❌ Type d\'interaction non supporté.',
-						ephemeral: true
-					});
+					content: '❌ Type d\'interaction non supporté.',
+					flags: 64 // MessageFlags.Ephemeral
+				});
 				}
 			}
 		} catch (error) {
@@ -329,9 +331,9 @@ module.exports = {
 			if (!InteractionHandler.isInteractionValid(interaction)) {
 				if (!interaction.replied && !interaction.deferred) {
 					await interaction.reply({
-						content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
-						ephemeral: true
-					});
+					content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
+					flags: 64 // MessageFlags.Ephemeral
+				});
 				}
 				return;
 			}
@@ -381,9 +383,9 @@ module.exports = {
 			if (!InteractionHandler.isInteractionValid(interaction)) {
 				if (!interaction.replied && !interaction.deferred) {
 					await interaction.reply({
-						content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
-						ephemeral: true
-					});
+					content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
+					flags: 64 // MessageFlags.Ephemeral
+				});
 				}
 				return;
 			}

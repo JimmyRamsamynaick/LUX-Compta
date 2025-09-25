@@ -52,7 +52,7 @@ const componentHandlers = {
 			console.warn('Stats command ou handleComponents non trouvé');
 			await interaction.reply({
 				content: '❌ Commande stats non disponible.',
-				ephemeral: true
+				flags: 64 // MessageFlags.Ephemeral
 			});
 		}
 	},

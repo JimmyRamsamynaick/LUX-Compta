@@ -76,7 +76,7 @@ class InteractionHandler {
 
 		const errorMessage = {
 			content: '❌ Une erreur est survenue lors du traitement de votre demande.',
-			ephemeral: true
+			flags: 64 // MessageFlags.Ephemeral
 		};
 
 		try {
@@ -115,7 +115,7 @@ class InteractionHandler {
 		if (!this.isInteractionValid(interaction)) {
 			await interaction.reply({
 				content: '❌ Cette interaction a expiré. Veuillez relancer la commande.',
-				ephemeral: true
+				flags: 64 // MessageFlags.Ephemeral
 			});
 			return;
 		}
@@ -142,7 +142,7 @@ class InteractionHandler {
 		console.warn(`Aucun handler trouvé pour customId: ${customId}`);
 		await interaction.reply({
 			content: '❌ Action non reconnue.',
-			ephemeral: true
+			flags: 64 // MessageFlags.Ephemeral
 		});
 	}
 
