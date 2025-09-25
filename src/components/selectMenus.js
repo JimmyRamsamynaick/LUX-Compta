@@ -1,10 +1,29 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const CustomEmbedBuilder = require('../utils/embedBuilder');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content) {
-	return {
-		content: `# ${title}\n\n${content}`
-	};
+// Fonction pour créer le nouveau format de réponse avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {

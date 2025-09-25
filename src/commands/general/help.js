@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-
+const CustomEmbedBuilder = require('../../utils/embedBuilder');
+const ComponentBuilder = require('../../utils/componentBuilder');
 const config = require('../../../config.json');
 
 module.exports = {
@@ -24,9 +25,9 @@ module.exports = {
 	},
 
 	async showGeneralHelp(interaction, isUpdate = false) {
-
-		let content = '🤖 **LUX COMPTA - GUIDE D\'UTILISATION** 🤖\n\n';
-		content += `📊 **Bot de comptabilité et statistiques pour ${config.server.name}**\n\n`;
+		const title = '🤖 LUX COMPTA - GUIDE D\'UTILISATION';
+		
+		let content = `📊 **Bot de comptabilité et statistiques pour ${config.server.name}**\n\n`;
 
 		// Commandes générales
 		content += '📊 **Commandes générales:**\n';
@@ -63,11 +64,14 @@ module.exports = {
 		content += `⏰ **Guide consulté:** <t:${Math.floor(Date.now() / 1000)}:F>\n`;
 		content += `📋 **Version:** ${config.bot.version}`;
 
-		// Menu de sélection pour l'aide détaillée (Type 17)
-		const selectMenu = new StringSelectMenuBuilder()
-			.setCustomId('help_category_select')
-			.setPlaceholder('Choisir une catégorie pour plus de détails...')
-			.addOptions([
+		// Créer l'embed avec CustomEmbedBuilder
+		const embed = CustomEmbedBuilder.createInfo(title, content);
+
+		// Menu de sélection pour l'aide détaillée
+		const selectMenu = ComponentBuilder.createSelectMenu(
+			'help_category_select',
+			'Choisir une catégorie pour plus de détails...',
+			[
 				{
 					label: 'Statistiques',
 					description: 'Commandes liées aux statistiques',
@@ -92,42 +96,34 @@ module.exports = {
 					value: 'components',
 					emoji: '🔧',
 				},
-			]);
+			]
+		);
 
-		// Boutons d'action (Type 10)
-		const buttons = new ActionRowBuilder()
-			.addComponents(
-				new ButtonBuilder()
-					.setCustomId('help_quick_start')
-					.setLabel('Guide rapide')
-					.setStyle(ButtonStyle.Primary)
-					.setEmoji('🚀'),
-				new ButtonBuilder()
-					.setCustomId('help_examples')
-					.setLabel('Exemples')
-					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('📝'),
-				new ButtonBuilder()
-					.setCustomId('help_support')
-					.setLabel('Support')
-					.setStyle(ButtonStyle.Secondary)
-					.setEmoji('❓'),
-			);
+		// Boutons d'action
+		const buttons = ComponentBuilder.createActionButtons([
+			{
+				customId: 'help_quick_start',
+				label: '🚀 Démarrage rapide',
+				style: 'Primary'
+			},
+			{
+				customId: 'help_examples',
+				label: '📝 Exemples',
+				style: 'Secondary'
+			},
+			{
+				customId: 'help_support',
+				label: '🆘 Support',
+				style: 'Secondary'
+			}
+		]);
 
-		const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+		const response = CustomEmbedBuilder.createResponse(embed, [selectMenu, buttons]);
 
 		if (isUpdate) {
-			await interaction.update({
-				content: content,
-				components: [selectRow, buttons],
-				embeds: [],
-			});
-		}
-		else {
-			await interaction.reply({
-				content: content,
-				components: [selectRow, buttons],
-			});
+			await interaction.update(response);
+		} else {
+			await interaction.reply(response);
 		}
 	},
 
@@ -562,5 +558,68 @@ module.exports = {
 			content: content,
 			components: []
 		});
+	},
+
+	async handleComponents(interaction) {
+		const customId = interaction.customId;
+
+		try {
+			// Gestion des menus déroulants
+			if (customId === 'help_category_select') {
+				const selectedCategory = interaction.values[0];
+				await this.handleCategorySelect(interaction, selectedCategory);
+				return;
+			}
+
+			if (customId === 'help_command_select') {
+				const selectedCommand = interaction.values[0];
+				await this.showCommandHelp(interaction, selectedCommand);
+				return;
+			}
+
+			// Gestion des boutons
+			switch (customId) {
+				case 'help_quick_start':
+					await this.showQuickStart(interaction);
+					break;
+				case 'help_examples':
+					await this.showExamples(interaction);
+					break;
+				case 'help_support':
+					await this.showSupport(interaction);
+					break;
+				case 'help_back_main':
+					await this.showGeneralHelp(interaction, true);
+					break;
+				case 'help_try_command':
+					await this.showTryCommand(interaction);
+					break;
+				case 'help_category_demo':
+					await this.showCategoryDemo(interaction);
+					break;
+				case 'help_category_examples':
+					await this.showCategoryExamples(interaction);
+					break;
+				case 'help_category_faq':
+					await this.showCategoryFAQ(interaction);
+					break;
+				case 'help_more_info':
+					await this.showMoreInfo(interaction);
+					break;
+				default:
+					await interaction.reply({
+						content: '❌ Action non reconnue.',
+						ephemeral: true
+					});
+			}
+		} catch (error) {
+			console.error('Erreur dans handleComponents (help):', error);
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.reply({
+					content: '❌ Une erreur est survenue lors du traitement de votre demande.',
+					ephemeral: true
+				});
+			}
+		}
 	},
 };

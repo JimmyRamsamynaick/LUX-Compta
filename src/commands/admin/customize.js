@@ -205,10 +205,10 @@ module.exports = {
 			content += `⏰ **Appliqué:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection de thème (Type 17) - Utilisation de ComponentBuilder
-			const selectMenu = ComponentBuilder.createSelectMenu({
-				customId: 'customization_select',
-				placeholder: 'Choisir un thème...',
-				options: [
+			const selectMenu = ComponentBuilder.createSelectMenu(
+				'customization_select',
+				'Choisir un thème...',
+				[
 					{
 						label: 'Thème Sombre',
 						description: 'Interface sombre et moderne',
@@ -228,7 +228,7 @@ module.exports = {
 						emoji: '💙',
 					},
 				]
-			});
+			);
 
 			await interaction.reply({
 				content: content,

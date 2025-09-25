@@ -1,12 +1,31 @@
 const { EmbedBuilder, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const CustomEmbedBuilder = require('../utils/embedBuilder');
 const fs = require('fs').promises;
 const path = require('path');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content) {
-	return {
-		content: `# ${title}\n\n${content}`
-	};
+// Fonction pour créer le nouveau format de réponse avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {
@@ -25,9 +44,10 @@ module.exports = {
 
 			if (!fileExists) {
 				return interaction.editReply(createResponse(
-					'Erreur',
-					'❌ Erreur lors de la génération du rapport.'
-				));
+				'Erreur',
+				'❌ Erreur lors de la génération du rapport.',
+				[], [], 'error'
+			));
 			}
 
 			// Créer l'attachment pour le téléchargement
@@ -372,7 +392,7 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('Erreur lors de l\'affichage des options de modification:', error);
-			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de l\'affichage des options de modification.'));
+			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de l\'affichage des options de modification.', [], [], 'error'));
 		}
 	},
 
@@ -403,7 +423,7 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('Erreur lors de la réinitialisation:', error);
-			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de la réinitialisation de la configuration.'));
+			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de la réinitialisation de la configuration.', [], [], 'error'));
 		}
 	},
 
@@ -422,7 +442,7 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('Erreur lors de la sauvegarde:', error);
-			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de la création de la sauvegarde.'));
+			await interaction.reply(createResponse('Erreur', '❌ Erreur lors de la création de la sauvegarde.', [], [], 'error'));
 		}
 	},
 };

@@ -1,13 +1,30 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const ComponentBuilder = require('../../utils/componentBuilder');
+const CustomEmbedBuilder = require('../../utils/embedBuilder');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content, components = [], files = []) {
-	return {
-		content: `# ${title}\n\n${content}`,
-		components: components,
-		files
-	};
+// Fonction pour créer le nouveau format de réponse avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {
@@ -217,10 +234,10 @@ module.exports = {
 			content += `⏰ **Liste mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection pour filtrer par période (Type 17) - Utilisation de ComponentBuilder
-		const periodSelect = ComponentBuilder.createSelectMenu({
-			customId: 'report_filter_period',
-			placeholder: '🔍 Filtrer par période',
-			options: [
+		const periodSelect = ComponentBuilder.createSelectMenu(
+			'report_filter_period',
+			'🔍 Filtrer par période',
+			[
 				{
 					label: 'Tous les rapports',
 					value: 'all',
@@ -242,7 +259,7 @@ module.exports = {
 					emoji: '🗓️'
 				}
 			]
-		});
+		);
 
 		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
 		const buttons = ComponentBuilder.createActionButtons([

@@ -1,15 +1,32 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const ComponentBuilder = require('../../utils/componentBuilder');
+const CustomEmbedBuilder = require('../../utils/embedBuilder');
 
 const config = require('../../../config.json');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content, components = [], files = []) {
-	return {
-		content: `# ${title}\n\n${content}`,
-		components: components,
-		files
-	};
+// Fonction pour créer le nouveau format de réponse avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {
@@ -47,9 +64,10 @@ module.exports = {
 		const type = interaction.options.getString('type') || 'general';
 		const statsManager = interaction.client.statsManager;
 
-		await interaction.deferReply();
-
 		try {
+			// Defer immédiatement pour éviter les timeouts
+			await interaction.deferReply();
+
 			const stats = await statsManager.getStats(periode);
 			const { content, components } = await this.createStatsResponse(stats, periode, type, interaction.guild);
 
@@ -62,14 +80,37 @@ module.exports = {
 		}
 		catch (error) {
 			console.error('Erreur lors de la récupération des statistiques:', error);
-			await interaction.editReply(createResponse(
-				'Erreur',
-				'❌ Erreur lors de la récupération des statistiques.'
-			));
+			
+			try {
+				if (interaction.deferred) {
+					await interaction.editReply(createResponse(
+						'Erreur',
+						'❌ Erreur lors de la récupération des statistiques.'
+					));
+				} else {
+					await interaction.reply(createResponse(
+						'Erreur',
+						'❌ Erreur lors de la récupération des statistiques.'
+					));
+				}
+			} catch (replyError) {
+				console.error('Erreur lors de l\'envoi de la réponse d\'erreur:', replyError);
+			}
 		}
 	},
 
 	async createStatsResponse(stats, periode, type, guild) {
+		// Vérifier que stats existe et initialiser les valeurs par défaut si nécessaire
+		if (!stats) {
+			stats = {
+				messages: 0,
+				membersJoined: 0,
+				membersLeft: 0,
+				totalMembers: 0,
+				voiceMinutes: 0,
+				reactions: 0
+			};
+		}
 
 		let content = `📊 **STATISTIQUES - ${guild.name.toUpperCase()}** 📊\n\n`;
 		content += `📅 **Période:** ${this.getPeriodLabel(periode)}\n`;
@@ -77,16 +118,16 @@ module.exports = {
 
 		switch (type) {
 		case 'general':
-			content += `📈 **Messages totaux:** ${stats.messages}\n`;
-			content += `👥 **Membres actifs:** ${stats.activeMembers}\n`;
-			content += `📊 **Canaux actifs:** ${stats.activeChannels}\n`;
-			content += `📅 **Nouveaux membres:** ${stats.newMembers}\n`;
-			content += `👋 **Membres partis:** ${stats.leftMembers}\n`;
+			content += `📈 **Messages totaux:** ${stats.messages || 0}\n`;
+			content += `👥 **Membres actifs:** ${stats.activeMembers || 0}\n`;
+			content += `📊 **Canaux actifs:** ${stats.activeChannels || 0}\n`;
+			content += `📅 **Nouveaux membres:** ${stats.newMembers || stats.membersJoined || 0}\n`;
+			content += `👋 **Membres partis:** ${stats.leftMembers || stats.membersLeft || 0}\n`;
 			content += `📈 **Évolution:** ${this.getEvolutionText(stats.evolution)}\n\n`;
 			break;
 
 		case 'messages':
-			content += `💬 **Messages totaux:** ${stats.messages}\n`;
+			content += `💬 **Messages totaux:** ${stats.messages || 0}\n`;
 			content += `📊 **Moyenne/jour:** ${Math.round(stats.messagesPerDay || 0)}\n`;
 			content += `⏰ **Pic d'activité:** ${stats.peakHour || 'N/A'}\n\n`;
 
@@ -102,11 +143,11 @@ module.exports = {
 
 		case 'members':
 			content += `👥 **Membres totaux:** ${guild.memberCount}\n`;
-			content += `🆕 **Nouveaux membres:** ${stats.newMembers}\n`;
-			content += `👋 **Membres partis:** ${stats.leftMembers}\n`;
-			content += `💬 **Membres actifs:** ${stats.activeMembers}\n`;
-			content += `📊 **Taux d'activité:** ${Math.round((stats.activeMembers / guild.memberCount) * 100)}%\n`;
-			content += `📈 **Croissance:** ${stats.newMembers - stats.leftMembers > 0 ? '+' : ''}${stats.newMembers - stats.leftMembers}\n\n`;
+			content += `🆕 **Nouveaux membres:** ${stats.newMembers || stats.membersJoined || 0}\n`;
+			content += `👋 **Membres partis:** ${stats.leftMembers || stats.membersLeft || 0}\n`;
+			content += `💬 **Membres actifs:** ${stats.activeMembers || 0}\n`;
+			content += `📊 **Taux d'activité:** ${Math.round(((stats.activeMembers || 0) / guild.memberCount) * 100)}%\n`;
+			content += `📈 **Croissance:** ${(stats.newMembers || stats.membersJoined || 0) - (stats.leftMembers || stats.membersLeft || 0) > 0 ? '+' : ''}${(stats.newMembers || stats.membersJoined || 0) - (stats.leftMembers || stats.membersLeft || 0)}\n\n`;
 
 			if (stats.topMembers && stats.topMembers.length > 0) {
 				content += '🏆 **Top Membres:**\n';
@@ -119,9 +160,9 @@ module.exports = {
 			break;
 
 		case 'channels':
-			content += `📊 **Canaux actifs:** ${stats.activeChannels}\n`;
+			content += `📊 **Canaux actifs:** ${stats.activeChannels || 0}\n`;
 			content += `📈 **Canal le plus actif:** ${stats.topChannel ? `<#${stats.topChannel.id}>` : 'N/A'}\n`;
-			content += `💬 **Messages moyens/canal:** ${Math.round(stats.messages / stats.activeChannels || 0)}\n\n`;
+			content += `💬 **Messages moyens/canal:** ${Math.round((stats.messages || 0) / (stats.activeChannels || 1))}\n\n`;
 
 			if (stats.channelStats && stats.channelStats.length > 0) {
 				content += '📊 **Activité par canal:**\n';
@@ -144,10 +185,10 @@ module.exports = {
 		content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 		// Menu de sélection pour changer de type (Type 17) - Utilisation de ComponentBuilder
-		const typeSelect = ComponentBuilder.createSelectMenu({
-			customId: 'stats_type_select',
-			placeholder: 'Changer le type de statistiques...',
-			options: [
+		const typeSelect = ComponentBuilder.createSelectMenu(
+			'stats_type_select',
+			'Changer le type de statistiques...',
+			[
 				{
 					label: 'Général',
 					description: 'Vue d\'ensemble des statistiques',
@@ -173,7 +214,7 @@ module.exports = {
 					emoji: '📊'
 				}
 			]
-		});
+		);
 
 		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
 		const buttons = ComponentBuilder.createActionButtons([

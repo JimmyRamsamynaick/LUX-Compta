@@ -1,15 +1,32 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const ComponentBuilder = require('../../utils/componentBuilder');
+const CustomEmbedBuilder = require('../../utils/embedBuilder');
 
 const config = require('../../../config.json');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content, components = [], files = []) {
-	return {
-		content: `# ${title}\n\n${content}`,
-		components: components,
-		files
-	};
+// Fonction pour créer le nouveau format de réponse avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {
@@ -91,10 +108,10 @@ module.exports = {
 			content += `⏰ **Généré le:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection pour changer de période (Type 17) - Utilisation de ComponentBuilder
-			const selectMenu = ComponentBuilder.createSelectMenu({
-				customId: 'report_period_select',
-				placeholder: 'Choisir une période',
-				options: [
+			const selectMenu = ComponentBuilder.createSelectMenu(
+				'report_period_select',
+				'Choisir une période',
+				[
 					{
 						label: 'Aujourd\'hui',
 						description: 'Rapport quotidien',
@@ -114,7 +131,7 @@ module.exports = {
 						emoji: '📈',
 					},
 				]
-			});
+			);
 
 			// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
 			const buttons = ComponentBuilder.createActionButtons([

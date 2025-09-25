@@ -167,6 +167,10 @@ class StatsManager {
 	}
 
 	initializePeriodStats(period, type) {
+		if (!this.stats[type]) {
+			this.stats[type] = {};
+		}
+		
 		if (!this.stats[type][period]) {
 			this.stats[type][period] = {
 				messages: 0,
@@ -177,6 +181,8 @@ class StatsManager {
 				reactions: 0,
 			};
 		}
+		
+		return this.stats[type][period];
 	}
 
 	async getStats(period = 'daily') {

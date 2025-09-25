@@ -1,13 +1,30 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const ComponentBuilder = require('../../utils/componentBuilder');
+const CustomEmbedBuilder = require('../../utils/embedBuilder');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content, components = [], files = []) {
-	return {
-		content: `# ${title}\n\n${content}`,
-		components: components,
-		files
-	};
+// Fonction pour créer le nouveau format de réponse avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {
@@ -312,16 +329,16 @@ module.exports = {
 			content += `⏰ **Liste mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection pour gérer un dashboard spécifique (Type 17) - Utilisation de ComponentBuilder
-		const dashboardSelect = ComponentBuilder.createSelectMenu({
-			customId: 'dashboard_manage_select',
-			placeholder: 'Sélectionner un dashboard à gérer...',
-			options: dashboards.slice(0, 25).map(dashboard => ({
+		const dashboardSelect = ComponentBuilder.createSelectMenu(
+			'dashboard_manage_select',
+			'Sélectionner un dashboard à gérer...',
+			dashboards.slice(0, 25).map(dashboard => ({
 				label: `Dashboard ${dashboard.channelId}`,
 				value: dashboard.channelId,
 				description: `Auto-update: ${dashboard.autoUpdate ? 'Activé' : 'Désactivé'}`,
 				emoji: dashboard.autoUpdate ? '🟢' : '🔴',
 			}))
-		});
+		);
 
 		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
 		const buttons = ComponentBuilder.createActionButtons([
@@ -434,10 +451,10 @@ module.exports = {
 			content += `⏰ **Dernière mise à jour:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Menu de sélection pour les paramètres (Type 17) - Utilisation de ComponentBuilder
-		const settingsSelect = ComponentBuilder.createSelectMenu({
-			customId: 'dashboard_settings_select',
-			placeholder: 'Modifier un paramètre...',
-			options: [
+		const settingsSelect = ComponentBuilder.createSelectMenu(
+			'dashboard_settings_select',
+			'Modifier un paramètre...',
+			[
 				{
 					label: 'Auto-update',
 					description: 'Activer/désactiver la mise à jour automatique',
@@ -463,7 +480,7 @@ module.exports = {
 					emoji: '🔔',
 				},
 			]
-		});
+		);
 
 		// Boutons d'action (Type 10) - Utilisation de ComponentBuilder
 		const buttons = ComponentBuilder.createActionButtons([

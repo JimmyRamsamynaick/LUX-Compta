@@ -1,14 +1,31 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const ComponentBuilder = require('../../utils/componentBuilder');
+const CustomEmbedBuilder = require('../../utils/embedBuilder');
 const config = require('../../../config.json');
 
-// Fonction pour créer le nouveau format de réponse
-function createResponse(title, content, components = [], files = []) {
-	return {
-		content: `# ${title}\n\n${content}`,
-		components: components,
-		files: files
-	};
+// Fonction utilitaire pour créer une réponse formatée avec embed
+function createResponse(title, content, components = [], files = [], type = 'info') {
+	let embed;
+	
+	switch (type) {
+		case 'success':
+			embed = CustomEmbedBuilder.createSuccess(title, content);
+			break;
+		case 'error':
+			embed = CustomEmbedBuilder.createError(title, content);
+			break;
+		case 'warning':
+			embed = CustomEmbedBuilder.createWarning(title, content);
+			break;
+		case 'config':
+			embed = CustomEmbedBuilder.createConfig(title, typeof content === 'object' ? content : {});
+			if (typeof content === 'string') embed.setDescription(content);
+			break;
+		default:
+			embed = CustomEmbedBuilder.createInfo(title, content);
+	}
+	
+	return CustomEmbedBuilder.createResponse(embed, components, files);
 }
 
 module.exports = {
@@ -131,7 +148,10 @@ module.exports = {
 
 			const errorResponse = createResponse(
 				'Erreur',
-				'❌ Une erreur est survenue lors de l\'exécution de la commande.'
+				'❌ Une erreur est survenue lors de l\'exécution de la commande.',
+				[],
+				[],
+				'error'
 			);
 
 			if (interaction.replied || interaction.deferred) {
