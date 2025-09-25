@@ -377,21 +377,35 @@ module.exports = {
 		const InteractionHandler = require('../../utils/interactionHandler');
 		
 		try {
-			await InteractionHandler.handleWithDefer(interaction, async (inter) => {
-				const customId = inter.customId;
-
-				if (customId.startsWith('refresh_stats_')) {
-					await this.handleRefreshStats(inter);
-				} else if (customId.startsWith('export_stats_')) {
-					await this.handleExportStats(inter);
-				} else if (customId.startsWith('detailed_stats_')) {
-					await this.handleDetailedStats(inter);
-				} else if (customId === 'stats_help') {
-					await this.showStatsHelp(inter);
-				} else if (customId === 'stats_config') {
-					await this.showStatsConfig(inter);
+			// Vérifier si l'interaction est valide
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
+						ephemeral: true
+					});
 				}
-			}, { deferType: 'update' });
+				return;
+			}
+
+			// Différer l'interaction pour les boutons
+			if (!interaction.deferred && !interaction.replied) {
+				await interaction.deferUpdate();
+			}
+
+			const customId = interaction.customId;
+
+			if (customId.startsWith('refresh_stats_')) {
+				await this.handleRefreshStats(interaction);
+			} else if (customId.startsWith('export_stats_')) {
+				await this.handleExportStats(interaction);
+			} else if (customId.startsWith('detailed_stats_')) {
+				await this.handleDetailedStats(interaction);
+			} else if (customId === 'stats_help') {
+				await this.showStatsHelp(interaction);
+			} else if (customId === 'stats_config') {
+				await this.showStatsConfig(interaction);
+			}
 		} catch (error) {
 			console.error('Erreur dans handleStatsButton:', error);
 			await InteractionHandler.handleError(interaction, error);

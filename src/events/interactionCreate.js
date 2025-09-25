@@ -56,6 +56,48 @@ const componentHandlers = {
 			});
 		}
 	},
+
+	// Refresh stats handlers (pour les boutons refresh_stats_*)
+	'refresh_stats_*': async (interaction) => {
+		const statsCommand = interaction.client.commands.get('stats');
+		if (statsCommand && statsCommand.handleStatsButton) {
+			await statsCommand.handleStatsButton(interaction);
+		} else {
+			console.warn('Stats command ou handleStatsButton non trouvé');
+			await interaction.reply({
+				content: '❌ Fonction de rafraîchissement non disponible.',
+				ephemeral: true
+			});
+		}
+	},
+
+	// Export stats handlers (pour les boutons export_stats_*)
+	'export_stats_*': async (interaction) => {
+		const statsCommand = interaction.client.commands.get('stats');
+		if (statsCommand && statsCommand.handleStatsButton) {
+			await statsCommand.handleStatsButton(interaction);
+		} else {
+			console.warn('Stats command ou handleStatsButton non trouvé');
+			await interaction.reply({
+				content: '❌ Fonction d\'export non disponible.',
+				ephemeral: true
+			});
+		}
+	},
+
+	// Detailed stats handlers (pour les boutons detailed_stats_*)
+	'detailed_stats_*': async (interaction) => {
+		const statsCommand = interaction.client.commands.get('stats');
+		if (statsCommand && statsCommand.handleStatsButton) {
+			await statsCommand.handleStatsButton(interaction);
+		} else {
+			console.warn('Stats command ou handleStatsButton non trouvé');
+			await interaction.reply({
+				content: '❌ Fonction de détails non disponible.',
+				ephemeral: true
+			});
+		}
+	},
 	
 	// Help handlers
 	'help_*': async (interaction) => {
