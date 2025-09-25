@@ -48,6 +48,12 @@ const componentHandlers = {
 		const statsCommand = interaction.client.commands.get('stats');
 		if (statsCommand && statsCommand.handleComponents) {
 			await statsCommand.handleComponents(interaction);
+		} else {
+			console.warn('Stats command ou handleComponents non trouvé');
+			await interaction.reply({
+				content: '❌ Commande stats non disponible.',
+				ephemeral: true
+			});
 		}
 	},
 	

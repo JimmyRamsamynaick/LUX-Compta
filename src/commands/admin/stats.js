@@ -81,21 +81,8 @@ module.exports = {
 		catch (error) {
 			console.error('Erreur lors de la récupération des statistiques:', error);
 			
-			try {
-				if (interaction.deferred) {
-					await interaction.editReply(createResponse(
-						'Erreur',
-						'❌ Erreur lors de la récupération des statistiques.'
-					));
-				} else {
-					await interaction.reply(createResponse(
-						'Erreur',
-						'❌ Erreur lors de la récupération des statistiques.'
-					));
-				}
-			} catch (replyError) {
-				console.error('Erreur lors de l\'envoi de la réponse d\'erreur:', replyError);
-			}
+			const InteractionHandler = require('../../utils/interactionHandler');
+			await InteractionHandler.handleError(interaction, error, interaction.deferred);
 		}
 	},
 
@@ -295,62 +282,135 @@ module.exports = {
 		}
 	},
 
-	async handleStatsButton(interaction) {
-		const customId = interaction.customId;
+	async handleComponents(interaction) {
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
+		// Vérifier si l'interaction est encore valide
+		if (!InteractionHandler.isInteractionValid(interaction)) {
+			try {
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '❌ Cette interaction a expiré. Veuillez relancer la commande `/stats`.',
+						ephemeral: true
+					});
+				}
+			} catch (error) {
+				console.error('Erreur lors de la réponse d\'interaction expirée:', error);
+			}
+			return;
+		}
 
 		try {
-			if (customId.startsWith('refresh_stats_')) {
-				await this.handleRefreshStats(interaction);
-			} else if (customId.startsWith('export_stats_')) {
-				await this.handleExportStats(interaction);
-			} else if (customId.startsWith('detailed_stats_')) {
-				await this.handleDetailedStats(interaction);
-			} else if (customId === 'stats_help') {
-				await this.showStatsHelp(interaction);
-			} else if (customId === 'stats_config') {
-				await this.showStatsConfig(interaction);
+			// Gérer les différents types d'interactions
+			if (interaction.isButton()) {
+				await this.handleStatsButton(interaction);
+			} else if (interaction.isStringSelectMenu()) {
+				await this.handleStatsSelectMenu(interaction);
+			} else {
+				// Type d'interaction non supporté
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '❌ Type d\'interaction non supporté.',
+						ephemeral: true
+					});
+				}
 			}
 		} catch (error) {
-			console.error('Erreur dans handleStatsButton:', error);
-			
-			let content = '❌ **ERREUR DE TRAITEMENT** ❌\n\n';
-			content += '⚠️ **Une erreur est survenue lors du traitement de votre demande.**\n\n';
-			content += `🔍 **Détails:** ${error.message || 'Erreur inconnue'}\n`;
-			content += `📝 **Action:** ${customId || 'Non spécifiée'}\n`;
-			content += `⏰ **Erreur survenue:** <t:${Math.floor(Date.now() / 1000)}:F>`;
+			console.error('Erreur dans handleComponents:', error);
+			await InteractionHandler.handleError(interaction, error);
+		}
+	},
 
-			await interaction.reply(createResponse(
-				'Erreur Stats',
-				content,
-				[],
-				[]
-			));
+	async handleStatsSelectMenu(interaction) {
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
+		try {
+			await InteractionHandler.handleWithDefer(interaction, async (inter) => {
+				const selectedValue = inter.values[0];
+				
+				// Traiter la sélection selon le customId
+				if (inter.customId.includes('period')) {
+					// Changement de période
+					const type = 'general'; // Par défaut
+					const stats = await inter.client.statsManager.getStats(selectedValue);
+					const { content, components } = await this.createStatsResponse(stats, selectedValue, type, inter.guild);
+					
+					await inter.editReply(createResponse(
+						'Statistiques du Serveur',
+						content,
+						components
+					));
+				} else if (inter.customId.includes('type')) {
+					// Changement de type
+					const period = 'daily'; // Par défaut
+					const stats = await inter.client.statsManager.getStats(period);
+					const { content, components } = await this.createStatsResponse(stats, period, selectedValue, inter.guild);
+					
+					await inter.editReply(createResponse(
+						'Statistiques du Serveur',
+						content,
+						components
+					));
+				}
+			}, { deferType: 'update' });
+		} catch (error) {
+			console.error('Erreur dans handleStatsSelectMenu:', error);
+			await InteractionHandler.handleError(interaction, error);
+		}
+	},
+
+	async handleStatsButton(interaction) {
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
+		try {
+			await InteractionHandler.handleWithDefer(interaction, async (inter) => {
+				const customId = inter.customId;
+
+				if (customId.startsWith('refresh_stats_')) {
+					await this.handleRefreshStats(inter);
+				} else if (customId.startsWith('export_stats_')) {
+					await this.handleExportStats(inter);
+				} else if (customId.startsWith('detailed_stats_')) {
+					await this.handleDetailedStats(inter);
+				} else if (customId === 'stats_help') {
+					await this.showStatsHelp(inter);
+				} else if (customId === 'stats_config') {
+					await this.showStatsConfig(inter);
+				}
+			}, { deferType: 'update' });
+		} catch (error) {
+			console.error('Erreur dans handleStatsButton:', error);
+			await InteractionHandler.handleError(interaction, error);
 		}
 	},
 
 	async handleRefreshStats(interaction) {
-		await interaction.deferUpdate();
-
+		const InteractionHandler = require('../../utils/interactionHandler');
+		
 		try {
-			// Actualiser les statistiques
-			await this.client.statsManager.updateStats();
+			// Vérifier si l'interaction est encore valide
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				return;
+			}
 
-			let content = '🔄 **STATISTIQUES ACTUALISÉES** 🔄\n\n';
-			content += '✅ Les données ont été mises à jour avec succès !\n';
-			content += `⏰ Dernière mise à jour: <t:${Math.floor(Date.now() / 1000)}:F>\n\n`;
-			content += '📊 Vous pouvez maintenant consulter les statistiques les plus récentes.';
+			// Actualiser les statistiques
+			await interaction.client.statsManager.updateStats();
+
+			// Réafficher les statistiques avec les nouvelles données
+			const period = 'daily'; // Par défaut
+			const type = 'general'; // Par défaut
+			const stats = await interaction.client.statsManager.getStats(period);
+			const { content, components } = await this.createStatsResponse(stats, period, type, interaction.guild);
 
 			await interaction.editReply(createResponse(
-				'Statistiques Actualisées',
-				content
+				'Statistiques du Serveur',
+				content,
+				components
 			));
 
 		} catch (error) {
 			console.error('❌ Erreur lors de l\'actualisation:', error);
-			await interaction.editReply(createResponse(
-				'Erreur',
-				'❌ Erreur lors de l\'actualisation des statistiques.'
-			));
+			await InteractionHandler.handleError(interaction, error, true);
 		}
 	},
 
