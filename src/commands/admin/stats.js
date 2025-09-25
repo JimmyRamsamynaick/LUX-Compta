@@ -325,34 +325,48 @@ module.exports = {
 		const InteractionHandler = require('../../utils/interactionHandler');
 		
 		try {
-			await InteractionHandler.handleWithDefer(interaction, async (inter) => {
-				const selectedValue = inter.values[0];
-				
-				// Traiter la sélection selon le customId
-				if (inter.customId.includes('period')) {
-					// Changement de période
-					const type = 'general'; // Par défaut
-					const stats = await inter.client.statsManager.getStats(selectedValue);
-					const { content, components } = await this.createStatsResponse(stats, selectedValue, type, inter.guild);
-					
-					await inter.editReply(createResponse(
-						'Statistiques du Serveur',
-						content,
-						components
-					));
-				} else if (inter.customId.includes('type')) {
-					// Changement de type
-					const period = 'daily'; // Par défaut
-					const stats = await inter.client.statsManager.getStats(period);
-					const { content, components } = await this.createStatsResponse(stats, period, selectedValue, inter.guild);
-					
-					await inter.editReply(createResponse(
-						'Statistiques du Serveur',
-						content,
-						components
-					));
+			// Vérifier si l'interaction est valide
+			if (!InteractionHandler.isInteractionValid(interaction)) {
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
+						ephemeral: true
+					});
 				}
-			}, { deferType: 'update' });
+				return;
+			}
+
+			// Différer l'interaction pour les menus déroulants
+			if (!interaction.deferred && !interaction.replied) {
+				await interaction.deferUpdate();
+			}
+
+			const selectedValue = interaction.values[0];
+			
+			// Traiter la sélection selon le customId
+			if (interaction.customId.includes('period')) {
+				// Changement de période
+				const type = 'general'; // Par défaut
+				const stats = await interaction.client.statsManager.getStats(selectedValue);
+				const { content, components } = await this.createStatsResponse(stats, selectedValue, type, interaction.guild);
+				
+				await interaction.editReply(createResponse(
+					'Statistiques du Serveur',
+					content,
+					components
+				));
+			} else if (interaction.customId.includes('type')) {
+				// Changement de type
+				const period = 'daily'; // Par défaut
+				const stats = await interaction.client.statsManager.getStats(period);
+				const { content, components } = await this.createStatsResponse(stats, period, selectedValue, interaction.guild);
+				
+				await interaction.editReply(createResponse(
+					'Statistiques du Serveur',
+					content,
+					components
+				));
+			}
 		} catch (error) {
 			console.error('Erreur dans handleStatsSelectMenu:', error);
 			await InteractionHandler.handleError(interaction, error);
