@@ -687,6 +687,50 @@ class AlertManager {
 			return [];
 		}
 	}
+
+	async handleComponents(interaction) {
+		const InteractionHandler = require('../utils/interactionHandler');
+		
+		// Vérifier si l'interaction est encore valide
+		if (!InteractionHandler.isInteractionValid(interaction)) {
+			try {
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '❌ Cette interaction a expiré. Veuillez relancer la commande d\'alertes.',
+						flags: 64 // MessageFlags.Ephemeral
+					});
+				}
+			} catch (error) {
+				console.error('Erreur lors de la réponse d\'interaction expirée:', error);
+			}
+			return;
+		}
+
+		try {
+			const customId = interaction.customId;
+			
+			// Gérer les boutons d'alertes
+			if (customId.startsWith('alert_')) {
+				const parts = customId.split('_');
+				const action = parts[1];
+				const alertType = parts.slice(2).join('_');
+				
+				await this.handleAlertButton(interaction, action, alertType);
+			}
+			// Gérer d'autres types d'interactions d'alertes si nécessaire
+			else {
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '❌ Action d\'alerte non reconnue.',
+						flags: 64 // MessageFlags.Ephemeral
+					});
+				}
+			}
+		} catch (error) {
+			console.error('Erreur dans handleComponents (AlertManager):', error);
+			await InteractionHandler.handleError(interaction, error);
+		}
+	}
 }
 
 module.exports = AlertManager;
