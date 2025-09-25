@@ -68,25 +68,21 @@ class InteractionHandler {
 	static async handleError(interaction, error, isDeferred = false) {
 		console.error('Erreur dans l\'interaction:', error);
 
-		// Vérifier si l'interaction est encore valide avant de tenter une réponse
-		if (!this.isInteractionValid(interaction)) {
-			console.warn('Interaction expirée, impossible de répondre à l\'erreur');
-			return;
-		}
-
-		// Vérifier si l'interaction a déjà été traitée pour éviter les erreurs 40060
-		if (interaction.replied || interaction.deferred) {
-			console.warn('Interaction déjà traitée, impossible de répondre à l\'erreur');
-			return;
-		}
-
 		const errorMessage = {
 			content: '❌ Une erreur est survenue lors du traitement de votre demande.',
 			flags: 64 // MessageFlags.Ephemeral
 		};
 
 		try {
-			await interaction.reply(errorMessage);
+			// Vérifier l'état de l'interaction et répondre en conséquence
+			if (!interaction.replied && !interaction.deferred) {
+				await interaction.reply(errorMessage);
+			} else if (interaction.deferred && !interaction.replied) {
+				await interaction.editReply({
+					content: errorMessage.content
+				});
+			}
+			// Si l'interaction a déjà été répondue, ne rien faire
 		} catch (replyError) {
 			console.error('Erreur lors de l\'envoi de la réponse d\'erreur:', replyError);
 		}

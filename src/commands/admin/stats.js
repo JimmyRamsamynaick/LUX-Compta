@@ -65,16 +65,7 @@ module.exports = {
 		const statsManager = interaction.client.statsManager;
 
 		try {
-			// Vérifier si l'interaction est encore valide avant de defer
-			const InteractionHandler = require('../../utils/interactionHandler');
-			if (!InteractionHandler.isInteractionValid(interaction)) {
-				await interaction.reply({
-					content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
-					flags: 64 // MessageFlags.Ephemeral
-				});
-				return;
-			}
-
+			// Defer immédiatement pour éviter l'expiration
 			if (!interaction.replied && !interaction.deferred) {
 				await interaction.deferReply();
 			}
@@ -92,8 +83,22 @@ module.exports = {
 		catch (error) {
 			console.error('Erreur lors de la récupération des statistiques:', error);
 			
-			const InteractionHandler = require('../../utils/interactionHandler');
-			await InteractionHandler.handleError(interaction, error, interaction.deferred);
+			try {
+				// Vérifier l'état de l'interaction avant de tenter une réponse
+				if (!interaction.replied && !interaction.deferred) {
+					await interaction.reply({
+						content: '❌ Une erreur est survenue lors de la récupération des statistiques.',
+						flags: 64 // MessageFlags.Ephemeral
+					});
+				} else if (interaction.deferred && !interaction.replied) {
+					await interaction.editReply({
+						content: '❌ Une erreur est survenue lors de la récupération des statistiques.'
+					});
+				}
+				// Si l'interaction a déjà été répondue, ne rien faire
+			} catch (errorHandlingError) {
+				console.error('Erreur lors de l\'envoi de la réponse d\'erreur:', errorHandlingError);
+			}
 		}
 	},
 
@@ -385,8 +390,6 @@ module.exports = {
 	},
 
 	async handleStatsButton(interaction) {
-		const InteractionHandler = require('../../utils/interactionHandler');
-		
 		try {
 			// Vérifier si l'interaction n'a pas déjà été traitée
 			if (interaction.replied || interaction.deferred) {
@@ -394,20 +397,7 @@ module.exports = {
 				return;
 			}
 
-			// Vérifier si l'interaction est valide
-			if (!InteractionHandler.isInteractionValid(interaction)) {
-				try {
-					await interaction.reply({
-						content: '⚠️ Cette interaction a expiré. Veuillez utiliser la commande `/stats` à nouveau.',
-						flags: 64 // MessageFlags.Ephemeral
-					});
-				} catch (error) {
-					console.error('Erreur lors de la réponse d\'interaction expirée:', error);
-				}
-				return;
-			}
-
-			// Différer l'interaction pour les boutons
+			// Différer l'interaction immédiatement pour éviter l'expiration
 			await interaction.deferUpdate();
 
 			const customId = interaction.customId;
@@ -425,7 +415,16 @@ module.exports = {
 			}
 		} catch (error) {
 			console.error('Erreur dans handleStatsButton:', error);
-			await InteractionHandler.handleError(interaction, error);
+			// Gestion d'erreur simplifiée pour éviter les doubles acknowledgements
+			try {
+				if (!interaction.replied && interaction.deferred) {
+					await interaction.editReply({
+						content: '❌ Une erreur est survenue lors du traitement de votre demande.'
+					});
+				}
+			} catch (errorHandlingError) {
+				console.error('Erreur lors de la gestion d\'erreur:', errorHandlingError);
+			}
 		}
 	},
 
