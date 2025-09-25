@@ -17,26 +17,24 @@ class InteractionHandler {
 			timeout = 2500 // Temps avant defer automatique
 		} = options;
 
-		let isDeferred = false;
 		let timeoutId;
 
 		try {
-			// Vérifier si l'interaction est encore valide
-			if (!this.isInteractionValid(interaction)) {
-				console.warn('Interaction expirée ou invalide, abandon du traitement');
+			// Vérifier si l'interaction a déjà été traitée
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée, abandon du traitement');
 				return;
 			}
 
 			// Programmer un defer automatique si l'interaction prend trop de temps
 			timeoutId = setTimeout(async () => {
-				if (!interaction.replied && !interaction.deferred && this.isInteractionValid(interaction)) {
+				if (!interaction.replied && !interaction.deferred) {
 					try {
 						if (deferType === 'update' && (interaction.isButton() || interaction.isStringSelectMenu())) {
 							await interaction.deferUpdate();
 						} else {
 							await interaction.deferReply({ ephemeral });
 						}
-						isDeferred = true;
 					} catch (error) {
 						console.error('Erreur lors du defer automatique:', error);
 					}
@@ -54,7 +52,7 @@ class InteractionHandler {
 			clearTimeout(timeoutId);
 			
 			// Gérer l'erreur avec une réponse appropriée
-			await this.handleError(interaction, error, isDeferred);
+			await this.handleError(interaction, error);
 			throw error;
 		}
 	}
@@ -114,11 +112,9 @@ class InteractionHandler {
 	 * @param {Object} handlers - Map des handlers par customId
 	 */
 	static async handleComponent(interaction, handlers) {
-		if (!this.isInteractionValid(interaction)) {
-			await interaction.reply({
-				content: '❌ Cette interaction a expiré. Veuillez relancer la commande.',
-				flags: 64 // MessageFlags.Ephemeral
-			});
+		// Vérifier si l'interaction a déjà été traitée
+		if (interaction.replied || interaction.deferred) {
+			console.warn('Interaction de composant déjà traitée');
 			return;
 		}
 
@@ -142,10 +138,12 @@ class InteractionHandler {
 
 		// Aucun handler trouvé
 		console.warn(`Aucun handler trouvé pour customId: ${customId}`);
-		await interaction.reply({
-			content: '❌ Action non reconnue.',
-			flags: 64 // MessageFlags.Ephemeral
-		});
+		if (!interaction.replied && !interaction.deferred) {
+			await interaction.reply({
+				content: '❌ Action non reconnue.',
+				flags: 64 // MessageFlags.Ephemeral
+			});
+		}
 	}
 
 	/**

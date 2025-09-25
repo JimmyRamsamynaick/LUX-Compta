@@ -65,11 +65,6 @@ module.exports = {
 		const statsManager = interaction.client.statsManager;
 
 		try {
-			// Defer immédiatement pour éviter l'expiration
-			if (!interaction.replied && !interaction.deferred) {
-				await interaction.deferReply();
-			}
-
 			const stats = await statsManager.getStats(periode);
 			const { content, components } = await this.createStatsResponse(stats, periode, type, interaction.guild);
 
@@ -83,22 +78,8 @@ module.exports = {
 		catch (error) {
 			console.error('Erreur lors de la récupération des statistiques:', error);
 			
-			try {
-				// Vérifier l'état de l'interaction avant de tenter une réponse
-				if (!interaction.replied && !interaction.deferred) {
-					await interaction.reply({
-						content: '❌ Une erreur est survenue lors de la récupération des statistiques.',
-						flags: 64 // MessageFlags.Ephemeral
-					});
-				} else if (interaction.deferred && !interaction.replied) {
-					await interaction.editReply({
-						content: '❌ Une erreur est survenue lors de la récupération des statistiques.'
-					});
-				}
-				// Si l'interaction a déjà été répondue, ne rien faire
-			} catch (errorHandlingError) {
-				console.error('Erreur lors de l\'envoi de la réponse d\'erreur:', errorHandlingError);
-			}
+			// La gestion d'erreur est maintenant déléguée à InteractionHandler
+			throw error;
 		}
 	},
 
@@ -390,21 +371,12 @@ module.exports = {
 	},
 
 	async handleStatsButton(interaction) {
+		const customId = interaction.customId;
+
 		try {
-			// Vérifier si l'interaction n'a pas déjà été traitée
-			if (interaction.replied || interaction.deferred) {
-				console.warn('Interaction déjà traitée dans handleStatsButton');
-				return;
-			}
-
-			// Différer l'interaction immédiatement pour éviter l'expiration
-			await interaction.deferUpdate();
-
-			const customId = interaction.customId;
-
-			if (customId.startsWith('refresh_stats_')) {
+			if (customId === 'refresh_stats') {
 				await this.handleRefreshStats(interaction);
-			} else if (customId.startsWith('export_stats_')) {
+			} else if (customId === 'export_stats') {
 				await this.handleExportStats(interaction);
 			} else if (customId.startsWith('detailed_stats_')) {
 				await this.handleDetailedStats(interaction);
@@ -415,16 +387,8 @@ module.exports = {
 			}
 		} catch (error) {
 			console.error('Erreur dans handleStatsButton:', error);
-			// Gestion d'erreur simplifiée pour éviter les doubles acknowledgements
-			try {
-				if (!interaction.replied && interaction.deferred) {
-					await interaction.editReply({
-						content: '❌ Une erreur est survenue lors du traitement de votre demande.'
-					});
-				}
-			} catch (errorHandlingError) {
-				console.error('Erreur lors de la gestion d\'erreur:', errorHandlingError);
-			}
+			// Déléguer la gestion d'erreur à InteractionHandler
+			throw error;
 		}
 	},
 
