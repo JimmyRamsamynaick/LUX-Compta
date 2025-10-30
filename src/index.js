@@ -10,10 +10,12 @@ const EmailManager = require('./managers/EmailManager');
 
 // Créer le client Discord avec les intents nécessaires
 const client = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-	],
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates,
+    ],
 });
 
 // Collections pour les commandes et composants

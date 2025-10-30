@@ -112,9 +112,11 @@ class InteractionHandler {
 	 * @param {Object} handlers - Map des handlers par customId
 	 */
 	static async handleComponent(interaction, handlers) {
-		// Vérifier si l'interaction a déjà été traitée
-		if (interaction.replied || interaction.deferred) {
-			console.warn('Interaction de composant déjà traitée');
+		if (!this.isInteractionValid(interaction)) {
+			await interaction.reply({
+				content: '❌ Cette interaction a expiré. Veuillez relancer la commande.',
+				flags: 64 // MessageFlags.Ephemeral
+			});
 			return;
 		}
 
@@ -138,12 +140,10 @@ class InteractionHandler {
 
 		// Aucun handler trouvé
 		console.warn(`Aucun handler trouvé pour customId: ${customId}`);
-		if (!interaction.replied && !interaction.deferred) {
-			await interaction.reply({
-				content: '❌ Action non reconnue.',
-				flags: 64 // MessageFlags.Ephemeral
-			});
-		}
+		await interaction.reply({
+			content: '❌ Action non reconnue.',
+			flags: 64 // MessageFlags.Ephemeral
+		});
 	}
 
 	/**

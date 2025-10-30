@@ -317,16 +317,20 @@ module.exports = {
 			content
 		));
 
-		try {
-			const result = await emailManager.sendReport(filename, email);
+        try {
+            const to = email || process.env.REPORT_EMAIL_TO || process.env.EMAIL_TO;
+            const reportsDir = require('path').join(process.cwd(), 'reports');
+            const filePath = require('path').join(reportsDir, filename);
+            const subject = `[${interaction.client.user.username}] Rapport envoyé: ${filename}`;
+            const ok = await emailManager.sendReport(to, subject, filePath, 'Rapport envoyé depuis la commande /report');
 
 
-			content = '✅ **RAPPORT ENVOYÉ AVEC SUCCÈS** ✅\n\n';
-			content += `📧 **Le rapport "${filename}" a été envoyé par email !**\n\n`;
-			content += '📋 **Détails de l\'envoi:**\n';
-			content += `• **📧 Destinataire:** ${result.recipient}\n`;
-			content += `• **📄 Fichier:** ${filename}\n`;
-			content += `• **📊 Taille:** ${result.size || 'Non spécifiée'}\n\n`;
+            content = '✅ **RAPPORT ENVOYÉ AVEC SUCCÈS** ✅\n\n';
+            content += `📧 **Le rapport "${filename}" a été envoyé par email !**\n\n`;
+            content += '📋 **Détails de l\'envoi:**\n';
+            content += `• **📧 Destinataire:** ${to}\n`;
+            content += `• **📄 Fichier:** ${filename}\n`;
+            content += `• **📊 Statut:** ${ok ? 'Envoyé' : 'Échec'}\n\n`;
 			content += `⏰ **Envoyé:** <t:${Math.floor(Date.now() / 1000)}:F>`;
 
 			// Boutons d'action (Type 10)

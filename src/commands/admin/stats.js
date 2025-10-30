@@ -371,12 +371,21 @@ module.exports = {
 	},
 
 	async handleStatsButton(interaction) {
-		const customId = interaction.customId;
-
 		try {
-			if (customId === 'refresh_stats') {
+			// Vérifier si l'interaction n'a pas déjà été traitée
+			if (interaction.replied || interaction.deferred) {
+				console.warn('Interaction déjà traitée dans handleStatsButton');
+				return;
+			}
+
+			// Différer l'interaction immédiatement pour éviter l'expiration
+			await interaction.deferUpdate();
+
+			const customId = interaction.customId;
+
+			if (customId.startsWith('refresh_stats_')) {
 				await this.handleRefreshStats(interaction);
-			} else if (customId === 'export_stats') {
+			} else if (customId.startsWith('export_stats_')) {
 				await this.handleExportStats(interaction);
 			} else if (customId.startsWith('detailed_stats_')) {
 				await this.handleDetailedStats(interaction);
@@ -387,8 +396,16 @@ module.exports = {
 			}
 		} catch (error) {
 			console.error('Erreur dans handleStatsButton:', error);
-			// Déléguer la gestion d'erreur à InteractionHandler
-			throw error;
+			// Gestion d'erreur simplifiée pour éviter les doubles acknowledgements
+			try {
+				if (!interaction.replied && interaction.deferred) {
+					await interaction.editReply({
+						content: '❌ Une erreur est survenue lors du traitement de votre demande.'
+					});
+				}
+			} catch (errorHandlingError) {
+				console.error('Erreur lors de la gestion d\'erreur:', errorHandlingError);
+			}
 		}
 	},
 

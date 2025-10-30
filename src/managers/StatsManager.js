@@ -9,6 +9,7 @@ class StatsManager {
 		this.client = client;
 		this.dataDir = path.join(process.cwd(), 'data');
 		this.statsFile = path.join(this.dataDir, 'stats.json');
+		this.voiceSessions = new Map(); // key: guildId:userId => { start: timestamp, channelId }
 		this.stats = {
 			daily: {},
 			weekly: {},
@@ -65,6 +66,16 @@ class StatsManager {
 		this.initializePeriodStats(today, 'daily');
 		this.initializePeriodStats(thisWeek, 'weekly');
 		this.initializePeriodStats(thisMonth, 'monthly');
+
+		// Capturer le comptage initial des membres si manquant
+		const guildMemberCount = message.guild?.memberCount || 0;
+		if (this.stats.daily[today].startMembers === 0) this.stats.daily[today].startMembers = guildMemberCount;
+		if (this.stats.weekly[thisWeek].startMembers === 0) this.stats.weekly[thisWeek].startMembers = guildMemberCount;
+		if (this.stats.monthly[thisMonth].startMembers === 0) this.stats.monthly[thisMonth].startMembers = guildMemberCount;
+		// Mettre à jour endMembers à chaque activité
+		this.stats.daily[today].endMembers = guildMemberCount;
+		this.stats.weekly[thisWeek].endMembers = guildMemberCount;
+		this.stats.monthly[thisMonth].endMembers = guildMemberCount;
 
 		// Enregistrer le message
 		this.stats.daily[today].messages++;
@@ -126,6 +137,14 @@ class StatsManager {
 		this.stats.weekly[thisWeek].totalMembers = guild.memberCount;
 		this.stats.monthly[thisMonth].totalMembers = guild.memberCount;
 
+		// Définir startMembers s'il manque et mettre endMembers
+		if (this.stats.daily[today].startMembers === 0) this.stats.daily[today].startMembers = guild.memberCount - 1;
+		if (this.stats.weekly[thisWeek].startMembers === 0) this.stats.weekly[thisWeek].startMembers = guild.memberCount - 1;
+		if (this.stats.monthly[thisMonth].startMembers === 0) this.stats.monthly[thisMonth].startMembers = guild.memberCount - 1;
+		this.stats.daily[today].endMembers = guild.memberCount;
+		this.stats.weekly[thisWeek].endMembers = guild.memberCount;
+		this.stats.monthly[thisMonth].endMembers = guild.memberCount;
+
 		// Enregistrer les informations du membre
 		const userId = member.id;
 		if (!this.stats.members[userId]) {
@@ -163,6 +182,14 @@ class StatsManager {
 		this.stats.weekly[thisWeek].totalMembers = guild.memberCount;
 		this.stats.monthly[thisMonth].totalMembers = guild.memberCount;
 
+		// Définir startMembers s'il manque et mettre endMembers
+		if (this.stats.daily[today].startMembers === 0) this.stats.daily[today].startMembers = guild.memberCount + 1;
+		if (this.stats.weekly[thisWeek].startMembers === 0) this.stats.weekly[thisWeek].startMembers = guild.memberCount + 1;
+		if (this.stats.monthly[thisMonth].startMembers === 0) this.stats.monthly[thisMonth].startMembers = guild.memberCount + 1;
+		this.stats.daily[today].endMembers = guild.memberCount;
+		this.stats.weekly[thisWeek].endMembers = guild.memberCount;
+		this.stats.monthly[thisMonth].endMembers = guild.memberCount;
+
 		await this.saveStats();
 	}
 
@@ -179,6 +206,8 @@ class StatsManager {
 				totalMembers: 0,
 				voiceMinutes: 0,
 				reactions: 0,
+				startMembers: 0,
+				endMembers: 0,
 			};
 		}
 		
@@ -316,6 +345,80 @@ class StatsManager {
 			period,
 			generatedAt: moment().toISOString(),
 		};
+	}
+
+	// --- Activité vocale ---
+	async recordVoiceStart(userId, guildId, channelId) {
+		try {
+			const key = `${guildId}:${userId}`;
+			// Si une session existe déjà, on la clôture avant d'en démarrer une nouvelle
+			if (this.voiceSessions.has(key)) {
+				await this.recordVoiceEnd(userId, guildId, this.voiceSessions.get(key).channelId);
+			}
+			this.voiceSessions.set(key, { start: Date.now(), channelId });
+		}
+		catch (error) {
+			console.error('❌ Erreur recordVoiceStart:', error);
+		}
+	}
+
+	async recordVoiceEnd(userId, guildId, channelId) {
+		try {
+			const key = `${guildId}:${userId}`;
+			const session = this.voiceSessions.get(key);
+			if (!session) return;
+
+			const durationMs = Date.now() - session.start;
+			const minutes = Math.max(0, Math.round(durationMs / 60000));
+
+			// Périodes
+			const today = moment().format('YYYY-MM-DD');
+			const thisWeek = moment().startOf('week').format('YYYY-MM-DD');
+			const thisMonth = moment().format('YYYY-MM');
+
+			// Initialiser
+			this.initializePeriodStats(today, 'daily');
+			this.initializePeriodStats(thisWeek, 'weekly');
+			this.initializePeriodStats(thisMonth, 'monthly');
+
+			// Ajouter au total de minutes vocales
+			this.stats.daily[today].voiceMinutes += minutes;
+			this.stats.weekly[thisWeek].voiceMinutes += minutes;
+			this.stats.monthly[thisMonth].voiceMinutes += minutes;
+
+			// Statistiques par membre
+			if (!this.stats.members[userId]) {
+				this.stats.members[userId] = {
+					username: this.client.users.cache.get(userId)?.username || 'Inconnu',
+					displayName: this.client.users.cache.get(userId)?.username || 'Inconnu',
+					messages: 0,
+					firstSeen: today,
+					lastActive: today,
+					voiceMinutes: 0,
+				};
+			}
+			this.stats.members[userId].voiceMinutes = (this.stats.members[userId].voiceMinutes || 0) + minutes;
+			this.stats.members[userId].lastActive = today;
+
+			// Statistiques par canal vocal
+			if (!this.stats.channels[channelId]) {
+				this.stats.channels[channelId] = {
+					name: this.client.channels.cache.get(channelId)?.name || 'Inconnu',
+					messages: this.stats.channels[channelId]?.messages || 0,
+					type: this.client.channels.cache.get(channelId)?.type,
+					voiceMinutes: 0,
+				};
+			}
+			this.stats.channels[channelId].voiceMinutes = (this.stats.channels[channelId].voiceMinutes || 0) + minutes;
+
+			// Clôturer la session
+			this.voiceSessions.delete(key);
+
+			await this.saveStats();
+		}
+		catch (error) {
+			console.error('❌ Erreur recordVoiceEnd:', error);
+		}
 	}
 
 	async checkActivityAlerts() {

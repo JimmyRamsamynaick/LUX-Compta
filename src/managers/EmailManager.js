@@ -56,19 +56,25 @@ class EmailManager {
 			const htmlContent = this.generateEmailHTML(filename, reportDate, additionalText);
 
 			// Configuration de l'email
-			const mailOptions = {
-				from: process.env.EMAIL_FROM,
-				to: to,
-				subject: subject,
-				html: htmlContent,
-				attachments: [
-					{
-						filename: filename,
-						path: reportPath,
-						contentType: 'text/csv',
-					},
-				],
-			};
+            // Déterminer le type MIME selon l'extension
+            const ext = path.extname(reportPath).toLowerCase();
+            const mime = ext === '.xlsx'
+                ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                : 'text/csv';
+
+            const mailOptions = {
+                from: process.env.EMAIL_FROM,
+                to: to,
+                subject: subject,
+                html: htmlContent,
+                attachments: [
+                    {
+                        filename: filename,
+                        path: reportPath,
+                        contentType: mime,
+                    },
+                ],
+            };
 
 			// Envoyer l'email
 			const info = await this.transporter.sendMail(mailOptions);

@@ -24,9 +24,10 @@ async function scheduleAutomaticTasks(client) {
 	// Rapport quotidien
 	if (config.reports.periods.daily.enabled) {
 		const dailyTime = config.reports.periods.daily.time.split(':');
-		cron.schedule(`${dailyTime[1]} ${dailyTime[0]} * * *`, async () => {
+	cron.schedule(`${dailyTime[1]} ${dailyTime[0]} * * *`, async () => {
 			console.log('📊 Génération du rapport quotidien...');
-			await client.reportManager.generateDailyReport();
+			const res = await client.reportManager.generateDailyReport();
+			await client.reportManager.postReportToChannel('daily', res);
 
 			if (config.git.auto_commit) {
 				await client.gitManager.autoCommit('Rapport quotidien généré');
@@ -43,7 +44,8 @@ async function scheduleAutomaticTasks(client) {
 		const weekDay = getWeekDay(config.reports.periods.weekly.day);
 		cron.schedule(`${weeklyTime[1]} ${weeklyTime[0]} * * ${weekDay}`, async () => {
 			console.log('📊 Génération du rapport hebdomadaire...');
-			await client.reportManager.generateWeeklyReport();
+			const res = await client.reportManager.generateWeeklyReport();
+			await client.reportManager.postReportToChannel('weekly', res);
 
 			if (config.git.auto_commit) {
 				await client.gitManager.autoCommit('Rapport hebdomadaire généré');
@@ -70,7 +72,8 @@ async function scheduleAutomaticTasks(client) {
 				// Si demain est le 1er du mois, alors aujourd'hui est le dernier jour
 				if (tomorrow.getDate() === 1) {
 					console.log('📊 Génération du rapport mensuel...');
-					await client.reportManager.generateMonthlyReport();
+					const res = await client.reportManager.generateMonthlyReport();
+					await client.reportManager.postReportToChannel('monthly', res);
 
 					if (config.git.auto_commit) {
 						await client.gitManager.autoCommit('Rapport mensuel généré');
@@ -83,7 +86,8 @@ async function scheduleAutomaticTasks(client) {
 		else {
 			cron.schedule(`${monthlyTime[1]} ${monthlyTime[0]} ${monthDay} * *`, async () => {
 				console.log('📊 Génération du rapport mensuel...');
-				await client.reportManager.generateMonthlyReport();
+				const res = await client.reportManager.generateMonthlyReport();
+				await client.reportManager.postReportToChannel('monthly', res);
 
 				if (config.git.auto_commit) {
 					await client.gitManager.autoCommit('Rapport mensuel généré');
