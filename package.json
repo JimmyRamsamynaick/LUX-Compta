@@ -1,7 +1,7 @@
 {
   "name": "lux-compta",
   "version": "1.0.0",
-  "description": "Bot Discord pour le suivi des statistiques du serveur La Lanterne Nocturne",
+  "description": "Bot Discord pour le suivi des statistiques de serveurs Discord",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

@@ -6,7 +6,7 @@
 [![Discord.js](https://img.shields.io/badge/discord.js-14.x-blue)](https://discord.js.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Latest-green)](https://www.mongodb.com/)
 
-Bot Discord avancé pour le serveur **La Lanterne Nocturne** qui suit et analyse les statistiques du serveur avec génération automatique de rapports, graphiques visuels et archivage.
+Bot Discord avancé qui suit et analyse les statistiques de votre serveur avec génération automatique de rapports, graphiques visuels et archivage.
 
 ## 🎯 Table des Matières
 
