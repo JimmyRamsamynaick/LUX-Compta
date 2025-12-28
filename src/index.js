@@ -1,138 +1,73 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const config = require('../config.json');
-const StatsManager = require('./managers/StatsManager');
-const ReportManager = require('./managers/ReportManager');
-const GitManager = require('./managers/GitManager');
-const EmailManager = require('./managers/EmailManager');
+const connectDB = require('./database/mongo');
 
-// Créer le client Discord avec les intents nécessaires
+// Create the Discord client with necessary intents
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.MessageContent, // Needed to count messages if we want to filter or just trigger
+        GatewayIntentBits.GuildPresences // Useful for status checks
     ],
 });
 
-// Collections pour les commandes et composants
+// Connect to MongoDB
+connectDB();
+
+// Collections for commands
 client.commands = new Collection();
-client.components = new Collection();
 
-// Initialiser les managers
-client.statsManager = new StatsManager(client);
-client.reportManager = new ReportManager(client);
-client.gitManager = new GitManager();
-client.emailManager = new EmailManager();
-
-// Initialiser les gestionnaires bonus
-const AlertManager = require('./managers/AlertManager');
-const ArchiveManager = require('./managers/ArchiveManager');
-const DashboardManager = require('./managers/DashboardManager');
-const CustomizationManager = require('./managers/CustomizationManager');
-
-client.alertManager = new AlertManager(client);
-client.archiveManager = new ArchiveManager(client);
-client.dashboardManager = new DashboardManager(client);
-client.customizationManager = new CustomizationManager(client);
-
-// Charger les commandes
+// Load commands
 const commandsPath = path.join(__dirname, 'commands');
+// Ensure commands directory exists
 if (fs.existsSync(commandsPath)) {
-	// Charger les commandes des sous-dossiers
-	const commandFolders = fs.readdirSync(commandsPath);
+    const commandFolders = fs.readdirSync(commandsPath);
 
-	for (const folder of commandFolders) {
-		const folderPath = path.join(commandsPath, folder);
-
-		// Vérifier si c'est un dossier
-		if (fs.statSync(folderPath).isDirectory()) {
-			const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
-
-			for (const file of commandFiles) {
-				const filePath = path.join(folderPath, file);
-				const command = require(filePath);
-
-				if ('data' in command && 'execute' in command) {
-					client.commands.set(command.data.name, command);
-					console.log(`✅ Commande chargée: ${command.data.name}`);
-				}
-				else {
-					console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
-				}
-			}
-		}
-		// Charger aussi les fichiers .js directement dans le dossier commands (si il y en a)
-		else if (folder.endsWith('.js')) {
-			const filePath = path.join(commandsPath, folder);
-			const command = require(filePath);
-
-			if ('data' in command && 'execute' in command) {
-				client.commands.set(command.data.name, command);
-				console.log(`✅ Commande chargée: ${command.data.name}`);
-			}
-			else {
-				console.log(`⚠️ Commande manquante "data" ou "execute": ${filePath}`);
-			}
-		}
-	}
+    for (const folder of commandFolders) {
+        const folderPath = path.join(commandsPath, folder);
+        
+        if (fs.statSync(folderPath).isDirectory()) {
+            const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
+            for (const file of commandFiles) {
+                const filePath = path.join(folderPath, file);
+                const command = require(filePath);
+                if ('data' in command && 'execute' in command) {
+                    client.commands.set(command.data.name, command);
+                    console.log(`✅ Command loaded: ${command.data.name}`);
+                }
+            }
+        } else if (folder.endsWith('.js')) {
+            const filePath = path.join(commandsPath, folder);
+            const command = require(filePath);
+            if ('data' in command && 'execute' in command) {
+                client.commands.set(command.data.name, command);
+                console.log(`✅ Command loaded: ${command.data.name}`);
+            }
+        }
+    }
 }
 
-// Charger les événements
+// Load events
 const eventsPath = path.join(__dirname, 'events');
 if (fs.existsSync(eventsPath)) {
-	const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+    const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
-	for (const file of eventFiles) {
-		const filePath = path.join(eventsPath, file);
-		const event = require(filePath);
-
-		if (event.once) {
-			client.once(event.name, (...args) => event.execute(...args));
-		}
-		else {
-			client.on(event.name, (...args) => event.execute(...args));
-		}
-		console.log(`✅ Événement chargé: ${event.name}`);
-	}
+    for (const file of eventFiles) {
+        const filePath = path.join(eventsPath, file);
+        const event = require(filePath);
+        if (event.once) {
+            client.once(event.name, (...args) => event.execute(...args));
+        } else {
+            client.on(event.name, (...args) => event.execute(...args));
+        }
+        console.log(`✅ Event loaded: ${event.name}`);
+    }
 }
 
-// Événement de connexion
-client.once(Events.ClientReady, async (readyClient) => {
-	console.log(`🤖 ${config.bot.name} est connecté en tant que ${readyClient.user.tag}!`);
-
-	// Définir l'activité du bot
-	client.user.setActivity(config.bot.activity.name, { type: config.bot.activity.type });
-
-	// Initialiser les managers
-	await client.statsManager.initialize();
-	await client.reportManager.initialize();
-
-	// Démarrer le planificateur d'alertes
-	if (client.alertManager) {
-		client.alertManager.startAlertScheduler();
-		console.log('🚨 Planificateur d\'alertes démarré');
-	}
-
-	console.log('📊 Tous les systèmes sont opérationnels!');
-});
-
-// Gestion des erreurs
-client.on('error', error => {
-	console.error('❌ Erreur Discord.js:', error);
-});
-
-process.on('unhandledRejection', error => {
-	console.error('❌ Erreur non gérée:', error);
-});
-
-process.on('uncaughtException', error => {
-	console.error('❌ Exception non capturée:', error);
-	process.exit(1);
-});
-
-// Connexion du bot
+// Login
 client.login(process.env.DISCORD_TOKEN);

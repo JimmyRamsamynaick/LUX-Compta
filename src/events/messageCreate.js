@@ -1,21 +1,20 @@
 const { Events } = require('discord.js');
+const Message = require('../models/Message');
 
 module.exports = {
-	name: Events.MessageCreate,
-	async execute(message) {
-		// Ignorer les messages des bots
-		if (message.author.bot) return;
+    name: Events.MessageCreate,
+    async execute(message) {
+        if (message.author.bot || !message.guild) return;
 
-		// Ignorer les messages en DM
-		if (!message.guild) return;
-
-		try {
-			// Enregistrer les statistiques du message
-			await message.client.statsManager.recordMessage(message);
-
-		}
-		catch (error) {
-			console.error('❌ Erreur lors de l\'enregistrement du message:', error);
-		}
-	},
+        try {
+            await Message.create({
+                user_id: message.author.id,
+                channel_id: message.channel.id,
+                guild_id: message.guild.id,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            console.error('Error logging message:', error);
+        }
+    },
 };

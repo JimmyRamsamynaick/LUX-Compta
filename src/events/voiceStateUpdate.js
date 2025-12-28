@@ -1,39 +1,52 @@
 const { Events } = require('discord.js');
+const VoiceSession = require('../models/VoiceSession');
 
 module.exports = {
-  name: Events.VoiceStateUpdate,
-  async execute(oldState, newState) {
-    try {
-      const client = newState.client || oldState.client;
-      const stats = client.statsManager;
-      if (!stats) return;
+    name: Events.VoiceStateUpdate,
+    async execute(oldState, newState) {
+        const member = newState.member || oldState.member;
+        if (!member || member.user.bot) return;
 
-      const userId = (newState.member || oldState.member)?.id;
-      const guild = newState.guild || oldState.guild;
-      if (!userId || !guild) return;
+        const userId = member.id;
+        const guildId = member.guild.id;
+        const now = new Date();
 
-      const oldChannel = oldState.channelId;
-      const newChannel = newState.channelId;
+        // Handle Voice Sessions (Join/Leave/Switch)
+        if (oldState.channelId !== newState.channelId) {
+            // Left a channel (or switched)
+            if (oldState.channelId) {
+                try {
+                    // Close the open session
+                    const session = await VoiceSession.findOne({
+                        user_id: userId,
+                        guild_id: guildId,
+                        channel_id: oldState.channelId,
+                        end_time: null
+                    });
 
-      // Joined a voice channel
-      if (!oldChannel && newChannel) {
-        await stats.recordVoiceStart(userId, guild.id, newChannel);
-        return;
-      }
+                    if (session) {
+                        session.end_time = now;
+                        session.duration = now - session.start_time;
+                        await session.save();
+                    }
+                } catch (error) {
+                    console.error('Error closing voice session:', error);
+                }
+            }
 
-      // Left voice channel
-      if (oldChannel && !newChannel) {
-        await stats.recordVoiceEnd(userId, guild.id, oldChannel);
-        return;
-      }
-
-      // Switched channels
-      if (oldChannel && newChannel && oldChannel !== newChannel) {
-        await stats.recordVoiceEnd(userId, guild.id, oldChannel);
-        await stats.recordVoiceStart(userId, guild.id, newChannel);
-      }
-    } catch (error) {
-      console.error('❌ Erreur voiceStateUpdate:', error);
-    }
-  },
+            // Joined a channel (or switched)
+            if (newState.channelId) {
+                try {
+                    await VoiceSession.create({
+                        user_id: userId,
+                        channel_id: newState.channelId,
+                        guild_id: guildId,
+                        start_time: now
+                    });
+                } catch (error) {
+                    console.error('Error creating voice session:', error);
+                }
+            }
+        }
+    },
 };

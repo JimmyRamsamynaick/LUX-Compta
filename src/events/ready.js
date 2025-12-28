@@ -1,133 +1,89 @@
 const { Events } = require('discord.js');
 const cron = require('node-cron');
-const config = require('../../config.json');
+const VoiceSession = require('../models/VoiceSession');
 
 module.exports = {
-	name: Events.ClientReady,
-	once: true,
-	async execute(client) {
-		console.log(`🚀 ${client.user.tag} est maintenant en ligne!`);
+    name: Events.ClientReady,
+    once: true,
+    async execute(client) {
+        console.log(`🚀 ${client.user.tag} is online!`);
 
-		// Programmer les tâches automatiques
-		await scheduleAutomaticTasks(client);
+        // Close any "stuck" voice sessions (where bot crashed while user was in voice)
+        // We set end_time to now for any session that is still null
+        // Note: Ideally we should check if they are actually in voice, but for simplicity we close them.
+        try {
+            const now = new Date();
+            // Find open sessions
+            // Note: Mongoose < 5.x or simple updateMany doesn't support aggregation pipeline in second argument directly without explicit option or if strictly typed?
+            // Actually, updateMany with pipeline IS supported in recent MongoDB versions, but Mongoose might need [ ] syntax which we used.
+            // The error "Cannot pass an array to query updates unless the `updatePipeline` option is set" suggests strict mode issue or version mismatch.
+            // Let's use a simpler approach: fetch then update, or just use a standard update without referencing other fields if possible.
+            // BUT we need `duration` = now - start_time.
+            // Workaround: Loop through them (safe and simple for "stuck" sessions which shouldn't be millions).
+            
+            const stuckSessions = await VoiceSession.find({ end_time: null });
+            
+            if (stuckSessions.length > 0) {
+                for (const session of stuckSessions) {
+                    session.end_time = now;
+                    session.duration = now - session.start_time;
+                    await session.save();
+                }
+                console.log(`Closed ${stuckSessions.length} stuck voice sessions.`);
+            }
+        } catch (error) {
+            console.error('Error closing stuck sessions:', error);
+        }
 
-		// Initialiser Git si configuré
-		if (config.git.auto_commit) {
-			await client.gitManager.setupGitConfig();
-		}
+        // Schedule Monthly Report (Last day of month at 23:59)
+        // Checks on 28th, 29th, 30th, 31st
+        cron.schedule('59 23 28-31 * *', async () => {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
 
-		console.log('⚙️ Configuration terminée avec succès!');
-	},
+            // Check if tomorrow is the 1st of the next month
+            if (tomorrow.getDate() === 1) {
+                console.log('📅 End of month detected. Generating monthly reports...');
+                
+                // Define period: First day of THIS month to First day of NEXT month
+                // This covers the entire current month
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+                try {
+                    const { generateMonthlyReport } = require('../utils/reportGenerator');
+                    await generateMonthlyReport(client, startOfMonth, endOfMonth);
+                } catch (error) {
+                    console.error('Error generating monthly report:', error);
+                }
+            }
+        }, {
+            timezone: process.env.TIMEZONE || 'Europe/Luxembourg'
+        });
+
+        // Schedule Server Status Update (Every 10 minutes)
+        cron.schedule('*/10 * * * *', async () => {
+            console.log('🔄 Running scheduled server status update...');
+            try {
+                const { updateServerStatus } = require('../utils/serverStatus');
+                await updateServerStatus(client);
+            } catch (error) {
+                console.error('Error updating server status:', error);
+            }
+        });
+
+        // Run an immediate update 5 seconds after startup to refresh status
+        setTimeout(async () => {
+            console.log('🔄 Running initial server status update...');
+            try {
+                const { updateServerStatus } = require('../utils/serverStatus');
+                await updateServerStatus(client);
+            } catch (error) {
+                console.error('Error running initial server status update:', error);
+            }
+        }, 5000);
+
+        console.log('📅 Scheduled tasks initialized.');
+    },
 };
-
-async function scheduleAutomaticTasks(client) {
-	// Rapport quotidien
-	if (config.reports.periods.daily.enabled) {
-		const dailyTime = config.reports.periods.daily.time.split(':');
-	cron.schedule(`${dailyTime[1]} ${dailyTime[0]} * * *`, async () => {
-			console.log('📊 Génération du rapport quotidien...');
-			const res = await client.reportManager.generateDailyReport();
-			await client.reportManager.postReportToChannel('daily', res);
-
-			if (config.git.auto_commit) {
-				await client.gitManager.autoCommit('Rapport quotidien généré');
-			}
-		}, {
-			timezone: config.server.timezone,
-		});
-		console.log(`⏰ Rapport quotidien programmé à ${config.reports.periods.daily.time}`);
-	}
-
-	// Rapport hebdomadaire
-	if (config.reports.periods.weekly.enabled) {
-		const weeklyTime = config.reports.periods.weekly.time.split(':');
-		const weekDay = getWeekDay(config.reports.periods.weekly.day);
-		cron.schedule(`${weeklyTime[1]} ${weeklyTime[0]} * * ${weekDay}`, async () => {
-			console.log('📊 Génération du rapport hebdomadaire...');
-			const res = await client.reportManager.generateWeeklyReport();
-			await client.reportManager.postReportToChannel('weekly', res);
-
-			if (config.git.auto_commit) {
-				await client.gitManager.autoCommit('Rapport hebdomadaire généré');
-			}
-		}, {
-			timezone: config.server.timezone,
-		});
-		console.log(`⏰ Rapport hebdomadaire programmé le ${config.reports.periods.weekly.day} à ${config.reports.periods.weekly.time}`);
-	}
-
-	// Rapport mensuel
-	if (config.reports.periods.monthly.enabled) {
-		const monthlyTime = config.reports.periods.monthly.time.split(':');
-		const monthDay = config.reports.periods.monthly.day === 'last' ? '28-31' : config.reports.periods.monthly.day;
-
-		// Pour le dernier jour du mois, on utilise une approche différente
-		if (config.reports.periods.monthly.day === 'last') {
-			// Vérifier tous les jours à 23:59 si c'est le dernier jour du mois
-			cron.schedule(`${monthlyTime[1]} ${monthlyTime[0]} 28-31 * *`, async () => {
-				const today = new Date();
-				const tomorrow = new Date(today);
-				tomorrow.setDate(today.getDate() + 1);
-
-				// Si demain est le 1er du mois, alors aujourd'hui est le dernier jour
-				if (tomorrow.getDate() === 1) {
-					console.log('📊 Génération du rapport mensuel...');
-					const res = await client.reportManager.generateMonthlyReport();
-					await client.reportManager.postReportToChannel('monthly', res);
-
-					if (config.git.auto_commit) {
-						await client.gitManager.autoCommit('Rapport mensuel généré');
-					}
-				}
-			}, {
-				timezone: config.server.timezone,
-			});
-		}
-		else {
-			cron.schedule(`${monthlyTime[1]} ${monthlyTime[0]} ${monthDay} * *`, async () => {
-				console.log('📊 Génération du rapport mensuel...');
-				const res = await client.reportManager.generateMonthlyReport();
-				await client.reportManager.postReportToChannel('monthly', res);
-
-				if (config.git.auto_commit) {
-					await client.gitManager.autoCommit('Rapport mensuel généré');
-				}
-			}, {
-				timezone: config.server.timezone,
-			});
-		}
-		console.log(`⏰ Rapport mensuel programmé le ${config.reports.periods.monthly.day} à ${config.reports.periods.monthly.time}`);
-	}
-
-	// Archivage automatique
-	if (config.reports.auto_archive.enabled) {
-		cron.schedule('0 2 * * *', async () => {
-			console.log('🗄️ Archivage automatique des anciens rapports...');
-			await client.reportManager.autoArchive();
-		}, {
-			timezone: config.server.timezone,
-		});
-		console.log('⏰ Archivage automatique programmé à 02:00');
-	}
-
-	// Commit Git automatique (si différent des rapports)
-	if (config.git.auto_commit && config.git.commit_frequency === 'hourly') {
-		cron.schedule('0 * * * *', async () => {
-			await client.gitManager.autoCommit('Mise à jour automatique');
-		});
-		console.log('⏰ Commits Git automatiques programmés toutes les heures');
-	}
-}
-
-function getWeekDay(day) {
-	const days = {
-		'sunday': 0,
-		'monday': 1,
-		'tuesday': 2,
-		'wednesday': 3,
-		'thursday': 4,
-		'friday': 5,
-		'saturday': 6,
-	};
-	return days[day.toLowerCase()] || 0;
-}

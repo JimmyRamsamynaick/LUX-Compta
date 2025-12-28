@@ -65,21 +65,20 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
         );
         console.log(`✅ ${globalData.length} commandes slash déployées globalement.`);
 
-        // Option 2: Déploiement pour une guilde spécifique (instantané)
-        // Utile pour les tests et le développement
+        // Option 2: Nettoyage des commandes de guilde (pour éviter les doublons)
+        // Comme nous déployons globalement, nous supprimons les commandes spécifiques à la guilde
+        // qui pourraient causer des doublons dans l'interface Discord.
         if (process.env.GUILD_ID) {
-            console.log(`🏠 Déploiement pour la guilde ${process.env.GUILD_ID}...`);
+            console.log(`🧹 Nettoyage des commandes locales pour la guilde ${process.env.GUILD_ID} (pour éviter les doublons)...`);
             try {
-                const guildData = await rest.put(
+                // Envoyer un tableau vide supprime toutes les commandes de guilde
+                await rest.put(
                     Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-                    { body: commands },
+                    { body: [] },
                 );
-                console.log(`✅ ${guildData.length} commandes slash déployées pour la guilde ${process.env.GUILD_ID}.`);
+                console.log(`✅ Commandes locales supprimées pour la guilde ${process.env.GUILD_ID}.`);
             } catch (guildError) {
-                console.warn(`⚠️ Impossible de déployer sur la guilde ${process.env.GUILD_ID}:`, guildError.message);
-                console.warn('💡 Le bot n\'est peut-être pas encore invité sur ce serveur ou n\'a pas les bonnes permissions.');
-                console.warn('🔗 Utilisez ce lien pour inviter le bot avec les bonnes permissions:');
-                console.warn(`https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=2147483648&scope=bot%20applications.commands`);
+                console.warn(`⚠️ Impossible de nettoyer la guilde ${process.env.GUILD_ID}:`, guildError.message);
             }
         }
 

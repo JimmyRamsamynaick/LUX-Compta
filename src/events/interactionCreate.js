@@ -1,112 +1,31 @@
 const { Events } = require('discord.js');
-const InteractionHandler = require('../utils/interactionHandler');
 
-// Map des handlers de composants
-const componentHandlers = {
-	// Dashboard handlers
-	'dashboard_*': async (interaction) => {
-		const DashboardManager = require('../managers/DashboardManager');
-		await DashboardManager.handleComponents(interaction);
-	},
-	
-	// Customization handlers
-	'customize_*': async (interaction) => {
-		const CustomizationManager = require('../managers/CustomizationManager');
-		await CustomizationManager.handleComponents(interaction);
-	},
-	
-	// Archive handlers
-	'archive_*': async (interaction) => {
-		const ArchiveManager = require('../managers/ArchiveManager');
-		await ArchiveManager.handleComponents(interaction);
-	},
-	
-	// Alert handlers
-	'alert_*': async (interaction) => {
-		const AlertManager = require('../managers/AlertManager');
-		await AlertManager.handleComponents(interaction);
-	},
-	
-	// Config handlers
-	'config_*': async (interaction) => {
-		const configCommand = interaction.client.commands.get('config');
-		if (configCommand && configCommand.handleComponents) {
-			await configCommand.handleComponents(interaction);
-		}
-	},
-	
-	// Report handlers
-	'report_*': async (interaction) => {
-		const reportCommand = interaction.client.commands.get('report');
-		if (reportCommand && reportCommand.handleComponents) {
-			await reportCommand.handleComponents(interaction);
-		}
-	},
-	
-	// Stats handlers
-	'stats_*': async (interaction) => {
-		const statsCommand = interaction.client.commands.get('stats');
-		if (statsCommand && statsCommand.handleComponents) {
-			await statsCommand.handleComponents(interaction);
-		} else {
-			console.warn('Stats command ou handleComponents non trouvé');
-			await interaction.reply({
-				content: '❌ Commande stats non disponible.',
-				flags: 64 // MessageFlags.Ephemeral
-			});
-		}
-	},
+module.exports = {
+    name: Events.InteractionCreate,
+    async execute(interaction) {
+        if (!interaction.isChatInputCommand()) return;
 
-	// Refresh stats handlers (pour les boutons refresh_stats_*)
-	'refresh_stats_*': async (interaction) => {
-		const statsCommand = interaction.client.commands.get('stats');
-		if (statsCommand && statsCommand.handleStatsButton) {
-			await statsCommand.handleStatsButton(interaction);
-		} else {
-			console.warn('Stats command ou handleStatsButton non trouvé');
-			await interaction.reply({
-				content: '❌ Fonction de rafraîchissement non disponible.',
-				ephemeral: true
-			});
-		}
-	},
+        const command = interaction.client.commands.get(interaction.commandName);
 
-	// Export stats handlers (pour les boutons export_stats_*)
-	'export_stats_*': async (interaction) => {
-		const statsCommand = interaction.client.commands.get('stats');
-		if (statsCommand && statsCommand.handleStatsButton) {
-			await statsCommand.handleStatsButton(interaction);
-		} else {
-			console.warn('Stats command ou handleStatsButton non trouvé');
-			await interaction.reply({
-				content: '❌ Fonction d\'export non disponible.',
-				ephemeral: true
-			});
-		}
-	},
+        if (!command) {
+            console.error(`No command matching ${interaction.commandName} was found.`);
+            return;
+        }
 
-	// Detailed stats handlers (pour les boutons detailed_stats_*)
-	'detailed_stats_*': async (interaction) => {
-		const statsCommand = interaction.client.commands.get('stats');
-		if (statsCommand && statsCommand.handleStatsButton) {
-			await statsCommand.handleStatsButton(interaction);
-		} else {
-			console.warn('Stats command ou handleStatsButton non trouvé');
-			await interaction.reply({
-				content: '❌ Fonction de détails non disponible.',
-				ephemeral: true
-			});
-		}
-	},
-	
-	// Help handlers
-	'help_*': async (interaction) => {
-		const helpCommand = interaction.client.commands.get('help');
-		if (helpCommand && helpCommand.handleComponents) {
-			await helpCommand.handleComponents(interaction);
-		}
-	}
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(`Error executing ${interaction.commandName}`);
+            console.error(error);
+            try {
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp({ content: 'Une erreur est survenue lors de l\'exécution de cette commande!', ephemeral: true });
+                } else {
+                    await interaction.reply({ content: 'Une erreur est survenue lors de l\'exécution de cette commande!', ephemeral: true });
+                }
+            } catch (handlerError) {
+                console.error('Error sending error message to user:', handlerError);
+            }
+        }
+    },
 };
-
-// Créer le gestionnaire d'événements avec InteractionHandler
-module.exports = InteractionHandler.createEventHandler({}, componentHandlers);
