@@ -11,6 +11,15 @@ const chartCallback = (ChartJS) => {
 
 const chartJSNodeCanvas = new ChartJSNodeCanvas({ width: 700, height: 250, chartCallback });
 
+// Helper to remove emojis from strings (fixes "tofu" boxes in canvas)
+const removeEmojis = (str) => {
+    if (!str) return '';
+    return str
+        .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
 async function generateStatsImage(user, stats, history, topChannels) {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
@@ -126,7 +135,7 @@ async function generateStatsImage(user, stats, history, topChannels) {
     
     topChannels.forEach((channel, index) => {
         if (index < 3) { // Show top 3 horizontally
-             ctx.fillText(`#${channel.name}: ${channel.count}`, 50 + (index * 200), 550);
+             ctx.fillText(`#${removeEmojis(channel.name)}: ${channel.count}`, 50 + (index * 200), 550);
         }
     });
 
@@ -233,7 +242,7 @@ async function generateMessageStatsImage(user, stats, history, topChannels) {
     
     topChannels.forEach((channel, index) => {
         if (index < 3) {
-             ctx.fillText(`#${channel.name}: ${channel.count}`, 50 + (index * 200), 550);
+             ctx.fillText(`#${removeEmojis(channel.name)}: ${channel.count}`, 50 + (index * 200), 550);
         }
     });
 
