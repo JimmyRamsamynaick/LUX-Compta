@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, ActivityType } = require('discord.js');
 const cron = require('node-cron');
 const VoiceSession = require('../models/VoiceSession');
 
@@ -7,6 +7,16 @@ module.exports = {
     once: true,
     async execute(client) {
         console.log(`🚀 ${client.user.tag} is online!`);
+
+        // Set Streaming Status
+        client.user.setPresence({
+            activities: [{ 
+                name: 'Vos statistiques', 
+                type: ActivityType.Streaming,
+                url: 'https://twitch.tv/jimmy_9708'
+            }],
+            status: 'online'
+        });
 
         // Close any "stuck" voice sessions (where bot crashed while user was in voice)
         // We set end_time to now for any session that is still null
