@@ -6,7 +6,13 @@
 [![Discord.js](https://img.shields.io/badge/discord.js-14.x-blue)](https://discord.js.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Latest-green)](https://www.mongodb.com/)
 
-Bot Discord avancé qui suit et analyse les statistiques de votre serveur avec génération automatique de rapports, graphiques visuels et archivage.
+**LUX Compta** est un bot analytique puissant conçu pour suivre la croissance et l'activité de votre serveur Discord. 
+
+> **ℹ️ À propos**
+> 
+> LUX Compta analyse en temps réel les interactions de votre communauté (messages, vocal, arrivées/départs) pour vous fournir des rapports détaillés et des graphiques visuels. Idéal pour les administrateurs souhaitant comprendre et optimiser l'engagement de leur serveur.
+>
+> 🆘 **Support & Aide :** [Rejoindre le serveur de support](https://discord.gg/sferTT73tZ)
 
 ## 🎯 Table des Matières
 
