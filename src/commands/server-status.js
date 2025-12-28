@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { generateServerStatusEmbed, updateServerStatus } = require('../utils/serverStatus');
+const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } = require('discord.js');
+const { generateServerStatusPayload, updateServerStatus } = require('../utils/serverStatus');
 const ServerConfig = require('../models/ServerConfig');
 
 module.exports = {
@@ -9,7 +9,12 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('setup')
-                .setDescription('Crée l\'embed de statistiques et active la mise à jour automatique'))
+                .setDescription('Crée l\'embed de statistiques et active la mise à jour automatique')
+                .addChannelOption(option =>
+                    option.setName('channel')
+                        .setDescription('Le salon où afficher les statistiques (optionnel)')
+                        .addChannelTypes(ChannelType.GuildText)
+                        .setRequired(false)))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('update')
@@ -19,15 +24,23 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'setup') {
-            await interaction.deferReply();
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             try {
-                const embed = await generateServerStatusEmbed(interaction.client, interaction.guild);
-                const message = await interaction.channel.send({ embeds: [embed] });
+                console.log('Setup command started');
+                const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
+                console.log(`Target channel: ${targetChannel.id}`);
+
+                console.log('Generating payload...');
+                const payload = await generateServerStatusPayload(interaction.client, interaction.guild);
+                console.log('Payload generated successfully');
+                
+                const message = await targetChannel.send(payload);
+                console.log(`Message sent: ${message.id}`);
 
                 // Save to DB with guild_id
                 await ServerConfig.findOneAndUpdate(
                     { guild_id: interaction.guild.id, key: 'status_channel_id' },
-                    { value: interaction.channel.id },
+                    { value: targetChannel.id },
                     { upsert: true, new: true }
                 );
                 await ServerConfig.findOneAndUpdate(
@@ -35,14 +48,15 @@ module.exports = {
                     { value: message.id },
                     { upsert: true, new: true }
                 );
+                console.log('Config saved to DB');
 
-                await interaction.editReply({ content: '✅ Embed de statistiques créé ! Il se mettra à jour automatiquement toutes les 10 minutes.' });
+                await interaction.editReply({ content: `✅ Embed de statistiques créé dans ${targetChannel} ! Il se mettra à jour automatiquement toutes les 10 minutes.` });
             } catch (error) {
-                console.error(error);
+                console.error('Error in setup command:', error);
                 await interaction.editReply({ content: 'Une erreur est survenue lors de la configuration.' });
             }
         } else if (subcommand === 'update') {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             try {
                 // Pass the specific guild ID to update only this guild
                 await updateServerStatus(interaction.client, interaction.guild.id);

@@ -1,53 +1,79 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const StatsHelper = require('./statsHelper');
 const ServerConfig = require('../models/ServerConfig');
 
-async function generateServerStatusEmbed(client, guild) {
+async function generateServerStatusPayload(client, guild) {
     // Force fetch members to get accurate numbers
-    const members = await guild.members.fetch();
-    const totalMembers = members.size;
-    
+    let members;
+    try {
+        // Try to fetch members with a timeout
+        members = await guild.members.fetch({ time: 5000 });
+    } catch (error) {
+        console.warn(`Failed to fetch all members for guild ${guild.name}:`, error.message);
+        members = guild.members.cache;
+    }
+
+    const totalMembers = guild.memberCount;
     const onlineMembers = members.filter(m => m.presence?.status && m.presence.status !== 'offline').size;
     const voiceMembers = members.filter(m => m.voice.channel).size;
-    const streamingMembers = members.filter(m => m.voice.streaming).size;
-    const mutedMembers = members.filter(m => m.voice.selfMute || m.voice.serverMute).size;
-
+    
     // DB Stats
     const stats = await StatsHelper.getServerStats(guild.id);
     
-    // Percentages
+    // Percentages & Trends
     const activePercent = totalMembers > 0 ? Math.round((onlineMembers / totalMembers) * 100) : 0;
     
+    const msgTrend = stats.comparison.messages.diff >= 0 ? '📈' : '📉';
+    const msgTrendSign = stats.comparison.messages.diff >= 0 ? '+' : '';
+    
+    const voiceTrend = stats.comparison.voice.diff >= 0 ? '📈' : '📉';
+    const voiceTrendSign = stats.comparison.voice.diff >= 0 ? '+' : '';
+
     const embed = new EmbedBuilder()
         .setColor('#2B2D31')
         .setTitle(`📊 État du Serveur: ${guild.name}`)
+        .setDescription(`> Dernière actualisation : <t:${Math.floor(Date.now() / 1000)}:R>`)
         .addFields(
             { 
-                name: '👥 Membres', 
-                value: `Total: **${totalMembers}**\nEn ligne: **${onlineMembers}**\nEn vocal: **${voiceMembers}**`, 
+                name: '👥 Population', 
+                value: `>>> Total : **${totalMembers}**\nEn ligne : **${onlineMembers}** (${activePercent}%)\nVocal : **${voiceMembers}**`, 
                 inline: true 
             },
             { 
-                name: '📅 Statistiques du Mois', 
-                value: `Messages: **${stats.activity.messages}**\nVocal: **${stats.activity.voice_hours}h ${stats.activity.voice_minutes}m**\nRejoint: **${stats.retention.joined}**\nQuitté: **${stats.retention.left}**`, 
+                name: '📈 Tendance Hebdo (7j)', 
+                value: `>>> Messages : **${stats.comparison.messages.current}** (${msgTrend} ${msgTrendSign}${stats.comparison.messages.percent}%)\nVocal : **${Math.floor(stats.comparison.voice.current / 60)}h** (${voiceTrend} ${voiceTrendSign}${stats.comparison.voice.percent}%)`, 
                 inline: true 
             },
             { 
-                name: '🔴 Activité Live', 
-                value: `Actifs: **${activePercent}%**\nStream: **${streamingMembers}**\nMute: **${mutedMembers}**`, 
+                name: '📅 Ce Mois-ci', 
+                value: `>>> Arrivées : **+${stats.month.joined}**\nDéparts : **-${stats.month.left}**\nMessages : **${stats.month.messages}**`, 
                 inline: true 
             }
         )
         .setThumbnail(guild.iconURL({ dynamic: true }))
-        .setFooter({ text: `Dernière mise à jour` })
+        .setFooter({ text: `LUX Compta • Statistiques en temps réel` })
         .setTimestamp();
 
-    return embed;
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('refresh_status')
+                .setLabel('Actualiser')
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Secondary)
+        );
+
+    return { embeds: [embed], components: [row] };
+}
+
+// Wrapper for backward compatibility if needed, though we should switch to payload
+async function generateServerStatusEmbed(client, guild) {
+    const payload = await generateServerStatusPayload(client, guild);
+    return payload.embeds[0];
 }
 
 async function updateServerStatus(client, targetGuildId = null) {
     try {
-        // If a specific guild ID is provided, update only that guild
         let query = { key: 'status_channel_id' };
         if (targetGuildId) {
             query.guild_id = targetGuildId;
@@ -59,7 +85,6 @@ async function updateServerStatus(client, targetGuildId = null) {
             const guildId = channelConfig.guild_id;
             const channelId = channelConfig.value;
 
-            // Find corresponding message ID
             const messageConfig = await ServerConfig.findOne({ guild_id: guildId, key: 'status_message_id' });
             if (!messageConfig) continue;
 
@@ -72,9 +97,8 @@ async function updateServerStatus(client, targetGuildId = null) {
                 const message = await channel.messages.fetch(messageId);
                 if (!message) continue;
 
-                const embed = await generateServerStatusEmbed(client, channel.guild);
-                await message.edit({ embeds: [embed] });
-                // console.log(`Updated server status for guild ${guildId}`);
+                const payload = await generateServerStatusPayload(client, channel.guild);
+                await message.edit(payload);
             } catch (err) {
                 console.error(`Failed to update status for guild ${guildId}:`, err.message);
             }
@@ -85,4 +109,4 @@ async function updateServerStatus(client, targetGuildId = null) {
     }
 }
 
-module.exports = { generateServerStatusEmbed, updateServerStatus };
+module.exports = { generateServerStatusEmbed, generateServerStatusPayload, updateServerStatus };
