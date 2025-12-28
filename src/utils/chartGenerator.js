@@ -135,7 +135,7 @@ async function generateStatsImage(user, stats, history, topChannels) {
     
     topChannels.forEach((channel, index) => {
         if (index < 3) { // Show top 3 horizontally
-             ctx.fillText(`#${removeEmojis(channel.name)}: ${channel.count}`, 50 + (index * 200), 550);
+             ctx.fillText(`#${removeEmojis(channel.name).substring(0, 15)}: ${channel.count}`, 50 + (index * 200), 550);
         }
     });
 
@@ -242,7 +242,7 @@ async function generateMessageStatsImage(user, stats, history, topChannels) {
     
     topChannels.forEach((channel, index) => {
         if (index < 3) {
-             ctx.fillText(`#${removeEmojis(channel.name)}: ${channel.count}`, 50 + (index * 200), 550);
+            ctx.fillText(`#${removeEmojis(channel.name).substring(0, 15)}: ${channel.count}`, 50 + (index * 200), 550);
         }
     });
 
