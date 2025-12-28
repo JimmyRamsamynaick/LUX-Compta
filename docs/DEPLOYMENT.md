@@ -11,12 +11,14 @@ Ce guide détaille les différentes méthodes de déploiement de LUX-Compta, des
 - **Node.js** : Version 18.0.0 ou supérieure
 - **npm** : Version 8.0.0 ou supérieure
 - **Git** : Pour le clonage et la gestion des versions
+- **MongoDB** : Une base de données MongoDB (locale ou Atlas)
 - **Mémoire RAM** : Minimum 512 MB, recommandé 1 GB
 - **Espace disque** : Minimum 1 GB pour les logs et archives
 
 ### Comptes et Services
 
 - **Discord Developer Portal** : Pour créer l'application bot
+- **MongoDB Atlas** : Pour héberger la base de données (gratuit) ou une instance locale
 - **Serveur SMTP** : Pour l'envoi d'emails (optionnel)
 - **Service de monitoring** : Pour la surveillance en production (optionnel)
 
@@ -26,7 +28,7 @@ Ce guide détaille les différentes méthodes de déploiement de LUX-Compta, des
 
 ```bash
 # Cloner le repository
-git clone https://github.com/votre-username/LUX-Compta.git
+git clone https://github.com/JimmyRamsamynaick/LUX-Compta.git
 cd LUX-Compta
 
 # Installer les dépendances
@@ -43,7 +45,11 @@ cp .env.example .env
 ```env
 # Configuration Discord
 DISCORD_TOKEN=votre_token_discord_bot
-DISCORD_CLIENT_ID=votre_client_id
+CLIENT_ID=votre_client_id
+GUILD_ID=votre_guild_id (optionnel, pour dev)
+
+# Base de données
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/lux-compta
 
 # Configuration Email (optionnel)
 EMAIL_HOST=smtp.gmail.com
@@ -51,11 +57,6 @@ EMAIL_PORT=587
 EMAIL_SECURE=false
 EMAIL_USER=votre_email@gmail.com
 EMAIL_PASS=votre_mot_de_passe_app
-
-# Configuration Développement
-NODE_ENV=development
-DEBUG=true
-LOG_LEVEL=debug
 ```
 
 ### 3. Lancement
