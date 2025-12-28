@@ -166,5 +166,5 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une Issue ou un
 ---
 
 <div align="center">
-  <strong>🌟 Développé pour La Lanterne Nocturne 🌟</strong>
+  <strong>🌟 Développé pour La communauté 🌟</strong>
 </div>
