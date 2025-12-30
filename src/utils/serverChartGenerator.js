@@ -124,7 +124,7 @@ async function generateServerStatsImage(guild, stats, onlineCount) {
                     backgroundColor: 'rgba(250, 166, 26, 0.2)',
                     fill: true,
                     tension: 0.3,
-                    yAxisID: 'y'
+                    yAxisID: 'y1'
                 }
             ]
         },
@@ -144,7 +144,16 @@ async function generateServerStatsImage(guild, stats, onlineCount) {
                         color: (context) => context.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(44, 47, 51, 1)',
                         lineWidth: (context) => context.tick.value === 0 ? 2 : 1
                     },
-                    beginAtZero: false // Allow negative values to be shown naturally
+                    beginAtZero: false 
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    ticks: { color: '#FAA61A' },
+                    grid: {
+                        drawOnChartArea: false // Avoid grid lines overlapping
+                    }
                 }
             }
         }
