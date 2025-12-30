@@ -84,15 +84,6 @@ async function generateServerStatsImage(guild, stats, onlineCount) {
     drawCard('Nouveaux (Mois)', stats.month.joined, `Départs: ${stats.month.left}`, 400, 140, '#FAA61A');
     drawCard('Total Membres', guild.memberCount, `En ligne: ${onlineCount}`, 590, 140, '#F04747');
 
-    // Calculate scale range to ensure negative axis is visible
-    const allValues = [
-        ...stats.history.messages,
-        ...stats.history.voice,
-        ...stats.history.net_growth
-    ];
-    const maxValue = Math.max(...allValues, 10);
-    const suggestedMin = -(maxValue * 0.15); // Ensure at least 15% negative space
-
     // Chart
     const configuration = {
         type: 'line',
@@ -138,19 +129,17 @@ async function generateServerStatsImage(guild, stats, onlineCount) {
                     type: 'linear',
                     display: true,
                     position: 'left',
-                    suggestedMin: suggestedMin,
                     ticks: { color: '#FFFFFF' }, 
                     grid: { 
                         color: (context) => context.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : 'rgba(44, 47, 51, 1)',
                         lineWidth: (context) => context.tick.value === 0 ? 2 : 1
                     },
-                    beginAtZero: false 
+                    beginAtZero: true 
                 },
                 y1: {
                     type: 'linear',
-                    display: true,
+                    display: false, // Hide the axis labels as requested
                     position: 'right',
-                    ticks: { color: '#FAA61A' },
                     grid: {
                         drawOnChartArea: false // Avoid grid lines overlapping
                     }
