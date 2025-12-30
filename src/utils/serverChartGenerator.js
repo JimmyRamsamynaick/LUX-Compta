@@ -138,10 +138,19 @@ async function generateServerStatsImage(guild, stats, onlineCount) {
                 },
                 y1: {
                     type: 'linear',
-                    display: false, // Hide the axis labels as requested
+                    display: true,
                     position: 'right',
+                    ticks: { color: '#FAA61A' },
                     grid: {
                         drawOnChartArea: false // Avoid grid lines overlapping
+                    },
+                    title: {
+                        display: true,
+                        text: 'Nouveaux Membres',
+                        color: '#FAA61A',
+                        font: {
+                            size: 12
+                        }
                     }
                 }
             }
